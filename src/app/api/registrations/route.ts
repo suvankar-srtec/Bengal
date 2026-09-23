@@ -80,7 +80,7 @@ export async function POST(request: Request) {
         member_name, email, phone, billing_details,
         participation_quantity, standee_quantity, presentation_selected,
         participation_unit_paise, standee_unit_paise, presentation_unit_paise, total_paise, participant_names
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
       ON CONFLICT (submission_id) DO NOTHING
       RETURNING id, reference, total_paise, payment_status, request_hash
     `, [id, data.submissionId, fingerprint, reference, EVENT.id, EVENT.name, EVENT.date,
@@ -99,9 +99,12 @@ export async function POST(request: Request) {
       id: record.id, reference: record.reference,
       totalPaise: record.total_paise, paymentStatus: record.payment_status,
     } }, inserted.rows.length ? 201 : 200);
-  } catch {
-    // Do not log credentials or personally identifiable submission contents.
-    console.error("Registration could not be saved to the database.");
+  } catch (error) {
+    // Log only database diagnostics; never log submitted personal data or credentials.
+    const diagnostic = error && typeof error === "object"
+      ? { code: "code" in error ? String(error.code) : undefined, message: "message" in error ? String(error.message) : undefined }
+      : {};
+    console.error("Registration could not be saved to the database.", diagnostic);
     return json({ error: "We couldn’t save your registration right now. Your details are still here; please try again." }, 503);
   }
 }

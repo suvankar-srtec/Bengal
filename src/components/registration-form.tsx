@@ -101,35 +101,33 @@ export function RegistrationForm() {
     }
   }
 
-  function downloadReceipt() {
-    if (!receipt) return;
-    const text = ["BENGAL BUSINESS COUNCIL", "Aalap Alochona · 29 September 2026", "Registration confirmation", "",
-      `Reference: ${receipt.reference}`, `Member: ${fields.memberName.trim()}`, `Email: ${fields.email.trim()}`,
-      `Phone: +91 ${fields.phone}`, `GSTIN / PAN: ${fields.billingDetails.trim().toUpperCase()}`, "",
-      ...participantNames.map((name, index) => `Participant ${index + 1}: ${name.trim()}`), "",
-      `Participation: ${participationQuantity} × ${formatMoney(PRICES.participation)}`,
-      `Standee placement: ${standeeQuantity} × ${formatMoney(PRICES.standee)}`,
-      `Company presentation (20 minutes): ${presentationSelected ? formatMoney(PRICES.presentation) : "Not selected"}`,
-      `Total: ${formatMoney(receipt.totalPaise)}`, "Payment status: Unpaid", "",
-      "This confirms that your registration was saved. This is not a payment receipt."].join("\n");
-    const url = URL.createObjectURL(new Blob([text], { type: "text/plain;charset=utf-8" }));
+  async function downloadQrCode() {
+    if (!receipt || receipt.paymentStatus !== "paid") return;
+    const QRCode = (await import("qrcode")).default;
+    const payload = `BBC|EVENT:AALAP-ALOCHONA-2026-09-29|REG:${receipt.id}|REF:${receipt.reference}`;
+    const url = await QRCode.toDataURL(payload, { width: 960, margin: 2, errorCorrectionLevel: "M" });
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `${receipt.reference}.txt`;
+    anchor.download = `${receipt.reference}-qr.png`;
     anchor.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
   }
 
-  if (receipt) return <div className="registration-card success-card">
+  if (receipt && receipt.paymentStatus !== "paid") return <div className="registration-card payment-stage-card">
+    <span className="eyebrow">SECURE CHECKOUT</span>
+    <h2>Complete your payment</h2>
+    <p>Your details are ready. Your registration will be confirmed only after a successful payment.</p>
+    <div className="receipt-details"><span>PAYMENT REFERENCE</span><strong className="reference">{receipt.reference}</strong><div><span>Amount to pay</span><strong>{formatMoney(receipt.totalPaise)}</strong></div><div><span>Status</span><span className="unpaid-badge">Payment pending</span></div></div>
+    <PaymentCheckout autoStart registration={receipt} submissionId={submission.current?.id ?? ""} member={fields} onPaid={() => setReceipt((current) => current ? { ...current, paymentStatus: "paid" } : current)} />
+  </div>;
+
+  if (receipt?.paymentStatus === "paid") return <div className="registration-card success-card">
     <span className="success-icon"><Icon name="check" size={32} /></span>
-    <span className="eyebrow">SEE YOU AT AALAP ALOCHONA</span>
+    <span className="eyebrow">PAYMENT SUCCESSFUL</span>
     <h2 ref={confirmationHeading} tabIndex={-1}>You’re registered.</h2>
-    <p>Your details have been saved, {fields.memberName.trim().split(" ")[0]}. We look forward to the conversation.</p>
-    <div className="receipt-details"><span>REGISTRATION REFERENCE</span><strong className="reference">{receipt.reference}</strong><div><span>Total amount</span><strong>{formatMoney(receipt.totalPaise)}</strong></div><div><span>Payment status</span><span className="unpaid-badge">Unpaid</span></div></div>
+    <p>Payment received successfully, {fields.memberName.trim().split(" ")[0]}. Your event registration is now confirmed.</p>
+    <div className="receipt-details"><span>REGISTRATION REFERENCE</span><strong className="reference">{receipt.reference}</strong><div><span>Total amount</span><strong>{formatMoney(receipt.totalPaise)}</strong></div><div><span>Payment status</span><span className="paid-badge">Paid</span></div></div>
     {participantNames.length > 1 && <div className="confirmed-participants"><strong>Participants</strong><ol>{participantNames.map((name, index) => <li key={index}>{name.trim()}</li>)}</ol></div>}
-    <p className="payment-note">Registration is saved. You can now try the payment demo below.</p>
-    <PaymentCheckout registration={receipt} submissionId={submission.current?.id ?? ""} member={fields} />
-    <button className="submit-button registration-download" type="button" onClick={downloadReceipt}><Icon name="download" size={18} /> Download confirmation</button>
+    <button className="submit-button registration-download" type="button" onClick={() => void downloadQrCode()}><Icon name="download" size={18} /> Download QR code</button>
     <button className="new-registration" type="button" onClick={() => {
       setReceipt(null); setFields({ memberName: "", email: "", phone: "", billingDetails: "" });
       setAdditionalParticipantNames([]); setParticipationQuantity(1); setStandeeQuantity(0); setPresentationSelected(false); submission.current = null;
@@ -170,8 +168,8 @@ export function RegistrationForm() {
 
         <div className="total-row"><div><span>Total amount</span><small>{participationQuantity} {participationQuantity === 1 ? "participant" : "participants"}{standeeQuantity > 0 ? ` · ${standeeQuantity} ${standeeQuantity === 1 ? "standee" : "standees"}` : ""}{presentationSelected ? " · Presentation" : ""}</small></div><output aria-label="Total amount" aria-live="polite">{formatMoney(total)}</output></div>
         {errorMessage && <div className="error-banner" role="alert">{errorMessage}</div>}
-        <button className="submit-button" type="submit" disabled={isSubmitting}>{isSubmitting ? <><span className="spinner" /> Saving registration…</> : <>Save & continue to payment <Icon name="arrow" size={19} /></>}</button>
-        <p className="submit-note">Your registration is saved first. Try a demo payment in the next step.</p>
+        <button className="submit-button" type="submit" disabled={isSubmitting}>{isSubmitting ? <><span className="spinner" /> Preparing payment…</> : <>Proceed to payment <Icon name="arrow" size={19} /></>}</button>
+        <p className="submit-note">Payment opens directly. Your registration is confirmed only after successful payment.</p>
       </fieldset>
     </form>
   </div>;

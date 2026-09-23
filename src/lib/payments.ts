@@ -94,6 +94,9 @@ async function createOrder(body: unknown): Promise<{ order: CheckoutOrder }> {
     let attempt = (await client.query<AttemptRow>(
       "SELECT * FROM public.bbc_payment_attempts WHERE registration_id = $1 AND mode = $2 AND status IN ('created', 'succeeded')",
       [data.registrationId, config.mode])).rows[0];
+    if (attempt?.status === "succeeded") {
+      await client.query("UPDATE public.bbc_event_registrations SET payment_status = 'paid' WHERE id = $1", [data.registrationId]);
+    }
     if (!attempt) {
       const id = randomUUID();
       let orderId = `demo_order_${id.replaceAll("-", "")}`;
@@ -158,13 +161,18 @@ async function completePayment(body: unknown): Promise<{ payment: PaymentAttempt
       if (row.status !== status || row.method !== method || row.provider_payment_id !== paymentId) {
         throw new PaymentError("This attempt already has a different result. Start a new checkout to retry.", 409);
       }
+      if (row.status === "succeeded") {
+        await client.query("UPDATE public.bbc_event_registrations SET payment_status = 'paid' WHERE id = $1", [data.registrationId]);
+      }
       await client.query("COMMIT");
       return { payment: serialize(row) };
     }
     const completed = (await client.query<AttemptRow>(
       `UPDATE public.bbc_payment_attempts SET status = $2, method = $3, provider_payment_id = $4, completed_at = NOW()
        WHERE id = $1 RETURNING *`, [row.id, status, method, paymentId])).rows[0];
-    // Demo and Razorpay Test Mode never change the registration's real payment status.
+    if (status === "succeeded") {
+      await client.query("UPDATE public.bbc_event_registrations SET payment_status = 'paid' WHERE id = $1", [data.registrationId]);
+    }
     await client.query("COMMIT");
     return { payment: serialize(completed) };
   } catch (error) { await client.query("ROLLBACK"); throw error; }

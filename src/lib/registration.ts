@@ -26,6 +26,7 @@ export const registrationSchema = z.object({
   ),
   participationQuantity: z.number().int().min(1).max(LIMITS.participation),
   standeeQuantity: z.number().int().min(0).max(LIMITS.standee),
+  lunchDinnerSelected: z.boolean().default(false),
   presentationSelected: z.boolean(),
   additionalParticipantNames: z.array(
     z.string().trim().min(2, "Enter the participant’s full name.").max(120, "Use 120 characters or fewer."),

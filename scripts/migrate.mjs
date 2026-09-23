@@ -10,7 +10,13 @@ try {
   await client.query("BEGIN");
   const directory = new URL("../db/", import.meta.url);
   for (const file of (await readdir(directory)).filter((name) => /^\d+.*\.sql$/.test(name)).sort()) {
-    await client.query(await readFile(new URL(file, directory), "utf8"));
+    try {
+      await client.query(await readFile(new URL(file, directory), "utf8"));
+      console.log(`Applied migration: ${file}`);
+    } catch (error) {
+      console.error(`Migration failed: ${file}`, error.code ?? "SQL_ERROR", error.message ?? "");
+      throw error;
+    }
   }
   await client.query("COMMIT");
   console.log("Database connected. Registration and payment demo tables are ready.");

@@ -26,12 +26,12 @@ npm start
 
 `npm run db:migrate` applies the SQL files in `db/` in order, within a transaction. It creates `public.bbc_event_registrations`, `public.bbc_payment_attempts`, and their indexes. It does not alter unrelated tables. The migrations can be run again safely.
 
-Each registration stores all form fields, the event name/date, unit prices and total in integer paise, INR currency, a unique reference, submission key, payment status, and creation timestamp. The server uses parameterized queries, validates inputs, calculates authoritative totals, and prevents duplicate inserts when the same submission is retried. Database connections use verified TLS and channel binding.
+Each registration stores all form fields, the event name/date, unit prices and total in integer paise, INR currency, a unique reference, submission key, payment status, and creation timestamp. Phone numbers are stored in E.164 format in one column, for example `+917980729034`. The server uses parameterized queries, validates inputs, calculates authoritative totals, and prevents duplicate inserts when the same submission is retried. Database connections use verified TLS and channel binding.
 
 Use the Neon SQL editor to view registrations:
 
 ```sql
-SELECT reference, member_name, participant_names, email, phone_country_code, phone,
+SELECT reference, member_name, participant_names, email, phone,
        billing_details, participation_quantity, standee_quantity,
        presentation_selected, total_paise / 100.0 AS total_inr,
        payment_status, created_at
@@ -47,7 +47,7 @@ ORDER BY created_at DESC;
 - Standee placement: ₹2,950 per standee; 0–10 per registration.
 - Company presentation: ₹35,400 for a 20-minute slot.
 
-Prices come from the supplied screenshot and are configured in `src/lib/registration.ts`. The quantity limits are configurable application defaults. The form saves registrations and offers a downloadable confirmation and a **Razorpay payment demo**. The default simulator supports UPI, card, netbanking, success, failure, cancellation, and retries without collecting money. Official Razorpay Test Mode can be enabled with your test keys. Demo/test outcomes are stored separately; real payment status remains `unpaid`. See [PAYMENTS.md](PAYMENTS.md) for configuration, database details, and test commands.
+Prices come from the supplied screenshot and are configured in `src/lib/registration.ts`. The quantity limits are configurable application defaults. The form stores the pending registration data, opens payment directly, and shows the registration confirmation only after a successful payment. Successful demo/test payments mark the registration `paid` and enable a downloadable QR code. See [PAYMENTS.md](PAYMENTS.md) for configuration, database details, and test commands.
 
 ## Integration verification
 

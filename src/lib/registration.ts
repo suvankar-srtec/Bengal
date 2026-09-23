@@ -49,7 +49,7 @@ export type RegistrationReceipt = {
   id: string;
   reference: string;
   totalPaise: number;
-  paymentStatus: "unpaid";
+  paymentStatus: "unpaid" | "paid" | "refunded";
 };
 
 export function calculateTotal(input: Pick<RegistrationInput, "participationQuantity" | "standeeQuantity" | "presentationSelected">) {

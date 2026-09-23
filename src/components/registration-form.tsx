@@ -101,14 +101,17 @@ export function RegistrationForm() {
     }
   }
 
-  async function downloadQrCode() {
+  async function downloadParticipantQr(participantIndex: number, participantName: string) {
     if (!receipt || receipt.paymentStatus !== "paid") return;
     const QRCode = (await import("qrcode")).default;
-    const payload = `BBC|EVENT:AALAP-ALOCHONA-2026-09-29|REG:${receipt.id}|REF:${receipt.reference}`;
+    const participantNumber = participantIndex + 1;
+    const passId = `${receipt.reference}-P${participantNumber}`;
+    const payload = `BBC|EVENT:AALAP-ALOCHONA-2026-09-29|REG:${receipt.id}|REF:${receipt.reference}|PARTICIPANT:${participantNumber}|PASS:${passId}`;
     const url = await QRCode.toDataURL(payload, { width: 960, margin: 2, errorCorrectionLevel: "M" });
+    const safeName = participantName.trim().replace(/[^a-zA-Z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || `participant-${participantNumber}`;
     const anchor = document.createElement("a");
     anchor.href = url;
-    anchor.download = `${receipt.reference}-qr.png`;
+    anchor.download = `${receipt.reference}-P${participantNumber}-${safeName}.png`;
     anchor.click();
   }
 
@@ -125,8 +128,16 @@ export function RegistrationForm() {
     <h2 ref={confirmationHeading} tabIndex={-1}>You’re registered.</h2>
     <p>Payment received successfully, {fields.memberName.trim().split(" ")[0]}. Your event registration is now confirmed.</p>
     <div className="receipt-details"><span>REGISTRATION REFERENCE</span><strong className="reference">{receipt.reference}</strong><div><span>Total amount</span><strong>{formatMoney(receipt.totalPaise)}</strong></div><div><span>Payment status</span><span className="paid-badge">Paid</span></div></div>
-    {participantNames.length > 1 && <div className="confirmed-participants"><strong>Participants</strong><ol>{participantNames.map((name, index) => <li key={index}>{name.trim()}</li>)}</ol></div>}
-    <button className="submit-button registration-download" type="button" onClick={() => void downloadQrCode()}><Icon name="download" size={18} /> Download QR code</button>
+    <div className="participant-passes">
+      <strong>Participant QR passes</strong>
+      <p>Each participant has a separate QR pass.</p>
+      <div className="participant-pass-list">
+        {participantNames.map((name, index) => <div className="participant-pass-row" key={`${index}-${name}`}>
+          <div><span>Participant {index + 1}</span><strong>{name.trim()}</strong></div>
+          <button type="button" onClick={() => void downloadParticipantQr(index, name)}><Icon name="download" size={16} /> Download QR</button>
+        </div>)}
+      </div>
+    </div>
     <button className="new-registration" type="button" onClick={() => {
       setReceipt(null); setFields({ memberName: "", email: "", phone: "", billingDetails: "" });
       setAdditionalParticipantNames([]); setParticipationQuantity(1); setStandeeQuantity(0); setPresentationSelected(false); submission.current = null;

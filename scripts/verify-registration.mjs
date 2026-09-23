@@ -48,8 +48,7 @@ try {
   assert.equal(row.member_name, payload.memberName);
   assert.deepEqual(row.participant_names, [payload.memberName, "Second Test Participant"]);
   assert.equal(row.email, email);
-  assert.equal(row.phone, payload.phone);
-  assert.equal(row.phone_country_code, "+91");
+  assert.equal(row.phone, `+91${payload.phone}`);
   assert.equal(row.billing_details, payload.billingDetails);
   assert.equal(row.participation_quantity, 2);
   assert.equal(row.standee_quantity, 1);

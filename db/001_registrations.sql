@@ -12,6 +12,7 @@ CREATE TABLE IF NOT EXISTS public.bbc_event_registrations (
   billing_details VARCHAR(15) NOT NULL,
   participation_quantity INTEGER NOT NULL CHECK (participation_quantity BETWEEN 1 AND 20),
   standee_quantity INTEGER NOT NULL CHECK (standee_quantity BETWEEN 0 AND 10),
+  lunch_dinner_selected BOOLEAN NOT NULL DEFAULT FALSE,
   presentation_selected BOOLEAN NOT NULL DEFAULT FALSE,
   participation_unit_paise INTEGER NOT NULL CHECK (participation_unit_paise > 0),
   standee_unit_paise INTEGER NOT NULL CHECK (standee_unit_paise > 0),

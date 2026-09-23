@@ -19,12 +19,17 @@ export function RegistrationForm() {
   const [participationQuantity, setParticipationQuantity] = useState(1);
   const [additionalParticipantNames, setAdditionalParticipantNames] = useState<string[]>([]);
   const [standeeQuantity, setStandeeQuantity] = useState(0);
+  const [lunchDinnerSelected, setLunchDinnerSelected] = useState(false);
   const [presentationSelected, setPresentationSelected] = useState(false);
   const [fields, setFields] = useState({ memberName: "", email: "", phone: "", billingDetails: "" });
   const [errors, setErrors] = useState<FieldErrors>({});
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [receipt, setReceipt] = useState<RegistrationReceipt | null>(null);
+  const [qrPasses, setQrPasses] = useState<Array<{ participantNumber: number; participantName: string; passId: string; url: string }>>([]);
+  const [qrGenerating, setQrGenerating] = useState(false);
+  const [qrError, setQrError] = useState("");
+  const [qrRetryKey, setQrRetryKey] = useState(0);
   const submission = useRef<{ key: string; id: string } | null>(null);
   const inFlight = useRef(false);
   const confirmationHeading = useRef<HTMLHeadingElement>(null);
@@ -32,10 +37,43 @@ export function RegistrationForm() {
     { length: participationQuantity - 1 }, (_, index) => additionalParticipantNames[index] ?? "",
   )];
   const total = calculateTotal({ participationQuantity, standeeQuantity, presentationSelected });
+  const participantKey = participantNames.map((name) => name.trim()).join("\u001f");
 
   useEffect(() => {
-    if (receipt) confirmationHeading.current?.focus();
-  }, [receipt]);
+    if (receipt?.paymentStatus === "paid") confirmationHeading.current?.focus();
+  }, [receipt?.paymentStatus]);
+
+  useEffect(() => {
+    if (!receipt || receipt.paymentStatus !== "paid") {
+      setQrPasses([]);
+      setQrGenerating(false);
+      setQrError("");
+      return;
+    }
+
+    let cancelled = false;
+    setQrGenerating(true);
+    setQrPasses([]);
+    setQrError("");
+
+    void (async () => {
+      const QRCode = (await import("qrcode")).default;
+      const passes = await Promise.all(participantNames.map(async (participantName, index) => {
+        const participantNumber = index + 1;
+        const passId = `${receipt.reference}-P${participantNumber}`;
+        const payload = `BBC|EVENT:AALAP-ALOCHONA-2026-09-29|REG:${receipt.id}|REF:${receipt.reference}|PARTICIPANT:${participantNumber}|PASS:${passId}`;
+        const url = await QRCode.toDataURL(payload, { width: 720, margin: 2, errorCorrectionLevel: "M" });
+        return { participantNumber, participantName: participantName.trim(), passId, url };
+      }));
+      if (!cancelled) setQrPasses(passes);
+    })().catch(() => {
+      if (!cancelled) setQrError("We couldn’t generate the QR passes. Please retry.");
+    }).finally(() => {
+      if (!cancelled) setQrGenerating(false);
+    });
+
+    return () => { cancelled = true; };
+  }, [receipt?.id, receipt?.reference, receipt?.paymentStatus, participantKey, qrRetryKey]);
 
   function updateField(field: keyof typeof fields, value: string) {
     setFields((current) => ({ ...current, [field]: value }));
@@ -63,7 +101,7 @@ export function RegistrationForm() {
     event.preventDefault();
     if (inFlight.current) return;
     setErrorMessage("");
-    const values = { ...fields, email: fields.email.trim(), participationQuantity, standeeQuantity, presentationSelected, additionalParticipantNames: participantNames.slice(1) };
+    const values = { ...fields, email: fields.email.trim(), participationQuantity, standeeQuantity, lunchDinnerSelected, presentationSelected, additionalParticipantNames: participantNames.slice(1) };
     const key = JSON.stringify(values);
     if (!submission.current || submission.current.key !== key) submission.current = { key, id: crypto.randomUUID() };
     const parsed = registrationSchema.safeParse({ ...values, submissionId: submission.current.id });
@@ -101,17 +139,11 @@ export function RegistrationForm() {
     }
   }
 
-  async function downloadParticipantQr(participantIndex: number, participantName: string) {
-    if (!receipt || receipt.paymentStatus !== "paid") return;
-    const QRCode = (await import("qrcode")).default;
-    const participantNumber = participantIndex + 1;
-    const passId = `${receipt.reference}-P${participantNumber}`;
-    const payload = `BBC|EVENT:AALAP-ALOCHONA-2026-09-29|REG:${receipt.id}|REF:${receipt.reference}|PARTICIPANT:${participantNumber}|PASS:${passId}`;
-    const url = await QRCode.toDataURL(payload, { width: 960, margin: 2, errorCorrectionLevel: "M" });
-    const safeName = participantName.trim().replace(/[^a-zA-Z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || `participant-${participantNumber}`;
+  function downloadParticipantQr(pass: { participantNumber: number; participantName: string; passId: string; url: string }) {
+    const safeName = pass.participantName.replace(/[^a-zA-Z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || `participant-${pass.participantNumber}`;
     const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = `${receipt.reference}-P${participantNumber}-${safeName}.png`;
+    anchor.href = pass.url;
+    anchor.download = `${receipt?.reference ?? "BBC"}-P${pass.participantNumber}-${safeName}.png`;
     anchor.click();
   }
 
@@ -122,25 +154,41 @@ export function RegistrationForm() {
     <PaymentCheckout autoStart registration={receipt} submissionId={submission.current?.id ?? ""} member={fields} onPaid={() => setReceipt((current) => current ? { ...current, paymentStatus: "paid" } : current)} />
   </div>;
 
-  if (receipt?.paymentStatus === "paid") return <div className="registration-card success-card">
-    <span className="success-icon"><Icon name="check" size={32} /></span>
+  if (receipt?.paymentStatus === "paid" && (qrGenerating || (!qrError && qrPasses.length !== participantNames.length))) return <div className="registration-card qr-generating-card" role="status" aria-live="polite">
+    <span className="qr-loader" aria-hidden="true" />
     <span className="eyebrow">PAYMENT SUCCESSFUL</span>
-    <h2 ref={confirmationHeading} tabIndex={-1}>You’re registered.</h2>
-    <p>Payment received successfully, {fields.memberName.trim().split(" ")[0]}. Your event registration is now confirmed.</p>
-    <div className="receipt-details"><span>REGISTRATION REFERENCE</span><strong className="reference">{receipt.reference}</strong><div><span>Total amount</span><strong>{formatMoney(receipt.totalPaise)}</strong></div><div><span>Payment status</span><span className="paid-badge">Paid</span></div></div>
-    <div className="participant-passes">
-      <strong>Participant QR passes</strong>
-      <p>Each participant has a separate QR pass.</p>
-      <div className="participant-pass-list">
-        {participantNames.map((name, index) => <div className="participant-pass-row" key={`${index}-${name}`}>
-          <div><span>Participant {index + 1}</span><strong>{name.trim()}</strong></div>
-          <button type="button" onClick={() => void downloadParticipantQr(index, name)}><Icon name="download" size={16} /> Download QR</button>
-        </div>)}
-      </div>
+    <h2>Generating QR passes…</h2>
+    <p>Please wait while we create one secure QR pass for each participant.</p>
+    <div className="qr-generation-count">{participantNames.length} {participantNames.length === 1 ? "pass" : "passes"} being generated</div>
+  </div>;
+
+  if (receipt?.paymentStatus === "paid" && qrError) return <div className="registration-card qr-generating-card">
+    <span className="eyebrow">PAYMENT SUCCESSFUL</span>
+    <h2>QR generation needs a retry</h2>
+    <div className="error-banner" role="alert">{qrError}</div>
+    <button className="submit-button" type="button" onClick={() => setQrRetryKey((value) => value + 1)}>Generate QR passes again</button>
+  </div>;
+
+  if (receipt?.paymentStatus === "paid") return <div className="registration-card success-card qr-ready-card">
+    <span className="success-icon"><Icon name="check" size={32} /></span>
+    <span className="eyebrow">QR PASSES READY</span>
+    <h2 ref={confirmationHeading} tabIndex={-1}>Your passes are ready.</h2>
+    <p>Each participant has a separate QR pass. Download the correct pass for each person.</p>
+    <div className="qr-pass-grid">
+      {qrPasses.map((pass) => <article className="qr-pass-card" key={pass.passId}>
+        <div className="qr-pass-image-wrap"><img src={pass.url} alt={`QR pass for ${pass.participantName}`} /></div>
+        <div className="qr-pass-meta">
+          <span>Participant {pass.participantNumber}</span>
+          <strong>{pass.participantName}</strong>
+          <small>{pass.passId}</small>
+        </div>
+        <button type="button" onClick={() => downloadParticipantQr(pass)}><Icon name="download" size={16} /> Download QR</button>
+      </article>)}
     </div>
     <button className="new-registration" type="button" onClick={() => {
       setReceipt(null); setFields({ memberName: "", email: "", phone: "", billingDetails: "" });
-      setAdditionalParticipantNames([]); setParticipationQuantity(1); setStandeeQuantity(0); setPresentationSelected(false); submission.current = null;
+      setAdditionalParticipantNames([]); setParticipationQuantity(1); setStandeeQuantity(0); setLunchDinnerSelected(false); setPresentationSelected(false);
+      setQrPasses([]); setQrError(""); submission.current = null;
     }}>Register another member <Icon name="arrow" size={16} /></button>
   </div>;
 
@@ -171,12 +219,13 @@ export function RegistrationForm() {
         <div className="fee-options">
           <div className="fee-row"><div><span className="fee-label">Participation fees <span className="required">*</span></span><span className="fee-price">{formatMoney(PRICES.participation)} <small>/ person</small></span></div><Quantity label="Participation" value={participationQuantity} minimum={1} maximum={LIMITS.participation} onChange={updateParticipationQuantity} /></div>
           <div className="fee-row"><div><span className="fee-label">Standee placement <span className="optional">Optional</span></span><span className="fee-price">{formatMoney(PRICES.standee)} <small>/ standee</small></span></div><Quantity label="Standee" value={standeeQuantity} minimum={0} maximum={LIMITS.standee} onChange={setStandeeQuantity} /></div>
+          <label className={`fee-row meal-option${lunchDinnerSelected ? " selected" : ""}`} htmlFor="lunchDinnerSelected"><div><span className="fee-label">Lunch &amp; Dinner <span className="optional">Optional</span></span><span className="fee-description">Include meals with your registration</span></div><input id="lunchDinnerSelected" name="lunchDinnerSelected" type="checkbox" checked={lunchDinnerSelected} onChange={(event) => setLunchDinnerSelected(event.target.checked)} /></label>
           <label className={`fee-row presentation-option${presentationSelected ? " selected" : ""}`} htmlFor="presentationSelected"><div><span className="fee-label">Company presentation</span><span className="fee-description">20-minute presentation slot</span><span className="fee-price">{formatMoney(PRICES.presentation)}</span></div><input id="presentationSelected" name="presentationSelected" type="checkbox" checked={presentationSelected} onChange={(event) => setPresentationSelected(event.target.checked)} /></label>
         </div>
 
         {participationQuantity > 1 && <p className="participant-count-hint" role="status">Add all {participationQuantity} participant names in Your details above.</p>}
 
-        <div className="total-row"><div><span>Total amount</span><small>{participationQuantity} {participationQuantity === 1 ? "participant" : "participants"}{standeeQuantity > 0 ? ` · ${standeeQuantity} ${standeeQuantity === 1 ? "standee" : "standees"}` : ""}{presentationSelected ? " · Presentation" : ""}</small></div><output aria-label="Total amount" aria-live="polite">{formatMoney(total)}</output></div>
+        <div className="total-row"><div><span>Total amount</span><small>{participationQuantity} {participationQuantity === 1 ? "participant" : "participants"}{standeeQuantity > 0 ? ` · ${standeeQuantity} ${standeeQuantity === 1 ? "standee" : "standees"}` : ""}{lunchDinnerSelected ? " · Lunch & Dinner" : ""}{presentationSelected ? " · Presentation" : ""}</small></div><output aria-label="Total amount" aria-live="polite">{formatMoney(total)}</output></div>
         {errorMessage && <div className="error-banner" role="alert">{errorMessage}</div>}
         <button className="submit-button" type="submit" disabled={isSubmitting}>{isSubmitting ? <><span className="spinner" /> Preparing payment…</> : <>Proceed to payment <Icon name="arrow" size={19} /></>}</button>
         <p className="submit-note">Payment opens directly. Your registration is confirmed only after successful payment.</p>

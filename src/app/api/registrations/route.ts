@@ -77,14 +77,14 @@ export async function POST(request: Request) {
     }>(`
       INSERT INTO public.bbc_event_registrations (
         id, submission_id, request_hash, reference, event_id, event_name, event_date,
-        member_name, email, phone_country_code, phone, billing_details,
+        member_name, email, phone, billing_details,
         participation_quantity, standee_quantity, presentation_selected,
         participation_unit_paise, standee_unit_paise, presentation_unit_paise, total_paise, participant_names
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, '+91', $10, $11, $12, $13, $14, $15, $16, $17, $18, $19)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)
       ON CONFLICT (submission_id) DO NOTHING
       RETURNING id, reference, total_paise, payment_status, request_hash
     `, [id, data.submissionId, fingerprint, reference, EVENT.id, EVENT.name, EVENT.date,
-      data.memberName, data.email, data.phone, data.billingDetails,
+      data.memberName, data.email, `+91${data.phone}`, data.billingDetails,
       data.participationQuantity, data.standeeQuantity, data.presentationSelected, PRICES.participation, PRICES.standee, PRICES.presentation, totalPaise, participantNames]);
 
     const record = inserted.rows[0] ?? (await database.query<{

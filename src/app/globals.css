@@ -123,6 +123,7 @@ input[type=checkbox]{height:19px;width:19px;accent-color:var(--coral);cursor:poi
 .receipt-details>.reference{font-size:11px;overflow-wrap:anywhere;display:block;margin:8px 0 20px;font-family:monospace;line-height:1.7}
 .receipt-details>div{display:flex;justify-content:space-between;gap:12px;font-size:12px;margin-top:15px;align-items:center}
 .unpaid-badge{background:#fff0d9;color:#956725;font-size:10px;padding:4px 8px;border-radius:5px}
+.paid-badge{background:#e8f5ed;color:#2d6d55;font-size:10px;padding:4px 8px;border-radius:5px;font-weight:650}
 .success-card>.payment-note{font-size:11px;margin:20px 0}
 .new-registration{display:flex;align-items:center;justify-content:center;gap:8px;background:none;border:0;width:100%;padding:20px 0 0;color:var(--muted);font-size:11px}
 @media(min-width:1440px){.page-shell{padding-top:39px}.event-layout{gap:93px}.event-info{padding-top:34px}.breadcrumb{margin-bottom:46px}}
@@ -135,3 +136,10 @@ input[type=checkbox]{height:19px;width:19px;accent-color:var(--coral);cursor:poi
 .confirmed-participants{text-align:left;margin:18px 0;padding:16px 19px;border:1px solid var(--line);border-radius:8px;background:var(--paper);font-size:12px}
 .confirmed-participants>strong{font-size:11px}
 .confirmed-participants ol{margin:9px 0 0;padding-left:20px;color:var(--muted);line-height:1.9;overflow-wrap:anywhere}
+
+.payment-stage-card{text-align:center;padding-top:36px;padding-bottom:30px}
+.payment-stage-card>.eyebrow{justify-content:center;color:#7e625b}
+.payment-stage-card>h2{font-size:29px;letter-spacing:-1px;margin:10px 0 12px}
+.payment-stage-card>p{font-size:12px;line-height:1.8;color:var(--muted);margin:0 0 20px}
+.payment-stage-card .receipt-details{text-align:left;margin-top:18px}
+.payment-stage-card .payment-panel{text-align:left;margin-top:20px}

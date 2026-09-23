@@ -114,9 +114,8 @@ export function RegistrationForm() {
 
   if (receipt && receipt.paymentStatus !== "paid") return <div className="registration-card payment-stage-card">
     <span className="eyebrow">SECURE CHECKOUT</span>
-    <h2>Complete your payment</h2>
-    <p>Your details are ready. Your registration will be confirmed only after a successful payment.</p>
-    <div className="receipt-details"><span>PAYMENT REFERENCE</span><strong className="reference">{receipt.reference}</strong><div><span>Amount to pay</span><strong>{formatMoney(receipt.totalPaise)}</strong></div><div><span>Status</span><span className="unpaid-badge">Payment pending</span></div></div>
+    <h2>Complete payment</h2>
+    <p>Complete payment to confirm your event registration.</p>
     <PaymentCheckout autoStart registration={receipt} submissionId={submission.current?.id ?? ""} member={fields} onPaid={() => setReceipt((current) => current ? { ...current, paymentStatus: "paid" } : current)} />
   </div>;
 

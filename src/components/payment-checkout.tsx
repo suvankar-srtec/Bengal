@@ -53,10 +53,12 @@ const methods: { id: DemoMethod; label: string; symbol: string }[] = [
   { id: "netbanking", label: "Netbanking", symbol: "⌂" },
 ];
 
-export function PaymentCheckout({ registration, submissionId, member }: {
+export function PaymentCheckout({ registration, submissionId, member, onPaid, autoStart = false }: {
   registration: RegistrationReceipt;
   submissionId: string;
   member: { memberName: string; email: string; phone: string };
+  onPaid: () => void;
+  autoStart?: boolean;
 }) {
   const [order, setOrder] = useState<CheckoutOrder | null>(null);
   const [result, setResult] = useState<PaymentAttempt | null>(null);
@@ -67,6 +69,7 @@ export function PaymentCheckout({ registration, submissionId, member }: {
   const [notice, setNotice] = useState("");
   const [pendingProof, setPendingProof] = useState<RazorpayProof | null>(null);
   const inFlight = useRef(false);
+  const autoStarted = useRef(false);
   const dialog = useRef<HTMLDialogElement>(null);
   const access = { registrationId: registration.id, submissionId };
 
@@ -76,6 +79,12 @@ export function PaymentCheckout({ registration, submissionId, member }: {
     if (!open && element?.open) element.close();
   }, [open]);
 
+  useEffect(() => {
+    if (!autoStart || autoStarted.current) return;
+    autoStarted.current = true;
+    void start();
+  }, [autoStart]);
+
   async function verifyTestPayment(checkoutOrder: CheckoutOrder, proof: RazorpayProof) {
     setBusy(true);
     inFlight.current = true;
@@ -84,6 +93,7 @@ export function PaymentCheckout({ registration, submissionId, member }: {
     try {
       const response = await api<{ payment: PaymentAttempt }>("complete", { ...access, attemptId: checkoutOrder.id, ...proof });
       setResult(response.payment);
+      if (response.payment.status === "succeeded") onPaid();
       setPendingProof(null);
       setNotice("");
     } catch (failure) { setError(errorText(failure)); }
@@ -101,7 +111,7 @@ export function PaymentCheckout({ registration, submissionId, member }: {
       const response = await api<{ order: CheckoutOrder }>("order", access);
       const checkoutOrder = response.order;
       setOrder(checkoutOrder);
-      if (checkoutOrder.status === "succeeded") { setResult(checkoutOrder); return; }
+      if (checkoutOrder.status === "succeeded") { setResult(checkoutOrder); onPaid(); return; }
       if (checkoutOrder.mode === "demo") { setOpen(true); return; }
 
       await loadRazorpay();
@@ -114,7 +124,7 @@ export function PaymentCheckout({ registration, submissionId, member }: {
         theme: { color: "#c74c40" },
         handler: (proof) => { settled = true; void verifyTestPayment(checkoutOrder, proof); },
         modal: { ondismiss: () => {
-          if (!settled) { inFlight.current = false; setBusy(false); setNotice("Test checkout closed. Your registration is saved; you can reopen checkout."); }
+          if (!settled) { inFlight.current = false; setBusy(false); setNotice("Checkout closed. Your details are saved; you can reopen payment."); }
         } },
       });
       checkout.on("payment.failed", () => setNotice("The test payment failed. Retry in checkout or close it to try later."));
@@ -132,6 +142,7 @@ export function PaymentCheckout({ registration, submissionId, member }: {
     try {
       const response = await api<{ payment: PaymentAttempt }>("complete", { ...access, attemptId: order.id, outcome, method });
       setResult(response.payment);
+      if (response.payment.status === "succeeded") onPaid();
       setOpen(false);
     } catch (failure) { setError(errorText(failure)); }
     finally { inFlight.current = false; setBusy(false); }
@@ -139,22 +150,22 @@ export function PaymentCheckout({ registration, submissionId, member }: {
 
   const completed = result?.status === "succeeded";
 
-  return <section className="payment-panel" aria-label="Payment demo">
-    <div className="payment-panel-heading"><strong>Razorpay payment demo</strong><span className="demo-pill">NO REAL MONEY</span></div>
-    <p>Try checkout with your registration total. Demo and test payments never charge real money.</p>
+  return <section className="payment-panel" aria-label="Payment checkout">
+    <div className="payment-panel-heading"><strong>Razorpay payment</strong><span className="demo-pill">TEST MODE</span></div>
+    <p>Complete payment for your selected event options. Test-mode payments never charge real money.</p>
     {completed ? <div className="payment-result payment-result-success" role="status">
       <span className="payment-result-title"><Icon name="check" size={18} /> {result.mode === "demo" ? "Demo payment successful" : "Razorpay test payment verified"}</span>
       <span>{formatMoney(result.amountPaise)} · {result.method?.toUpperCase()}</span>
       <code>{result.paymentId}</code>
       <small>{result.mode === "demo" ? "Simulated transaction saved. No money was charged." : "Test transaction verified and saved. No real money was charged."}</small>
     </div> : <>
-      {result?.status === "failed" && <p className="payment-feedback" role="status">Demo payment failed as requested. Your registration is saved. Try again to see a successful payment.</p>}
-      {result?.status === "cancelled" && <p className="payment-feedback" role="status">Checkout cancelled. Your registration is saved and you can retry.</p>}
+      {result?.status === "failed" && <p className="payment-feedback" role="status">Demo payment failed as requested. Your details are saved. Retry payment to confirm your registration.</p>}
+      {result?.status === "cancelled" && <p className="payment-feedback" role="status">Checkout cancelled. Your details are saved and you can retry payment.</p>}
       {notice && <p className="payment-feedback" role="status">{notice}</p>}
       {!open && error && <div className="error-banner" role="alert">{error}</div>}
       <button type="button" className="submit-button payment-launch" disabled={busy} onClick={() => {
         if (pendingProof && order) void verifyTestPayment(order, pendingProof); else void start();
-      }}>{busy ? <><span className="spinner" /> Please wait…</> : pendingProof ? "Retry test payment verification" : <>{result ? "Retry" : "Try"} payment · {formatMoney(registration.totalPaise)} <Icon name="arrow" size={16} /></>}</button>
+      }}>{busy ? <><span className="spinner" /> Please wait…</> : pendingProof ? "Retry test payment verification" : <>{result ? "Retry" : "Open"} payment · {formatMoney(registration.totalPaise)} <Icon name="arrow" size={16} /></>}</button>
     </>}
 
     <dialog className="checkout-dialog" ref={dialog} aria-labelledby="checkout-title" aria-describedby="checkout-description" onCancel={(event) => { event.preventDefault(); if (!busy) void finish("cancelled"); }}>

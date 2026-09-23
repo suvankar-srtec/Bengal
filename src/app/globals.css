@@ -143,3 +143,15 @@ input[type=checkbox]{height:19px;width:19px;accent-color:var(--coral);cursor:poi
 .payment-stage-card>p{font-size:12px;line-height:1.8;color:var(--muted);margin:0 0 20px}
 .payment-stage-card .receipt-details{text-align:left;margin-top:18px}
 .payment-stage-card .payment-panel{text-align:left;margin-top:20px}
+
+.participant-passes{text-align:left;margin:18px 0;padding:16px 18px;border:1px solid var(--line);border-radius:9px;background:var(--paper)}
+.participant-passes>strong{font-size:11px}
+.participant-passes>p{font-size:10px!important;color:var(--muted);margin:5px 0 13px!important;line-height:1.5!important}
+.participant-pass-list{display:flex;flex-direction:column;gap:9px}
+.participant-pass-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:11px 12px;background:white;border:1px solid var(--line);border-radius:7px}
+.participant-pass-row>div{min-width:0}
+.participant-pass-row>div>span{display:block;font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:.7px;margin-bottom:4px}
+.participant-pass-row>div>strong{display:block;font-size:12px;overflow-wrap:anywhere}
+.participant-pass-row>button{display:flex;align-items:center;justify-content:center;gap:6px;flex-shrink:0;border:1px solid #d9dfe3;background:white;color:var(--ink);border-radius:6px;padding:8px 10px;font-size:10px;font-weight:650}
+.participant-pass-row>button:hover{border-color:var(--coral);color:var(--coral);background:var(--soft-coral)}
+@media(max-width:420px){.participant-pass-row{align-items:stretch;flex-direction:column}.participant-pass-row>button{width:100%}}

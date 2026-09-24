@@ -4,6 +4,7 @@ import { ADMIN_SESSION_COOKIE, validAdminSession } from "@/lib/admin-auth";
 import { AdminLogoutButton } from "@/components/admin-logout-button";
 import { getDatabase } from "@/lib/db";
 import { BBC_LOGO_DATA_URL } from "@/lib/bbc-logo";
+import { DashboardEventCard } from "@/components/dashboard-event-card";
 
 export const dynamic = "force-dynamic";
 
@@ -93,11 +94,12 @@ export default async function DashboardPage() {
           <strong>Create Event</strong>
         </a>
 
-        {events.map((event) => <a className="dashboard-event-card" href={`/create-event?id=${event.id}`} key={event.id}>
-          <span className="dashboard-event-card-label">EVENT</span>
-          <strong>{event.title}</strong>
-          <span className="dashboard-event-created">Created {event.createdAt}</span>
-        </a>)}
+        {events.map((event) => <DashboardEventCard
+          key={event.id}
+          id={event.id}
+          title={event.title}
+          createdAt={event.createdAt}
+        />)}
       </section>
     </main>
   </div>;

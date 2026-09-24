@@ -6,4 +6,4 @@ ALTER TABLE public.bbc_event_registrations
 
 ALTER TABLE public.bbc_event_registrations
   ADD CONSTRAINT bbc_event_registrations_meal_choice_check
-  CHECK (meal_choice IS NULL OR meal_choice IN ('lunch', 'dinner'));
+  CHECK (meal_choice IS NULL OR meal_choice IN ('snacks', 'lunch', 'dinner'));

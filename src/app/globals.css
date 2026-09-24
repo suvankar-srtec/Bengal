@@ -311,3 +311,15 @@ input[type=checkbox]{height:19px;width:19px;accent-color:var(--coral);cursor:poi
 @media(max-width:520px){
   .participant-pass-preview img{max-height:300px}
 }
+
+.bbc-logo{display:block;object-fit:contain}
+.bbc-logo-login{width:180px;height:auto}
+.bbc-logo-sidebar{width:150px;height:auto}
+.bbc-logo-header{width:170px;height:auto}
+.admin-login-card-brand{margin-bottom:28px}
+.admin-sidebar-brand{justify-content:flex-start}
+.brand{display:flex;align-items:center;text-decoration:none}
+@media(max-width:760px){
+  .bbc-logo-header{width:145px}
+  .bbc-logo-sidebar{width:135px}
+}

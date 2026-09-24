@@ -8,16 +8,29 @@ import { getDatabase } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
 
-export default async function CreateEventPage() {
+export default async function CreateEventPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ id?: string }>;
+}) {
   const store = await cookies();
   if (!validAdminSession(store.get(ADMIN_SESSION_COOKIE)?.value)) redirect("/");
 
+  const params = await searchParams;
+  const eventId = Number(params.id);
   let content = DEFAULT_EVENT_CONTENT;
-  try {
-    const result = await getDatabase().query("SELECT * FROM public.bbc_event_content WHERE id = 1");
-    content = eventContentFromRow(result.rows[0]);
-  } catch {
-    // Defaults keep the editor usable if the database is temporarily unavailable.
+  let editingId: number | undefined;
+
+  if (Number.isInteger(eventId) && eventId > 0) {
+    try {
+      const result = await getDatabase().query("SELECT * FROM public.bbc_event_content WHERE id = $1", [eventId]);
+      if (result.rows[0]) {
+        content = eventContentFromRow(result.rows[0]);
+        editingId = eventId;
+      }
+    } catch {
+      // Defaults keep the editor usable if the database is temporarily unavailable.
+    }
   }
 
   return <div className="admin-dashboard-shell">
@@ -38,11 +51,11 @@ export default async function CreateEventPage() {
       <div className="event-editor-heading">
         <div>
           <span className="eyebrow">EVENT CONTENT</span>
-          <h1>Create / Edit Event</h1>
+          <h1>{editingId ? "Edit Event" : "Create Event"}</h1>
           <p>These fields control only the left side of the registration page. The registration form remains fixed.</p>
         </div>
       </div>
-      <EventContentEditor initial={content} />
+      <EventContentEditor initial={content} eventId={editingId} />
     </main>
   </div>;
 }

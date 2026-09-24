@@ -323,3 +323,16 @@ input[type=checkbox]{height:19px;width:19px;accent-color:var(--coral);cursor:poi
   .bbc-logo-header{width:145px}
   .bbc-logo-sidebar{width:135px}
 }
+
+.dashboard-event-card-shell{position:relative;width:180px;height:180px}
+.dashboard-event-card-shell .dashboard-event-card{width:100%;height:100%}
+.dashboard-event-menu{position:absolute;top:10px;right:10px;z-index:5}
+.dashboard-event-menu-trigger{width:32px;height:30px;border:0;border-radius:7px;background:transparent;color:var(--muted);display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;letter-spacing:1px;padding:0}
+.dashboard-event-menu-trigger:hover,.dashboard-event-menu-trigger[aria-expanded="true"]{background:#f3f5f6;color:var(--ink)}
+.dashboard-event-menu-popover{position:absolute;top:34px;right:0;width:112px;padding:5px;background:white;border:1px solid var(--line);border-radius:8px;box-shadow:0 10px 28px #172d4220;display:flex;flex-direction:column;z-index:10}
+.dashboard-event-menu-popover a,.dashboard-event-menu-popover button{width:100%;height:34px;border:0;border-radius:5px;background:white;text-align:left;padding:0 10px;font-size:11px;color:var(--ink);text-decoration:none;display:flex;align-items:center}
+.dashboard-event-menu-popover a:hover,.dashboard-event-menu-popover button:hover:not(:disabled){background:#f6f7f8}
+.dashboard-event-menu-popover .delete{color:#b23b32}
+.dashboard-event-menu-popover .delete:hover:not(:disabled){background:#fff1ee}
+.dashboard-event-menu-popover button:disabled{opacity:.55}
+@media(max-width:520px){.dashboard-event-card-shell{width:100%;height:150px}}

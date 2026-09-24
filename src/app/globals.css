@@ -227,3 +227,18 @@ input[type=checkbox]{height:19px;width:19px;accent-color:var(--coral);cursor:poi
   .admin-stat-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.admin-dashboard-header{align-items:flex-start;flex-direction:column}
 }
 @media(max-width:520px){.admin-stat-grid{grid-template-columns:1fr}.admin-dashboard-card{align-items:flex-start;flex-direction:column}.admin-login-card{padding:26px 21px}}
+
+/* Centered admin login */
+.admin-login-page{min-height:100vh;display:flex;align-items:center;justify-content:center;background:#f7f9fa;padding:28px}
+.admin-login-page .admin-login-panel{width:100%;min-height:0;display:flex;align-items:center;justify-content:center;padding:0;background:transparent}
+.admin-login-page .admin-login-card{width:min(420px,100%);padding:36px;border:1px solid var(--line);border-top:3px solid var(--coral);border-radius:14px;background:white;box-shadow:0 18px 48px #172d4212}
+.admin-login-card-brand{display:flex;align-items:center;justify-content:center;gap:13px;margin-bottom:30px}
+.admin-login-card-brand .brand-mark{font-size:44px;width:39px;height:42px}
+.admin-login-card-brand .brand-name{font-size:16px;letter-spacing:2.7px}
+.admin-login-card-brand .brand-name>span{font-size:7px;letter-spacing:1.8px}
+.admin-login-page .admin-login-card h2{margin:0 0 25px;text-align:center;font-size:24px;line-height:1.35;letter-spacing:-.5px;font-weight:750}
+@media(max-width:520px){
+  .admin-login-page{padding:18px}
+  .admin-login-page .admin-login-card{padding:28px 22px}
+  .admin-login-page .admin-login-card h2{font-size:22px}
+}

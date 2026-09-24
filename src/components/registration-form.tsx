@@ -15,6 +15,102 @@ function Quantity({ label, value, minimum, maximum, onChange }: {
   </div>;
 }
 
+function loadPassImage(src: string) {
+  return new Promise<HTMLImageElement>((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => resolve(image);
+    image.onerror = reject;
+    image.src = src;
+  });
+}
+
+function fitPassText(context: CanvasRenderingContext2D, text: string, maxWidth: number, initialSize: number, minimumSize = 24) {
+  let size = initialSize;
+  while (size > minimumSize) {
+    context.font = `700 ${size}px "Segoe UI", Arial, sans-serif`;
+    if (context.measureText(text).width <= maxWidth) break;
+    size -= 2;
+  }
+  return size;
+}
+
+async function createParticipantPassImage(input: {
+  qrUrl: string;
+  participantName: string;
+  participantNumber: number;
+  passId: string;
+  mealLabel: string;
+}) {
+  const canvas = document.createElement("canvas");
+  canvas.width = 900;
+  canvas.height = 1250;
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Canvas is not available.");
+
+  context.fillStyle = "#ffffff";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+
+  context.fillStyle = "#c74c40";
+  context.fillRect(0, 0, canvas.width, 16);
+
+  context.fillStyle = "#182f46";
+  context.font = '700 28px "Segoe UI", Arial, sans-serif';
+  context.fillText("BENGAL BUSINESS COUNCIL", 70, 85);
+
+  context.fillStyle = "#c74c40";
+  context.font = '700 18px "Segoe UI", Arial, sans-serif';
+  context.fillText("AALAP ALOCHONA · EVENT PASS", 70, 127);
+
+  context.strokeStyle = "#e5e8ea";
+  context.lineWidth = 2;
+  context.beginPath();
+  context.moveTo(70, 160);
+  context.lineTo(830, 160);
+  context.stroke();
+
+  context.fillStyle = "#626f7b";
+  context.font = '600 17px "Segoe UI", Arial, sans-serif';
+  context.fillText(`PARTICIPANT ${input.participantNumber}`, 70, 220);
+
+  const nameSize = fitPassText(context, input.participantName, 760, 48);
+  context.font = `700 ${nameSize}px "Segoe UI", Arial, sans-serif`;
+  context.fillStyle = "#182f46";
+  context.fillText(input.participantName, 70, 278);
+
+  context.fillStyle = "#f8f9fa";
+  context.fillRect(70, 318, 760, 86);
+  context.fillStyle = "#626f7b";
+  context.font = '600 15px "Segoe UI", Arial, sans-serif';
+  context.fillText("MEAL PREFERENCE", 95, 349);
+  context.fillStyle = "#182f46";
+  context.font = '700 25px "Segoe UI", Arial, sans-serif';
+  context.fillText(input.mealLabel, 95, 383);
+
+  const qrImage = await loadPassImage(input.qrUrl);
+  context.fillStyle = "#ffffff";
+  context.fillRect(150, 445, 600, 600);
+  context.drawImage(qrImage, 180, 475, 540, 540);
+
+  context.fillStyle = "#626f7b";
+  context.font = '600 14px "Segoe UI", Arial, sans-serif';
+  context.textAlign = "center";
+  context.fillText("SCAN THIS PASS AT ENTRY", 450, 1078);
+
+  context.fillStyle = "#182f46";
+  context.font = '700 18px "Courier New", monospace';
+  context.fillText(input.passId, 450, 1120);
+
+  context.fillStyle = "#626f7b";
+  context.font = '500 15px "Segoe UI", Arial, sans-serif';
+  context.fillText("29 September 2026 · Bengal Business Council", 450, 1174);
+
+  context.fillStyle = "#c74c40";
+  context.font = '700 14px "Segoe UI", Arial, sans-serif';
+  context.fillText("INDIVIDUAL PASS · NON-TRANSFERABLE", 450, 1212);
+
+  return canvas.toDataURL("image/png");
+}
+
 export function RegistrationForm() {
   const [additionalParticipantNames, setAdditionalParticipantNames] = useState<string[]>([]);
   const [standeeQuantity, setStandeeQuantity] = useState(0);
@@ -25,7 +121,7 @@ export function RegistrationForm() {
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [receipt, setReceipt] = useState<RegistrationReceipt | null>(null);
-  const [qrPasses, setQrPasses] = useState<Array<{ participantNumber: number; participantName: string; passId: string; url: string }>>([]);
+  const [qrPasses, setQrPasses] = useState<Array<{ participantNumber: number; participantName: string; passId: string; mealLabel: string; qrUrl: string; passUrl: string }>>([]);
   const [qrGenerating, setQrGenerating] = useState(false);
   const [qrError, setQrError] = useState("");
   const [qrRetryKey, setQrRetryKey] = useState(0);
@@ -56,22 +152,32 @@ export function RegistrationForm() {
 
     void (async () => {
       const QRCode = (await import("qrcode")).default;
+      const mealLabel = mealChoice === "lunch" ? "Lunch" : mealChoice === "dinner" ? "Dinner" : "No meal";
+      const mealCode = mealChoice ?? "none";
       const passes = await Promise.all(participantNames.map(async (participantName, index) => {
         const participantNumber = index + 1;
+        const cleanName = participantName.trim();
         const passId = `${receipt.reference}-P${participantNumber}`;
-        const payload = `BBC|EVENT:AALAP-ALOCHONA-2026-09-29|REG:${receipt.id}|REF:${receipt.reference}|PARTICIPANT:${participantNumber}|PASS:${passId}`;
-        const url = await QRCode.toDataURL(payload, { width: 720, margin: 2, errorCorrectionLevel: "M" });
-        return { participantNumber, participantName: participantName.trim(), passId, url };
+        const payload = `BBC|EVENT:AALAP-ALOCHONA-2026-09-29|REG:${receipt.id}|REF:${receipt.reference}|PARTICIPANT:${participantNumber}|PASS:${passId}|NAME:${encodeURIComponent(cleanName)}|MEAL:${mealCode}`;
+        const qrUrl = await QRCode.toDataURL(payload, { width: 720, margin: 2, errorCorrectionLevel: "M" });
+        const passUrl = await createParticipantPassImage({
+          qrUrl,
+          participantName: cleanName,
+          participantNumber,
+          passId,
+          mealLabel,
+        });
+        return { participantNumber, participantName: cleanName, passId, mealLabel, qrUrl, passUrl };
       }));
       if (!cancelled) setQrPasses(passes);
     })().catch(() => {
-      if (!cancelled) setQrError("We couldn’t generate the QR passes. Please retry.");
+      if (!cancelled) setQrError("We couldn’t generate the participant passes. Please retry.");
     }).finally(() => {
       if (!cancelled) setQrGenerating(false);
     });
 
     return () => { cancelled = true; };
-  }, [receipt?.id, receipt?.reference, receipt?.paymentStatus, participantKey, qrRetryKey]);
+  }, [receipt?.id, receipt?.reference, receipt?.paymentStatus, participantKey, mealChoice, qrRetryKey]);
 
   function updateField(field: keyof typeof fields, value: string) {
     setFields((current) => ({ ...current, [field]: value }));
@@ -144,11 +250,11 @@ export function RegistrationForm() {
     }
   }
 
-  function downloadParticipantQr(pass: { participantNumber: number; participantName: string; passId: string; url: string }) {
+  function downloadParticipantPass(pass: { participantNumber: number; participantName: string; passId: string; passUrl: string }) {
     const safeName = pass.participantName.replace(/[^a-zA-Z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || `participant-${pass.participantNumber}`;
     const anchor = document.createElement("a");
-    anchor.href = pass.url;
-    anchor.download = `${receipt?.reference ?? "BBC"}-P${pass.participantNumber}-${safeName}.png`;
+    anchor.href = pass.passUrl;
+    anchor.download = `${receipt?.reference ?? "BBC"}-P${pass.participantNumber}-${safeName}-pass.png`;
     anchor.click();
   }
 
@@ -162,32 +268,33 @@ export function RegistrationForm() {
   if (receipt?.paymentStatus === "paid" && (qrGenerating || (!qrError && qrPasses.length !== participantNames.length))) return <div className="registration-card qr-generating-card" role="status" aria-live="polite">
     <span className="qr-loader" aria-hidden="true" />
     <span className="eyebrow">PAYMENT SUCCESSFUL</span>
-    <h2>Generating QR passes…</h2>
-    <p>Please wait while we create one secure QR pass for each participant.</p>
+    <h2>Generating participant passes…</h2>
+    <p>Please wait while we create one individual pass with name, meal preference and QR code for each participant.</p>
     <div className="qr-generation-count">{participantNames.length} {participantNames.length === 1 ? "pass" : "passes"} being generated</div>
   </div>;
 
   if (receipt?.paymentStatus === "paid" && qrError) return <div className="registration-card qr-generating-card">
     <span className="eyebrow">PAYMENT SUCCESSFUL</span>
-    <h2>QR generation needs a retry</h2>
+    <h2>Pass generation needs a retry</h2>
     <div className="error-banner" role="alert">{qrError}</div>
-    <button className="submit-button" type="button" onClick={() => setQrRetryKey((value) => value + 1)}>Generate QR passes again</button>
+    <button className="submit-button" type="button" onClick={() => setQrRetryKey((value) => value + 1)}>Generate passes again</button>
   </div>;
 
   if (receipt?.paymentStatus === "paid") return <div className="registration-card success-card qr-ready-card">
     <span className="success-icon"><Icon name="check" size={32} /></span>
-    <span className="eyebrow">QR PASSES READY</span>
+    <span className="eyebrow">PARTICIPANT PASSES READY</span>
     <h2 ref={confirmationHeading} tabIndex={-1}>Your passes are ready.</h2>
-    <p>Each participant has a separate QR pass. Download the correct pass for each person.</p>
+    <p>Each participant has an individual pass showing their name, meal preference and QR code.</p>
     <div className="qr-pass-grid">
       {qrPasses.map((pass) => <article className="qr-pass-card" key={pass.passId}>
-        <div className="qr-pass-image-wrap"><img src={pass.url} alt={`QR pass for ${pass.participantName}`} /></div>
+        <div className="qr-pass-image-wrap participant-pass-preview"><img src={pass.passUrl} alt={`Event pass for ${pass.participantName}`} /></div>
         <div className="qr-pass-meta">
           <span>Participant {pass.participantNumber}</span>
           <strong>{pass.participantName}</strong>
           <small>{pass.passId}</small>
+          <span className="qr-pass-meal">Meal: {pass.mealLabel}</span>
         </div>
-        <button type="button" onClick={() => downloadParticipantQr(pass)}><Icon name="download" size={16} /> Download QR</button>
+        <button type="button" onClick={() => downloadParticipantPass(pass)}><Icon name="download" size={16} /> Download pass</button>
       </article>)}
     </div>
     <button className="new-registration" type="button" onClick={() => {

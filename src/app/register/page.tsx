@@ -15,7 +15,7 @@ export default async function RegisterPage() {
 
   let event = DEFAULT_EVENT_CONTENT;
   try {
-    const result = await getDatabase().query("SELECT * FROM public.bbc_event_content WHERE id = 1");
+    const result = await getDatabase().query("SELECT * FROM public.bbc_event_content ORDER BY created_at DESC, id DESC LIMIT 1");
     event = eventContentFromRow(result.rows[0]);
   } catch {
     // Use defaults if the editable event content cannot be loaded.

@@ -388,3 +388,11 @@ input[type=checkbox]{height:19px;width:19px;accent-color:var(--coral);cursor:poi
 @media(max-width:520px){
   .report-event-summary{grid-template-columns:1fr}
 }
+
+.report-download-menu{position:relative}
+.report-download-menu summary{list-style:none;width:38px;height:38px;border:1px solid #dce2e6;border-radius:7px;background:white;color:var(--ink);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.report-download-menu summary::-webkit-details-marker{display:none}
+.report-download-menu[open] summary,.report-download-menu summary:hover{border-color:var(--coral);color:var(--coral);background:#fff8f5}
+.report-download-popover{position:absolute;top:44px;right:0;z-index:20;width:145px;background:white;border:1px solid var(--line);border-radius:8px;box-shadow:0 10px 28px #172d4220;padding:5px}
+.report-download-popover a{display:flex;align-items:center;height:34px;padding:0 10px;border-radius:5px;text-decoration:none;font-size:10px;color:var(--ink)}
+.report-download-popover a:hover{background:#f6f7f8;color:var(--coral)}

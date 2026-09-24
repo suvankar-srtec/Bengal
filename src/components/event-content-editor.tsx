@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from "react";
 import type { EventContent } from "@/lib/event-content";
 
-export function EventContentEditor({ initial }: { initial: EventContent }) {
+export function EventContentEditor({ initial, eventId }: { initial: EventContent; eventId?: number }) {
   const [form, setForm] = useState(initial);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
@@ -21,13 +21,13 @@ export function EventContentEditor({ initial }: { initial: EventContent }) {
 
     try {
       const response = await fetch("/api/event-content", {
-        method: "PUT",
+        method: eventId ? "PUT" : "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify(eventId ? { ...form, eventId } : form),
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Couldn’t save event content.");
-      setMessage({ type: "success", text: "Event content saved successfully." });
+      window.location.assign("/dashboard");
     } catch (error) {
       setMessage({ type: "error", text: error instanceof Error ? error.message : "Couldn’t save event content." });
     } finally {
@@ -74,7 +74,7 @@ export function EventContentEditor({ initial }: { initial: EventContent }) {
     {message && <div className={`event-editor-message ${message.type}`} role="status">{message.text}</div>}
     <div className="event-editor-actions">
       <a href="/register" target="_blank" rel="noreferrer">Preview registration</a>
-      <button type="submit" disabled={busy}>{busy ? "Saving…" : "Save event content"}</button>
+      <button type="submit" disabled={busy}>{busy ? "Saving…" : eventId ? "Update event" : "Create event"}</button>
     </div>
   </form>;
 }

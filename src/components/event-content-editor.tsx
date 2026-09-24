@@ -61,17 +61,6 @@ export function EventContentEditor({ initial, eventId }: { initial: EventContent
       </div>
     </section>
 
-    <section className="event-editor-section">
-      <h2>Impact card & values</h2>
-      <div className="event-editor-grid">
-        <label><span>Impact label</span><input value={form.impactLabel} onChange={(e) => set("impactLabel", e.target.value)} required /></label>
-        <label><span>Impact value</span><input value={form.impactValue} onChange={(e) => set("impactValue", e.target.value)} required /></label>
-        <label className="full"><span>Impact description</span><textarea rows={3} value={form.impactCopy} onChange={(e) => set("impactCopy", e.target.value)} required /></label>
-        <label><span>Value 1</span><input value={form.value1} onChange={(e) => set("value1", e.target.value)} required /></label>
-        <label><span>Value 2</span><input value={form.value2} onChange={(e) => set("value2", e.target.value)} required /></label>
-      </div>
-    </section>
-
     {message && <div className={`event-editor-message ${message.type}`} role="status">{message.text}</div>}
     <div className="event-editor-actions">
       <a href="/register" target="_blank" rel="noreferrer">Preview registration</a>

@@ -6,6 +6,7 @@ import { ADMIN_SESSION_COOKIE, validAdminSession } from "@/lib/admin-auth";
 import { AdminLogoutButton } from "@/components/admin-logout-button";
 import { DEFAULT_EVENT_CONTENT, eventContentFromRow } from "@/lib/event-content";
 import { getDatabase } from "@/lib/db";
+import { BBC_LOGO_DATA_URL } from "@/lib/bbc-logo";
 
 export const dynamic = "force-dynamic";
 
@@ -45,8 +46,7 @@ export default async function RegisterPage({
       <header className="site-header">
         <div className="header-inner">
           <a className="brand" href="/dashboard" aria-label="Bengal Business Council dashboard">
-            <span className="brand-mark" aria-hidden="true">b<span>.</span></span>
-            <span className="brand-name">BENGAL<span>BUSINESS COUNCIL</span></span>
+            <img className="bbc-logo bbc-logo-header" src={BBC_LOGO_DATA_URL} alt="Bengal Business Council" />
           </a>
           <div className="admin-header-actions">
             <a className="dashboard-back-link" href="/dashboard">Dashboard</a>

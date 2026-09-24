@@ -7,17 +7,35 @@ export const EVENT = {
 } as const;
 
 // Store and calculate money in paise, never floating-point rupees.
+export type MealChoice = "snacks" | "lunch" | "dinner";
+
 export type ParticipationPrices = {
   participation: number;
   standee: number;
   presentation: number;
+  mealOption: MealChoice;
+  snacks: number;
+  lunch: number;
+  dinner: number;
 };
 
 export const PRICES: ParticipationPrices = {
   participation: 118000,
   standee: 295000,
   presentation: 3540000,
+  mealOption: "lunch",
+  snacks: 0,
+  lunch: 0,
+  dinner: 0,
 };
+
+export function mealPriceForChoice(prices: ParticipationPrices, choice: MealChoice) {
+  return prices[choice];
+}
+
+export function mealChoiceLabel(choice: MealChoice) {
+  return choice === "snacks" ? "Snacks" : choice === "lunch" ? "Lunch" : "Dinner";
+}
 
 export function participationPricesFromRow(row: Record<string, unknown> | undefined): ParticipationPrices {
   const read = (value: unknown, fallback: number) => {
@@ -25,10 +43,18 @@ export function participationPricesFromRow(row: Record<string, unknown> | undefi
     return Number.isInteger(number) && number >= 0 ? number : fallback;
   };
 
+  const mealOption = row?.meal_option === "snacks" || row?.meal_option === "dinner"
+    ? row.meal_option
+    : "lunch";
+
   return {
     participation: read(row?.participation_unit_paise, PRICES.participation),
     standee: read(row?.standee_unit_paise, PRICES.standee),
     presentation: read(row?.presentation_unit_paise, PRICES.presentation),
+    mealOption,
+    snacks: read(row?.snacks_unit_paise, PRICES.snacks),
+    lunch: read(row?.lunch_unit_paise, PRICES.lunch),
+    dinner: read(row?.dinner_unit_paise, PRICES.dinner),
   };
 }
 
@@ -46,7 +72,7 @@ export const registrationSchema = z.object({
   ),
   participationQuantity: z.number().int().min(1).max(LIMITS.participation),
   standeeQuantity: z.number().int().min(0).max(LIMITS.standee),
-  mealChoice: z.enum(["lunch", "dinner"]).nullable().default(null),
+  mealChoice: z.enum(["snacks", "lunch", "dinner"]).nullable().default(null),
   presentationSelected: z.boolean(),
   additionalParticipantNames: z.array(
     z.string().trim().min(2, "Enter the participant’s full name.").max(120, "Use 120 characters or fewer."),
@@ -74,11 +100,16 @@ export type RegistrationReceipt = {
 };
 
 export function calculateTotal(
-  input: Pick<RegistrationInput, "participationQuantity" | "standeeQuantity" | "presentationSelected">,
+  input: Pick<RegistrationInput, "participationQuantity" | "standeeQuantity" | "mealChoice" | "presentationSelected">,
   prices: ParticipationPrices = PRICES,
 ) {
+  const mealTotal = input.mealChoice
+    ? input.participationQuantity * mealPriceForChoice(prices, input.mealChoice)
+    : 0;
+
   return input.participationQuantity * prices.participation
     + input.standeeQuantity * prices.standee
+    + mealTotal
     + (input.presentationSelected ? prices.presentation : 0);
 }
 

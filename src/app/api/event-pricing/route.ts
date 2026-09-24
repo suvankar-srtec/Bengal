@@ -33,12 +33,22 @@ export async function PUT(request: Request) {
   const participationPaise = validPaise(body.participationPaise);
   const standeePaise = validPaise(body.standeePaise);
   const presentationPaise = validPaise(body.presentationPaise);
+  const snacksPaise = validPaise(body.snacksPaise);
+  const lunchPaise = validPaise(body.lunchPaise);
+  const dinnerPaise = validPaise(body.dinnerPaise);
+  const mealOption = body.mealOption === "snacks" || body.mealOption === "lunch" || body.mealOption === "dinner"
+    ? body.mealOption
+    : null;
 
   if (
     !Number.isInteger(eventId) || eventId < 1 ||
     participationPaise === null ||
     standeePaise === null ||
-    presentationPaise === null
+    presentationPaise === null ||
+    snacksPaise === null ||
+    lunchPaise === null ||
+    dinnerPaise === null ||
+    mealOption === null
   ) {
     return NextResponse.json({ error: "Enter valid pricing values." }, { status: 400 });
   }
@@ -49,9 +59,13 @@ export async function PUT(request: Request) {
        SET participation_unit_paise = $1,
            standee_unit_paise = $2,
            presentation_unit_paise = $3,
+           meal_option = $4,
+           snacks_unit_paise = $5,
+           lunch_unit_paise = $6,
+           dinner_unit_paise = $7,
            updated_at = NOW()
-       WHERE id = $4`,
-      [participationPaise, standeePaise, presentationPaise, eventId],
+       WHERE id = $8`,
+      [participationPaise, standeePaise, presentationPaise, mealOption, snacksPaise, lunchPaise, dinnerPaise, eventId],
     );
 
     if (!result.rowCount) {
@@ -65,6 +79,10 @@ export async function PUT(request: Request) {
         participation: participationPaise,
         standee: standeePaise,
         presentation: presentationPaise,
+        mealOption,
+        snacks: snacksPaise,
+        lunch: lunchPaise,
+        dinner: dinnerPaise,
       },
     });
   } catch (error) {

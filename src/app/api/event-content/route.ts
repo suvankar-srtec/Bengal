@@ -25,11 +25,6 @@ function values(data: ReturnType<typeof eventContentSchema.parse>) {
     data.aboutParagraph2,
     data.bengaliParagraph1,
     data.bengaliParagraph2,
-    data.impactLabel,
-    data.impactValue,
-    data.impactCopy,
-    data.value1,
-    data.value2,
   ];
 }
 
@@ -51,10 +46,9 @@ export async function POST(request: Request) {
       `INSERT INTO public.bbc_event_content (
         section_label, title_bn, title_en, tagline_line_1, tagline_line_2,
         event_date, organizer, about_title, about_paragraph_1, about_paragraph_2,
-        bengali_paragraph_1, bengali_paragraph_2, impact_label, impact_value,
-        impact_copy, value_1, value_2
+        bengali_paragraph_1, bengali_paragraph_2
       ) VALUES (
-        $1, $2, $3, $4, $5, $6::date, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17
+        $1, $2, $3, $4, $5, $6::date, $7, $8, $9, $10, $11, $12
       )
       RETURNING id`,
       values(parsed.data),
@@ -101,13 +95,8 @@ export async function PUT(request: Request) {
         about_paragraph_2 = $10,
         bengali_paragraph_1 = $11,
         bengali_paragraph_2 = $12,
-        impact_label = $13,
-        impact_value = $14,
-        impact_copy = $15,
-        value_1 = $16,
-        value_2 = $17,
         updated_at = NOW()
-      WHERE id = $18`,
+      WHERE id = $13`,
       [...values(parsed.data), eventId],
     );
     if (!result.rowCount) return NextResponse.json({ error: "Event not found." }, { status: 404 });

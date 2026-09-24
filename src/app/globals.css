@@ -293,3 +293,14 @@ input[type=checkbox]{height:19px;width:19px;accent-color:var(--coral);cursor:poi
 .participant-name-field{padding-top:2px}
 .participant-fee-count{min-width:72px;height:34px;border:1px solid #dfe4e8;border-radius:6px;background:#fafbfc;display:flex;align-items:center;justify-content:center;gap:5px;padding:0 9px;font-size:10px;color:var(--muted)}
 .participant-fee-count>span{font-size:12px;font-weight:700;color:var(--ink)}
+
+.member-remove-button{border-color:#ead1cc;background:#fff8f5}
+.member-remove-button:hover{background:#fff0ec;border-color:var(--coral)}
+.meal-radio-group{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.meal-radio-group label{display:flex;align-items:center;gap:5px;cursor:pointer;font-size:10px;color:var(--muted)}
+.meal-radio-group input[type="radio"]{appearance:none;-webkit-appearance:none;width:16px;height:16px;border:1.5px solid #cbd3d8;border-radius:50%;background:white;display:grid;place-items:center;margin:0}
+.meal-radio-group input[type="radio"]::before{content:"";width:8px;height:8px;border-radius:50%;transform:scale(0);transition:transform .12s ease;background:var(--coral)}
+.meal-radio-group input[type="radio"]:checked{border-color:var(--coral)}
+.meal-radio-group input[type="radio"]:checked::before{transform:scale(1)}
+.meal-radio-group input[type="radio"]:focus-visible{outline:3px solid #d8554833;outline-offset:2px}
+@media(max-width:420px){.meal-radio-group{gap:12px}}

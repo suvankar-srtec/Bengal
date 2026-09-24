@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ADMIN_SESSION_COOKIE, validAdminSession } from "@/lib/admin-auth";
 import { AdminLogoutButton } from "@/components/admin-logout-button";
 import { ReportEventSelector } from "@/components/report-event-selector";
+import { Icon } from "@/components/icon";
 import { getDatabase } from "@/lib/db";
 import { BBC_LOGO_DATA_URL } from "@/lib/bbc-logo";
 
@@ -135,6 +136,15 @@ export default async function ReportPage({
         <section className="report-table-card">
           <div className="report-table-heading">
             <div><h2>Registrations</h2><p>{registrations.length} record{registrations.length === 1 ? "" : "s"} for {selectedEvent.title_en}</p></div>
+            <details className="report-download-menu">
+              <summary aria-label="Download registration report" title="Download report">
+                <Icon name="download" size={17} />
+              </summary>
+              <div className="report-download-popover">
+                <a href={`/api/report/export?eventId=${selectedEvent.id}&format=pdf`}>Download PDF</a>
+                <a href={`/api/report/export?eventId=${selectedEvent.id}&format=excel`}>Download Excel</a>
+              </div>
+            </details>
           </div>
 
           {registrations.length ? <div className="report-table-scroll">

@@ -17,6 +17,10 @@ type EventRow = {
   participation_unit_paise: number;
   standee_unit_paise: number;
   presentation_unit_paise: number;
+  meal_option: "snacks" | "lunch" | "dinner";
+  snacks_unit_paise: number;
+  lunch_unit_paise: number;
+  dinner_unit_paise: number;
 };
 
 function dateLabel(value: Date | string) {
@@ -51,7 +55,11 @@ export default async function PricingPage({
         id, title_en, event_date,
         participation_unit_paise,
         standee_unit_paise,
-        presentation_unit_paise
+        presentation_unit_paise,
+        meal_option,
+        snacks_unit_paise,
+        lunch_unit_paise,
+        dinner_unit_paise
       FROM public.bbc_event_content
       ORDER BY created_at DESC, id DESC
     `);

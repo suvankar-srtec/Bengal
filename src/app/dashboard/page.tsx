@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ADMIN_SESSION_COOKIE, validAdminSession } from "@/lib/admin-auth";
 import { AdminLogoutButton } from "@/components/admin-logout-button";
 import { getDatabase } from "@/lib/db";
+import { BBC_LOGO_DATA_URL } from "@/lib/bbc-logo";
 
 export const dynamic = "force-dynamic";
 
@@ -67,9 +68,8 @@ export default async function DashboardPage() {
 
   return <div className="admin-dashboard-shell">
     <aside className="admin-sidebar">
-      <a className="admin-sidebar-brand" href="/dashboard">
-        <span className="brand-mark" aria-hidden="true">b<span>.</span></span>
-        <span className="brand-name">BENGAL<span>BUSINESS COUNCIL</span></span>
+      <a className="admin-sidebar-brand" href="/dashboard" aria-label="Bengal Business Council">
+        <img className="bbc-logo bbc-logo-sidebar" src={BBC_LOGO_DATA_URL} alt="Bengal Business Council" />
       </a>
       <nav className="admin-nav">
         <a className="active" href="/dashboard">Dashboard</a>

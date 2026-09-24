@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { ADMIN_SESSION_COOKIE, validAdminSession } from "@/lib/admin-auth";
 import { getDatabase } from "@/lib/db";
+import { BBC_LOGO_DATA_URL } from "@/lib/bbc-logo";
 
 export const runtime = "nodejs";
 
@@ -125,123 +126,422 @@ function pdfEscape(value: unknown) {
     .replace(/\)/g, "\\)");
 }
 
-function wrapText(value: unknown, maxLength = 105) {
-  const words = ascii(value).split(/\s+/).filter(Boolean);
+function wrapPdfText(value: unknown, width: number, fontSize: number, maxLines = 4) {
+  const source = ascii(value).trim();
+  if (!source) return [""];
+
+  const maxChars = Math.max(4, Math.floor((width - 8) / (fontSize * 0.52)));
+  const words = source.split(/\s+/).filter(Boolean);
   const lines: string[] = [];
   let line = "";
 
-  for (const word of words) {
-    const candidate = line ? `${line} ${word}` : word;
-    if (candidate.length <= maxLength) {
+  for (const sourceWord of words) {
+    let word = sourceWord;
+
+    while (word.length > maxChars && lines.length < maxLines) {
+      if (line) {
+        lines.push(line);
+        line = "";
+        if (lines.length >= maxLines) break;
+      }
+      lines.push(word.slice(0, maxChars));
+      word = word.slice(maxChars);
+    }
+
+    if (lines.length >= maxLines) break;
+
+    const candidate = line ? line + " " + word : word;
+    if (candidate.length <= maxChars) {
       line = candidate;
     } else {
       if (line) lines.push(line);
-      line = word.length > maxLength ? word.slice(0, maxLength) : word;
+      line = word;
     }
+
+    if (lines.length >= maxLines) break;
   }
 
-  if (line) lines.push(line);
+  if (lines.length < maxLines && line) lines.push(line);
+
+  if (lines.length === maxLines && source.length > lines.join(" ").length) {
+    const last = lines[maxLines - 1];
+    lines[maxLines - 1] = last.slice(0, Math.max(1, last.length - 3)) + "...";
+  }
+
   return lines.length ? lines : [""];
 }
 
-function buildPdf(event: ExportEvent, registrations: ExportRegistration[]) {
-  const lines: Array<{ text: string; size?: number; bold?: boolean; gapAfter?: number }> = [
-    { text: "BENGAL BUSINESS COUNCIL", size: 15, bold: true, gapAfter: 4 },
-    { text: `Registration Report - ${event.title_en}`, size: 13, bold: true, gapAfter: 3 },
-    { text: `Event date: ${dateLabel(event.event_date)}   Organizer: ${event.organizer}`, size: 8, gapAfter: 8 },
+type PdfRegistrationRow = {
+  cells: string[][];
+  height: number;
+};
+
+async function buildPdf(event: ExportEvent, registrations: ExportRegistration[]) {
+  const sharp = (await import("sharp")).default;
+  const logoBase64 = BBC_LOGO_DATA_URL.split(",")[1] ?? "";
+  const logoSource = Buffer.from(logoBase64, "base64");
+  const logoJpeg = await sharp(logoSource)
+    .flatten({ background: "#ffffff" })
+    .resize({ width: 360, withoutEnlargement: true })
+    .jpeg({ quality: 92 })
+    .toBuffer();
+
+  const logoMetadata = await sharp(logoJpeg).metadata();
+  const imagePixelWidth = logoMetadata.width ?? 360;
+  const imagePixelHeight = logoMetadata.height ?? 240;
+
+  const PAGE_WIDTH = 842;
+  const PAGE_HEIGHT = 595;
+  const LEFT = 26;
+  const RIGHT = 26;
+  const CONTENT_WIDTH = PAGE_WIDTH - LEFT - RIGHT;
+  const CORAL = [0.78, 0.30, 0.25] as const;
+  const NAVY = [0.09, 0.18, 0.28] as const;
+  const MUTED = [0.38, 0.44, 0.48] as const;
+  const LINE = [0.87, 0.89, 0.90] as const;
+  const LIGHT = [0.97, 0.98, 0.98] as const;
+  const WHITE = [1, 1, 1] as const;
+
+  const columns = [
+    { label: "Primary member", width: 73 },
+    { label: "Participants", width: 98 },
+    { label: "Email", width: 106 },
+    { label: "WhatsApp", width: 77 },
+    { label: "Billing", width: 65 },
+    { label: "Meal", width: 43 },
+    { label: "Standee", width: 39 },
+    { label: "Presentation", width: 53 },
+    { label: "Amount", width: 68 },
+    { label: "Payment", width: 52 },
+    { label: "Registered", width: 69 },
   ];
 
-  if (!registrations.length) {
-    lines.push({ text: "No registrations found for this event.", size: 10 });
-  }
+  const tableWidth = columns.reduce((sum, column) => sum + column.width, 0);
+  const tableLeft = LEFT + Math.max(0, (CONTENT_WIDTH - tableWidth) / 2);
+  const bodyFontSize = 6.4;
+  const lineHeight = 8.2;
 
-  registrations.forEach((registration, index) => {
-    const participants = (registration.participant_names ?? [registration.member_name]).join(", ");
+  const rows: PdfRegistrationRow[] = registrations.map((registration) => {
     const meal = registration.meal_choice
       ? registration.meal_choice[0].toUpperCase() + registration.meal_choice.slice(1)
       : "None";
 
-    lines.push({
-      text: `${index + 1}. ${registration.member_name} | Participants: ${participants}`,
-      size: 8,
-      bold: true,
-      gapAfter: 1,
-    });
+    const values = [
+      registration.member_name,
+      (registration.participant_names ?? [registration.member_name]).join(", "),
+      registration.email,
+      registration.phone,
+      registration.billing_details,
+      meal,
+      String(registration.standee_quantity),
+      registration.presentation_selected ? "Yes" : "No",
+      "INR " + money(registration.total_paise),
+      registration.payment_status
+        ? registration.payment_status[0].toUpperCase() + registration.payment_status.slice(1)
+        : "",
+      dateLabel(registration.created_at),
+    ];
 
-    for (const line of wrapText(
-      `Email: ${registration.email} | WhatsApp: ${registration.phone} | Billing: ${registration.billing_details}`,
-      118,
-    )) {
-      lines.push({ text: line, size: 7 });
+    const cells = values.map((value, index) =>
+      wrapPdfText(value, columns[index].width, bodyFontSize, index === 1 || index === 2 ? 4 : 3),
+    );
+    const maxLines = Math.max(...cells.map((cell) => cell.length));
+
+    return {
+      cells,
+      height: Math.max(26, maxLines * lineHeight + 10),
+    };
+  });
+
+  function color(value: readonly number[]) {
+    return value[0] + " " + value[1] + " " + value[2];
+  }
+
+  function rect(
+    x: number,
+    top: number,
+    width: number,
+    height: number,
+    fill: readonly number[],
+    stroke?: readonly number[],
+  ) {
+    const y = PAGE_HEIGHT - top - height;
+    let command =
+      color(fill) + " rg " +
+      x.toFixed(2) + " " + y.toFixed(2) + " " +
+      width.toFixed(2) + " " + height.toFixed(2) + " re f\n";
+
+    if (stroke) {
+      command +=
+        color(stroke) + " RG 0.5 w " +
+        x.toFixed(2) + " " + y.toFixed(2) + " " +
+        width.toFixed(2) + " " + height.toFixed(2) + " re S\n";
     }
 
-    lines.push({
-      text: `Meal: ${meal} | Standee: ${registration.standee_quantity} | Presentation: ${registration.presentation_selected ? "Yes" : "No"} | Amount: INR ${money(registration.total_paise)} | Payment: ${registration.payment_status} | Registered: ${dateLabel(registration.created_at)}`,
-      size: 7,
-      gapAfter: 6,
+    return command;
+  }
+
+  function line(
+    x1: number,
+    top1: number,
+    x2: number,
+    top2: number,
+    stroke: readonly number[],
+    width = 0.5,
+  ) {
+    return (
+      color(stroke) + " RG " + width + " w " +
+      x1.toFixed(2) + " " + (PAGE_HEIGHT - top1).toFixed(2) + " m " +
+      x2.toFixed(2) + " " + (PAGE_HEIGHT - top2).toFixed(2) + " l S\n"
+    );
+  }
+
+  function text(
+    value: unknown,
+    x: number,
+    top: number,
+    size: number,
+    bold = false,
+    fill: readonly number[] = NAVY,
+  ) {
+    return (
+      color(fill) + " rg BT /" + (bold ? "F2" : "F1") + " " + size + " Tf " +
+      x.toFixed(2) + " " + (PAGE_HEIGHT - top - size).toFixed(2) +
+      " Td (" + pdfEscape(value) + ") Tj ET\n"
+    );
+  }
+
+  function imageCommand(x: number, top: number, width: number, height: number) {
+    const y = PAGE_HEIGHT - top - height;
+    return (
+      "q " + width.toFixed(2) + " 0 0 " + height.toFixed(2) + " " +
+      x.toFixed(2) + " " + y.toFixed(2) + " cm /Im1 Do Q\n"
+    );
+  }
+
+  function pageHeader(pageNumber: number) {
+    let stream = "";
+    stream += rect(0, 0, PAGE_WIDTH, 6, CORAL);
+
+    const logoWidth = 112;
+    const logoHeight = Math.min(64, logoWidth * imagePixelHeight / imagePixelWidth);
+    stream += imageCommand(LEFT, 17, logoWidth, logoHeight);
+
+    const headingX = LEFT + 132;
+    stream += text("REGISTRATION REPORT", headingX, 22, 8.5, true, CORAL);
+    stream += text(event.title_en, headingX, 36, 19, true, NAVY);
+    stream += text(
+      dateLabel(event.event_date) + "  |  " + event.organizer,
+      headingX,
+      62,
+      8,
+      false,
+      MUTED,
+    );
+
+    stream += text(
+      registrations.length + " registration" + (registrations.length === 1 ? "" : "s"),
+      PAGE_WIDTH - RIGHT - 105,
+      27,
+      8,
+      true,
+      MUTED,
+    );
+
+    stream += line(LEFT, 91, PAGE_WIDTH - RIGHT, 91, LINE, 0.7);
+
+    const headerTop = 103;
+    stream += rect(tableLeft, headerTop, tableWidth, 25, NAVY);
+
+    let x = tableLeft;
+    columns.forEach((column) => {
+      const headerLines = wrapPdfText(column.label.toUpperCase(), column.width, 6.1, 2);
+      const totalHeight = headerLines.length * 7;
+      const startTop = headerTop + (25 - totalHeight) / 2 + 1;
+
+      headerLines.forEach((headerLine, index) => {
+        stream += text(headerLine, x + 4, startTop + index * 7, 6.1, true, WHITE);
+      });
+
+      x += column.width;
     });
-  });
 
-  const pages: string[] = [];
-  let current = "";
-  let y = 560;
-
-  const addPage = () => {
-    if (current) pages.push(current);
-    current = "";
-    y = 560;
-  };
-
-  for (const line of lines) {
-    const size = line.size ?? 8;
-    const height = Math.max(10, size + 4);
-    if (y - height < 30) addPage();
-
-    const font = line.bold ? "F2" : "F1";
-    current += `BT /${font} ${size} Tf 28 ${y} Td (${pdfEscape(line.text)}) Tj ET\n`;
-    y -= height + (line.gapAfter ?? 0);
+    return { stream, rowTop: 128, pageNumber };
   }
 
-  if (current || !pages.length) pages.push(current);
+  const pageStreams: string[] = [];
+  let pageIndex = 1;
+  let currentPage = pageHeader(pageIndex);
+  let currentStream = currentPage.stream;
+  let rowTop = currentPage.rowTop;
+  let rowIndex = 0;
 
-  const objects: string[] = [];
-  const pageRefs: string[] = [];
+  function finishPage() {
+    currentStream += line(LEFT, PAGE_HEIGHT - 26, PAGE_WIDTH - RIGHT, PAGE_HEIGHT - 26, LINE, 0.5);
+    currentStream += text(
+      "Bengal Business Council  |  " + event.title_en,
+      LEFT,
+      PAGE_HEIGHT - 20,
+      6.3,
+      false,
+      MUTED,
+    );
+    currentStream += text(
+      "Page " + pageIndex,
+      PAGE_WIDTH - RIGHT - 36,
+      PAGE_HEIGHT - 20,
+      6.3,
+      false,
+      MUTED,
+    );
+    pageStreams.push(currentStream);
+  }
 
-  objects[1] = "<< /Type /Catalog /Pages 2 0 R >>";
-  objects[3] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>";
-  objects[4] = "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>";
+  if (!rows.length) {
+    currentStream += rect(tableLeft, rowTop, tableWidth, 58, WHITE, LINE);
+    currentStream += text(
+      "No registrations found for this event.",
+      tableLeft + 12,
+      rowTop + 21,
+      10,
+      false,
+      MUTED,
+    );
+  } else {
+    for (const row of rows) {
+      if (rowTop + row.height > PAGE_HEIGHT - 42) {
+        finishPage();
+        pageIndex += 1;
+        currentPage = pageHeader(pageIndex);
+        currentStream = currentPage.stream;
+        rowTop = currentPage.rowTop;
+      }
 
-  pages.forEach((stream, index) => {
-    const pageObject = 5 + index * 2;
+      const background = rowIndex % 2 === 0 ? WHITE : LIGHT;
+      currentStream += rect(tableLeft, rowTop, tableWidth, row.height, background, LINE);
+
+      let x = tableLeft;
+      row.cells.forEach((cellLines, columnIndex) => {
+        if (columnIndex > 0) {
+          currentStream += line(x, rowTop, x, rowTop + row.height, LINE, 0.35);
+        }
+
+        const topPadding = 5;
+        cellLines.forEach((cellLine, lineIndex) => {
+          const isPrimary = columnIndex === 0;
+          let fill: readonly number[] = NAVY;
+
+          if (columnIndex === 9 && cellLine.toLowerCase() === "paid") {
+            fill = [0.18, 0.43, 0.33] as const;
+          } else if (columnIndex === 9 && cellLine.toLowerCase() === "unpaid") {
+            fill = [0.62, 0.39, 0.08] as const;
+          }
+
+          currentStream += text(
+            cellLine,
+            x + 4,
+            rowTop + topPadding + lineIndex * lineHeight,
+            bodyFontSize,
+            isPrimary,
+            fill,
+          );
+        });
+
+        x += columns[columnIndex].width;
+      });
+
+      rowTop += row.height;
+      rowIndex += 1;
+    }
+  }
+
+  finishPage();
+
+  const objects = new Map<number, Buffer>();
+  const pageReferences: string[] = [];
+
+  objects.set(1, Buffer.from("<< /Type /Catalog /Pages 2 0 R >>", "latin1"));
+  objects.set(3, Buffer.from("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>", "latin1"));
+  objects.set(4, Buffer.from("<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica-Bold >>", "latin1"));
+
+  const imageHeader = Buffer.from(
+    "<< /Type /XObject /Subtype /Image /Width " + imagePixelWidth +
+    " /Height " + imagePixelHeight +
+    " /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length " +
+    logoJpeg.length + " >>\nstream\n",
+    "latin1",
+  );
+  const imageFooter = Buffer.from("\nendstream", "latin1");
+  objects.set(5, Buffer.concat([imageHeader, logoJpeg, imageFooter]));
+
+  pageStreams.forEach((stream, index) => {
+    const pageObject = 6 + index * 2;
     const contentObject = pageObject + 1;
-    pageRefs.push(`${pageObject} 0 R`);
+    pageReferences.push(pageObject + " 0 R");
 
-    objects[pageObject] =
-      `<< /Type /Page /Parent 2 0 R /MediaBox [0 0 842 595] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> >> /Contents ${contentObject} 0 R >>`;
-    objects[contentObject] =
-      `<< /Length ${Buffer.byteLength(stream, "latin1")} >>\nstream\n${stream}endstream`;
+    objects.set(
+      pageObject,
+      Buffer.from(
+        "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 " +
+        PAGE_WIDTH + " " + PAGE_HEIGHT +
+        "] /Resources << /Font << /F1 3 0 R /F2 4 0 R >> /XObject << /Im1 5 0 R >> >> /Contents " +
+        contentObject + " 0 R >>",
+        "latin1",
+      ),
+    );
+
+    const contentBuffer = Buffer.from(stream, "latin1");
+    objects.set(
+      contentObject,
+      Buffer.concat([
+        Buffer.from("<< /Length " + contentBuffer.length + " >>\nstream\n", "latin1"),
+        contentBuffer,
+        Buffer.from("endstream", "latin1"),
+      ]),
+    );
   });
 
-  objects[2] = `<< /Type /Pages /Kids [${pageRefs.join(" ")}] /Count ${pages.length} >>`;
+  objects.set(
+    2,
+    Buffer.from(
+      "<< /Type /Pages /Kids [" + pageReferences.join(" ") +
+      "] /Count " + pageReferences.length + " >>",
+      "latin1",
+    ),
+  );
 
-  let pdf = "%PDF-1.4\n";
-  const offsets: number[] = [0];
+  const maxObjectId = Math.max(...objects.keys());
+  const parts: Buffer[] = [Buffer.from("%PDF-1.4\n%\xFF\xFF\xFF\xFF\n", "latin1")];
+  const offsets: number[] = new Array(maxObjectId + 1).fill(0);
+  let offset = parts[0].length;
 
-  for (let id = 1; id < objects.length; id += 1) {
-    offsets[id] = Buffer.byteLength(pdf, "latin1");
-    pdf += `${id} 0 obj\n${objects[id]}\nendobj\n`;
+  for (let id = 1; id <= maxObjectId; id += 1) {
+    const body = objects.get(id);
+    if (!body) continue;
+
+    offsets[id] = offset;
+    const prefix = Buffer.from(id + " 0 obj\n", "latin1");
+    const suffix = Buffer.from("\nendobj\n", "latin1");
+    parts.push(prefix, body, suffix);
+    offset += prefix.length + body.length + suffix.length;
   }
 
-  const xrefOffset = Buffer.byteLength(pdf, "latin1");
-  pdf += `xref\n0 ${objects.length}\n`;
-  pdf += "0000000000 65535 f \n";
+  const xrefOffset = offset;
+  let xref = "xref\n0 " + (maxObjectId + 1) + "\n";
+  xref += "0000000000 65535 f \n";
 
-  for (let id = 1; id < objects.length; id += 1) {
-    pdf += `${String(offsets[id]).padStart(10, "0")} 00000 n \n`;
+  for (let id = 1; id <= maxObjectId; id += 1) {
+    xref += offsets[id]
+      ? String(offsets[id]).padStart(10, "0") + " 00000 n \n"
+      : "0000000000 00000 f \n";
   }
 
-  pdf += `trailer\n<< /Size ${objects.length} /Root 1 0 R >>\nstartxref\n${xrefOffset}\n%%EOF`;
-  return Buffer.from(pdf, "latin1");
+  xref +=
+    "trailer\n<< /Size " + (maxObjectId + 1) +
+    " /Root 1 0 R >>\nstartxref\n" + xrefOffset + "\n%%EOF";
+
+  parts.push(Buffer.from(xref, "latin1"));
+  return Buffer.concat(parts);
 }
 
 export async function GET(request: Request) {
@@ -306,7 +606,7 @@ export async function GET(request: Request) {
       });
     }
 
-    const pdf = buildPdf(event, registrationResult.rows);
+    const pdf = await buildPdf(event, registrationResult.rows);
     return new Response(pdf, {
       headers: {
         "Content-Type": "application/pdf",

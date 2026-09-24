@@ -42,6 +42,21 @@ export const DEFAULT_EVENT_CONTENT: EventContent = {
   value2: "Shared growth",
 };
 
+function normalizeEventDate(value: unknown) {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) {
+    return value.toISOString().slice(0, 10);
+  }
+
+  const text = String(value ?? "");
+  const direct = text.match(/\d{4}-\d{2}-\d{2}/)?.[0];
+  if (direct) return direct;
+
+  const parsed = new Date(text);
+  if (!Number.isNaN(parsed.getTime())) return parsed.toISOString().slice(0, 10);
+
+  return DEFAULT_EVENT_CONTENT.eventDate;
+}
+
 export function eventContentFromRow(row: Record<string, unknown> | undefined): EventContent {
   if (!row) return DEFAULT_EVENT_CONTENT;
   return {
@@ -50,7 +65,7 @@ export function eventContentFromRow(row: Record<string, unknown> | undefined): E
     titleEn: String(row.title_en ?? DEFAULT_EVENT_CONTENT.titleEn),
     taglineLine1: String(row.tagline_line_1 ?? DEFAULT_EVENT_CONTENT.taglineLine1),
     taglineLine2: String(row.tagline_line_2 ?? DEFAULT_EVENT_CONTENT.taglineLine2),
-    eventDate: String(row.event_date ?? DEFAULT_EVENT_CONTENT.eventDate).slice(0, 10),
+    eventDate: normalizeEventDate(row.event_date ?? DEFAULT_EVENT_CONTENT.eventDate),
     organizer: String(row.organizer ?? DEFAULT_EVENT_CONTENT.organizer),
     aboutTitle: String(row.about_title ?? DEFAULT_EVENT_CONTENT.aboutTitle),
     aboutParagraph1: String(row.about_paragraph_1 ?? DEFAULT_EVENT_CONTENT.aboutParagraph1),

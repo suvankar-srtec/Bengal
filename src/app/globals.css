@@ -362,21 +362,19 @@ input[type=checkbox]{height:19px;width:19px;accent-color:var(--coral);cursor:poi
 .report-table{width:100%;border-collapse:collapse;table-layout:fixed;min-width:0}
 .report-table th,.report-table td{padding:8px 7px;border-bottom:1px solid #edf0f2;text-align:left;vertical-align:top;font-size:8.5px;line-height:1.35;white-space:normal;overflow-wrap:anywhere;word-break:break-word}
 .report-table th{font-size:7.5px;text-transform:uppercase;letter-spacing:.25px;color:var(--muted);background:#fafbfc;position:sticky;top:0;z-index:1}
-.report-table td code{font-size:7.5px;white-space:normal;overflow-wrap:anywhere;word-break:break-all}
 .report-participant-names{display:flex;flex-direction:column;gap:3px;white-space:normal;min-width:0}
 .report-participant-names span{font-size:8.5px;overflow-wrap:anywhere}
-.report-table th:nth-child(1),.report-table td:nth-child(1){width:9%}
-.report-table th:nth-child(2),.report-table td:nth-child(2){width:8%}
-.report-table th:nth-child(3),.report-table td:nth-child(3){width:11%}
-.report-table th:nth-child(4),.report-table td:nth-child(4){width:12%}
-.report-table th:nth-child(5),.report-table td:nth-child(5){width:9%}
+.report-table th:nth-child(1),.report-table td:nth-child(1){width:10%}
+.report-table th:nth-child(2),.report-table td:nth-child(2){width:12%}
+.report-table th:nth-child(3),.report-table td:nth-child(3){width:14%}
+.report-table th:nth-child(4),.report-table td:nth-child(4){width:11%}
+.report-table th:nth-child(5),.report-table td:nth-child(5){width:8%}
 .report-table th:nth-child(6),.report-table td:nth-child(6){width:7%}
-.report-table th:nth-child(7),.report-table td:nth-child(7){width:6%}
-.report-table th:nth-child(8),.report-table td:nth-child(8){width:5%}
-.report-table th:nth-child(9),.report-table td:nth-child(9){width:6%}
-.report-table th:nth-child(10),.report-table td:nth-child(10){width:8%}
-.report-table th:nth-child(11),.report-table td:nth-child(11){width:6%}
-.report-table th:nth-child(12),.report-table td:nth-child(12){width:7%}
+.report-table th:nth-child(7),.report-table td:nth-child(7){width:5%}
+.report-table th:nth-child(8),.report-table td:nth-child(8){width:8%}
+.report-table th:nth-child(9),.report-table td:nth-child(9){width:9%}
+.report-table th:nth-child(10),.report-table td:nth-child(10){width:7%}
+.report-table th:nth-child(11),.report-table td:nth-child(11){width:9%}
 .report-payment-status{display:inline-flex;align-items:center;padding:4px 7px;border-radius:999px;font-size:8px;text-transform:capitalize}
 .report-payment-status.paid{background:#e9f5ee;color:#2f6a55}
 .report-payment-status.unpaid{background:#fff3df;color:#9b6415}

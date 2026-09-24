@@ -17,6 +17,7 @@ export const LIMITS = { participation: 20, standee: 10 } as const;
 
 export const registrationSchema = z.object({
   submissionId: z.uuid(),
+  eventContentId: z.number().int().positive().nullable().default(null),
   memberName: z.string().trim().min(2, "Enter your full name.").max(120, "Use 120 characters or fewer."),
   email: z.email("Enter a valid email address.").max(254).transform((email) => email.toLowerCase()),
   phone: z.string().regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit Indian WhatsApp number."),

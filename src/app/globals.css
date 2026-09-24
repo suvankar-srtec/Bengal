@@ -304,3 +304,10 @@ input[type=checkbox]{height:19px;width:19px;accent-color:var(--coral);cursor:poi
 .meal-radio-group input[type="radio"]:checked::before{transform:scale(1)}
 .meal-radio-group input[type="radio"]:focus-visible{outline:3px solid #d8554833;outline-offset:2px}
 @media(max-width:420px){.meal-radio-group{gap:12px}}
+
+.participant-pass-preview{padding:6px;background:#eef2f4}
+.participant-pass-preview img{aspect-ratio:auto!important;max-height:420px;object-fit:contain;background:white}
+.qr-pass-meal{display:block;margin-top:7px;font-size:9px!important;letter-spacing:0!important;text-transform:none!important;color:var(--ink)!important;font-weight:650}
+@media(max-width:520px){
+  .participant-pass-preview img{max-height:300px}
+}

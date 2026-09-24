@@ -74,8 +74,7 @@ export default async function DashboardPage() {
       </a>
       <nav className="admin-nav">
         <a className="active" href="/dashboard">Dashboard</a>
-        <a href="/create-event">Create Event</a>
-        <a href="/register">Event registration</a>
+        <a href="/report">Report</a>
       </nav>
       <div className="admin-sidebar-footer"><AdminLogoutButton /></div>
     </aside>

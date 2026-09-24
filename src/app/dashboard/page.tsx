@@ -46,17 +46,13 @@ export default async function DashboardPage() {
       </a>
       <nav className="admin-nav">
         <a className="active" href="/dashboard">Dashboard</a>
+        <a href="/create-event">Create Event</a>
         <a href="/register">Event registration</a>
       </nav>
       <div className="admin-sidebar-footer"><AdminLogoutButton /></div>
     </aside>
 
     <main className="admin-dashboard-main">
-      <header className="admin-dashboard-header">
-        <div><span className="eyebrow">AALAP ALOCHONA · ADMIN</span><h1>Dashboard</h1><p>29 September, 2026 · Bengal Business Council</p></div>
-        <a className="admin-primary-action" href="/register">Open registration</a>
-      </header>
-
       <section className="admin-stat-grid" aria-label="Event summary">
         <article><span>Total registrations</span><strong>{totals.registrations}</strong><small>Saved registrations</small></article>
         <article><span>Paid registrations</span><strong>{totals.paid}</strong><small>Completed payments</small></article>

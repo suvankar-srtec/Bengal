@@ -21,9 +21,14 @@ export default async function RegisterPage() {
     // Use defaults if the editable event content cannot be loaded.
   }
 
-  const eventDate = new Date(`${event.eventDate}T00:00:00`);
-  const eventDateLabel = new Intl.DateTimeFormat("en-GB", { day: "2-digit", month: "long", year: "numeric" }).format(eventDate);
-  const eventDayLabel = new Intl.DateTimeFormat("en-GB", { weekday: "long" }).format(eventDate);
+  const [eventYear, eventMonth, eventDay] = event.eventDate.split("-").map(Number);
+  const eventDate = new Date(Date.UTC(eventYear, eventMonth - 1, eventDay));
+  const eventDateLabel = new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit", month: "long", year: "numeric", timeZone: "UTC",
+  }).format(eventDate);
+  const eventDayLabel = new Intl.DateTimeFormat("en-GB", {
+    weekday: "long", timeZone: "UTC",
+  }).format(eventDate);
 
   return (
     <>

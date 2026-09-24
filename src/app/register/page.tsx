@@ -7,6 +7,7 @@ import { AdminLogoutButton } from "@/components/admin-logout-button";
 import { DEFAULT_EVENT_CONTENT, eventContentFromRow } from "@/lib/event-content";
 import { getDatabase } from "@/lib/db";
 import { BBC_LOGO_DATA_URL } from "@/lib/bbc-logo";
+import { PRICES, participationPricesFromRow, type ParticipationPrices } from "@/lib/registration";
 
 export const dynamic = "force-dynamic";
 
@@ -23,12 +24,14 @@ export default async function RegisterPage({
 
   let event = DEFAULT_EVENT_CONTENT;
   let activeEventId: number | null = null;
+  let prices: ParticipationPrices = PRICES;
   try {
     const result = Number.isInteger(requestedEventId) && requestedEventId > 0
       ? await getDatabase().query("SELECT * FROM public.bbc_event_content WHERE id = $1", [requestedEventId])
       : await getDatabase().query("SELECT * FROM public.bbc_event_content ORDER BY created_at DESC, id DESC LIMIT 1");
     event = eventContentFromRow(result.rows[0]);
     activeEventId = result.rows[0]?.id ? Number(result.rows[0].id) : null;
+    prices = participationPricesFromRow(result.rows[0]);
   } catch {
     // Use defaults if the editable event content cannot be loaded.
   }
@@ -88,7 +91,7 @@ export default async function RegisterPage({
           </section>
 
           <section className="form-column" id="registration" aria-label="Event registration form">
-            <RegistrationForm eventContentId={activeEventId} />
+            <RegistrationForm eventContentId={activeEventId} prices={prices} />
             <p className="form-footnote"><Icon name="lock" size={13} /> Your details are saved securely for this event.</p>
           </section>
         </div>

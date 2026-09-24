@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { calculateTotal, formatMoney, LIMITS, registrationSchema, registrationFieldKey, type FieldErrors, type ParticipationPrices, type RegistrationReceipt } from "@/lib/registration";
+import { calculateTotal, formatMoney, LIMITS, mealChoiceLabel, mealPriceForChoice, registrationSchema, registrationFieldKey, type FieldErrors, type MealChoice, type ParticipationPrices, type RegistrationReceipt } from "@/lib/registration";
 import { Icon } from "./icon";
 import { PaymentCheckout } from "./payment-checkout";
 import { BBC_LOGO_DATA_URL } from "@/lib/bbc-logo";
@@ -133,7 +133,7 @@ async function createParticipantPassImage(input: {
 export function RegistrationForm({ eventContentId, prices }: { eventContentId: number | null; prices: ParticipationPrices }) {
   const [additionalParticipantNames, setAdditionalParticipantNames] = useState<string[]>([]);
   const [standeeQuantity, setStandeeQuantity] = useState(0);
-  const [mealChoice, setMealChoice] = useState<"lunch" | "dinner" | null>(null);
+  const [mealChoice, setMealChoice] = useState<MealChoice | null>(null);
   const [presentationSelected, setPresentationSelected] = useState(false);
   const [fields, setFields] = useState({ memberName: "", email: "", phone: "", billingDetails: "" });
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -149,7 +149,7 @@ export function RegistrationForm({ eventContentId, prices }: { eventContentId: n
   const confirmationHeading = useRef<HTMLHeadingElement>(null);
   const participationQuantity = 1 + additionalParticipantNames.length;
   const participantNames = [fields.memberName, ...additionalParticipantNames];
-  const total = calculateTotal({ participationQuantity, standeeQuantity, presentationSelected }, prices);
+  const total = calculateTotal({ participationQuantity, standeeQuantity, mealChoice, presentationSelected }, prices);
   const participantKey = participantNames.map((name) => name.trim()).join("\u001f");
 
   useEffect(() => {
@@ -171,7 +171,7 @@ export function RegistrationForm({ eventContentId, prices }: { eventContentId: n
 
     void (async () => {
       const QRCode = (await import("qrcode")).default;
-      const mealLabel = mealChoice === "lunch" ? "Lunch" : mealChoice === "dinner" ? "Dinner" : "No meal";
+      const mealLabel = mealChoice ? mealChoiceLabel(mealChoice) : "No meal";
       const mealCode = mealChoice ?? "none";
       const passes = await Promise.all(participantNames.map(async (participantName, index) => {
         const participantNumber = index + 1;
@@ -361,15 +361,20 @@ export function RegistrationForm({ eventContentId, prices }: { eventContentId: n
           <div className="fee-row"><div><span className="fee-label">Participation fees <span className="required">*</span></span><span className="fee-price">{formatMoney(prices.participation)} <small>/ person</small></span></div><div className="participant-fee-count" aria-label="Participant count"><span>{participationQuantity}</span> {participationQuantity === 1 ? "person" : "people"}</div></div>
           <div className="fee-row"><div><span className="fee-label">Standee placement <span className="optional">Optional</span></span><span className="fee-price">{formatMoney(prices.standee)} <small>/ standee</small></span></div><Quantity label="Standee" value={standeeQuantity} minimum={0} maximum={LIMITS.standee} onChange={setStandeeQuantity} /></div>
           <div className={`fee-row meal-option${mealChoice ? " selected" : ""}`}>
-            <div><span className="fee-label">Meal preference <span className="optional">Optional</span></span></div>
+            <div>
+              <span className="fee-label">Meal preference <span className="optional">Optional</span></span>
+              <span className="fee-price">{formatMoney(mealPriceForChoice(prices, prices.mealOption))} <small>/ person</small></span>
+            </div>
             <div className="meal-radio-group" role="radiogroup" aria-label="Meal preference">
-              <label onDoubleClick={() => mealChoice === "lunch" && setMealChoice(null)} title="Double-click the selected option to clear">
-                <input type="radio" name="mealChoice" value="lunch" checked={mealChoice === "lunch"} onChange={() => setMealChoice("lunch")} />
-                <span>Lunch</span>
-              </label>
-              <label onDoubleClick={() => mealChoice === "dinner" && setMealChoice(null)} title="Double-click the selected option to clear">
-                <input type="radio" name="mealChoice" value="dinner" checked={mealChoice === "dinner"} onChange={() => setMealChoice("dinner")} />
-                <span>Dinner</span>
+              <label onDoubleClick={() => mealChoice === prices.mealOption && setMealChoice(null)} title="Double-click the selected option to clear">
+                <input
+                  type="radio"
+                  name="mealChoice"
+                  value={prices.mealOption}
+                  checked={mealChoice === prices.mealOption}
+                  onChange={() => setMealChoice(prices.mealOption)}
+                />
+                <span>{mealChoiceLabel(prices.mealOption)}</span>
               </label>
             </div>
           </div>
@@ -378,7 +383,7 @@ export function RegistrationForm({ eventContentId, prices }: { eventContentId: n
 
         <p className="participant-count-hint" role="status">Participant fee is calculated automatically from the {participationQuantity} member {participationQuantity === 1 ? "name" : "names"} above.</p>
 
-        <div className="total-row"><div><span>Total amount</span><small>{participationQuantity} {participationQuantity === 1 ? "participant" : "participants"}{standeeQuantity > 0 ? ` · ${standeeQuantity} ${standeeQuantity === 1 ? "standee" : "standees"}` : ""}{mealChoice === "lunch" ? " · Lunch" : mealChoice === "dinner" ? " · Dinner" : ""}{presentationSelected ? " · Presentation" : ""}</small></div><output aria-label="Total amount" aria-live="polite">{formatMoney(total)}</output></div>
+        <div className="total-row"><div><span>Total amount</span><small>{participationQuantity} {participationQuantity === 1 ? "participant" : "participants"}{standeeQuantity > 0 ? ` · ${standeeQuantity} ${standeeQuantity === 1 ? "standee" : "standees"}` : ""}{mealChoice ? ` · ${mealChoiceLabel(mealChoice)}` : ""}{presentationSelected ? " · Presentation" : ""}</small></div><output aria-label="Total amount" aria-live="polite">{formatMoney(total)}</output></div>
         {errorMessage && <div className="error-banner" role="alert">{errorMessage}</div>}
         <button className="submit-button" type="submit" disabled={isSubmitting}>{isSubmitting ? <><span className="spinner" /> Preparing payment…</> : <>Proceed to payment <Icon name="arrow" size={19} /></>}</button>
         <p className="submit-note">Payment opens directly. Your registration is confirmed only after successful payment.</p>

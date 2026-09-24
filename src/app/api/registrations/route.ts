@@ -14,20 +14,6 @@ async function readBody(request: Request): Promise<string> {
   const chunks: Uint8Array[] = [];
   let length = 0;
   while (true) {
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     const { done, value } = await reader.read();
     if (done) break;
     length += value.byteLength;
@@ -86,9 +72,9 @@ export async function POST(request: Request) {
   try {
     const database = getDatabase();
 
-    let eventId = EVENT.id;
-    let eventName = EVENT.name;
-    let eventDate = EVENT.date;
+    let eventId: string = EVENT.id;
+    let eventName: string = EVENT.name;
+    let eventDate: string = EVENT.date;
 
     if (data.eventContentId) {
       const eventResult = await database.query<{ id: number; title_en: string; event_date: Date | string }>(

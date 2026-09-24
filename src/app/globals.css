@@ -284,3 +284,12 @@ input[type=checkbox]{height:19px;width:19px;accent-color:var(--coral);cursor:poi
   .dashboard-events-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
   .dashboard-create-event-card,.dashboard-event-card{width:100%;height:150px}
 }
+
+.member-name-label-row{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:7px}
+.member-name-label-row label{margin:0!important}
+.member-add-button,.member-remove-button{width:30px;height:30px;border:1px solid #dce2e6;border-radius:7px;background:white;color:var(--coral);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.member-add-button:hover:not(:disabled),.member-remove-button:hover{background:var(--soft-coral);border-color:var(--coral)}
+.member-add-button:disabled{opacity:.4}
+.participant-name-field{padding-top:2px}
+.participant-fee-count{min-width:72px;height:34px;border:1px solid #dfe4e8;border-radius:6px;background:#fafbfc;display:flex;align-items:center;justify-content:center;gap:5px;padding:0 9px;font-size:10px;color:var(--muted)}
+.participant-fee-count>span{font-size:12px;font-weight:700;color:var(--ink)}

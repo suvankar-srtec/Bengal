@@ -242,3 +242,28 @@ input[type=checkbox]{height:19px;width:19px;accent-color:var(--coral);cursor:poi
   .admin-login-page .admin-login-card{padding:28px 22px}
   .admin-login-page .admin-login-card h2{font-size:22px}
 }
+
+.event-editor-page{max-width:1180px;width:100%}
+.event-editor-heading{margin-bottom:22px}
+.event-editor-heading h1{font-family:"Segoe UI",Arial,sans-serif;font-size:30px;line-height:1.15;letter-spacing:-.8px;margin:9px 0 8px}
+.event-editor-heading p{margin:0;color:var(--muted);font-size:12px;line-height:1.7}
+.event-editor-form{display:flex;flex-direction:column;gap:18px}
+.event-editor-section{background:white;border:1px solid var(--line);border-radius:11px;padding:22px}
+.event-editor-section h2{font-size:15px;margin:0 0 18px}
+.event-editor-grid{display:grid;grid-template-columns:1fr 1fr;gap:15px}
+.event-editor-grid label{display:flex;flex-direction:column;gap:7px;min-width:0}
+.event-editor-grid label.full{grid-column:1/-1}
+.event-editor-grid label>span{font-size:10px;font-weight:650;color:var(--ink)}
+.event-editor-grid input,.event-editor-grid textarea{width:100%;border:1px solid #dce2e6;border-radius:7px;background:white;color:var(--ink);font:inherit;font-size:12px;padding:10px 12px}
+.event-editor-grid input{height:42px}
+.event-editor-grid textarea{resize:vertical;line-height:1.65;min-height:88px}
+.event-editor-grid input:focus-visible,.event-editor-grid textarea:focus-visible{outline:3px solid #d8554833;outline-offset:1px;border-color:var(--coral)}
+.event-editor-message{border-radius:7px;padding:12px 14px;font-size:11px}
+.event-editor-message.success{background:#eaf5ee;color:#27624e;border:1px solid #cfe5d8}
+.event-editor-message.error{background:#fff5f2;color:#a73b31;border:1px solid #eac5c0}
+.event-editor-actions{display:flex;align-items:center;justify-content:flex-end;gap:11px;padding-bottom:20px}
+.event-editor-actions a,.event-editor-actions button{height:42px;border-radius:7px;padding:0 16px;font-size:11px;font-weight:700;display:inline-flex;align-items:center;justify-content:center;text-decoration:none}
+.event-editor-actions a{border:1px solid #dce2e6;background:white;color:var(--ink)}
+.event-editor-actions button{border:0;background:var(--coral);color:white}
+.event-editor-actions button:disabled{opacity:.65}
+@media(max-width:720px){.event-editor-grid{grid-template-columns:1fr}.event-editor-grid label.full{grid-column:auto}.event-editor-actions{align-items:stretch;flex-direction:column}.event-editor-actions a,.event-editor-actions button{width:100%}}

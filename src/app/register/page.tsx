@@ -22,11 +22,13 @@ export default async function RegisterPage({
   const requestedEventId = Number(params.id);
 
   let event = DEFAULT_EVENT_CONTENT;
+  let activeEventId: number | null = null;
   try {
     const result = Number.isInteger(requestedEventId) && requestedEventId > 0
       ? await getDatabase().query("SELECT * FROM public.bbc_event_content WHERE id = $1", [requestedEventId])
       : await getDatabase().query("SELECT * FROM public.bbc_event_content ORDER BY created_at DESC, id DESC LIMIT 1");
     event = eventContentFromRow(result.rows[0]);
+    activeEventId = result.rows[0]?.id ? Number(result.rows[0].id) : null;
   } catch {
     // Use defaults if the editable event content cannot be loaded.
   }
@@ -86,7 +88,7 @@ export default async function RegisterPage({
           </section>
 
           <section className="form-column" id="registration" aria-label="Event registration form">
-            <RegistrationForm />
+            <RegistrationForm eventContentId={activeEventId} />
             <p className="form-footnote"><Icon name="lock" size={13} /> Your details are saved securely for this event.</p>
           </section>
         </div>

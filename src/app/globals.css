@@ -336,3 +336,6 @@ input[type=checkbox]{height:19px;width:19px;accent-color:var(--coral);cursor:poi
 .dashboard-event-menu-popover .delete:hover:not(:disabled){background:#fff1ee}
 .dashboard-event-menu-popover button:disabled{opacity:.55}
 @media(max-width:520px){.dashboard-event-card-shell{width:100%;height:150px}}
+
+.report-page-heading{margin-bottom:22px}
+.report-page-heading h1{margin:0;font-family:"Segoe UI",Arial,sans-serif;font-size:30px;line-height:1.15;letter-spacing:-.8px}

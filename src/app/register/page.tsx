@@ -78,11 +78,11 @@ export default async function RegisterPage({
 
             <div className="impact-card">
               <div className="impact-icon"><Icon name="users" size={26} /></div>
-              <div><span className="impact-label">{event.impactLabel}</span><strong>{event.impactValue}</strong><p>{event.impactCopy}</p></div>
+              <div><span className="impact-label">CONNECTIONS THAT CREATE IMPACT</span><strong>₹2,500+ crore</strong><p>in business through connections built within the Council.</p></div>
               <span className="impact-decoration" aria-hidden="true">↗</span>
             </div>
 
-            <div className="event-values"><span><Icon name="check" size={15} /> {event.value1}</span><span><Icon name="check" size={15} /> {event.value2}</span></div>
+            <div className="event-values"><span><Icon name="check" size={15} /> Meaningful connections</span><span><Icon name="check" size={15} /> Shared growth</span></div>
           </section>
 
           <section className="form-column" id="registration" aria-label="Event registration form">

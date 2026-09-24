@@ -7,11 +7,30 @@ export const EVENT = {
 } as const;
 
 // Store and calculate money in paise, never floating-point rupees.
-export const PRICES = {
+export type ParticipationPrices = {
+  participation: number;
+  standee: number;
+  presentation: number;
+};
+
+export const PRICES: ParticipationPrices = {
   participation: 118000,
   standee: 295000,
   presentation: 3540000,
-} as const;
+};
+
+export function participationPricesFromRow(row: Record<string, unknown> | undefined): ParticipationPrices {
+  const read = (value: unknown, fallback: number) => {
+    const number = Number(value);
+    return Number.isInteger(number) && number >= 0 ? number : fallback;
+  };
+
+  return {
+    participation: read(row?.participation_unit_paise, PRICES.participation),
+    standee: read(row?.standee_unit_paise, PRICES.standee),
+    presentation: read(row?.presentation_unit_paise, PRICES.presentation),
+  };
+}
 
 export const LIMITS = { participation: 20, standee: 10 } as const;
 
@@ -54,10 +73,13 @@ export type RegistrationReceipt = {
   paymentStatus: "unpaid" | "paid" | "refunded";
 };
 
-export function calculateTotal(input: Pick<RegistrationInput, "participationQuantity" | "standeeQuantity" | "presentationSelected">) {
-  return input.participationQuantity * PRICES.participation
-    + input.standeeQuantity * PRICES.standee
-    + (input.presentationSelected ? PRICES.presentation : 0);
+export function calculateTotal(
+  input: Pick<RegistrationInput, "participationQuantity" | "standeeQuantity" | "presentationSelected">,
+  prices: ParticipationPrices = PRICES,
+) {
+  return input.participationQuantity * prices.participation
+    + input.standeeQuantity * prices.standee
+    + (input.presentationSelected ? prices.presentation : 0);
 }
 
 export function formatMoney(paise: number) {

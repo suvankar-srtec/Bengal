@@ -26,7 +26,7 @@ type RegistrationRow = {
   billing_details: string;
   participation_quantity: number;
   standee_quantity: number;
-  meal_choice: "lunch" | "dinner" | null;
+  meal_choice: "snacks" | "lunch" | "dinner" | null;
   presentation_selected: boolean;
   total_paise: number;
   payment_status: string;

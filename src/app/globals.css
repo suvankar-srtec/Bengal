@@ -268,9 +268,19 @@ input[type=checkbox]{height:19px;width:19px;accent-color:var(--coral);cursor:poi
 .event-editor-actions button:disabled{opacity:.65}
 @media(max-width:720px){.event-editor-grid{grid-template-columns:1fr}.event-editor-grid label.full{grid-column:auto}.event-editor-actions{align-items:stretch;flex-direction:column}.event-editor-actions a,.event-editor-actions button{width:100%}}
 
-.dashboard-create-event-area{margin-top:24px}
+.dashboard-events-grid{margin-top:24px;display:grid;grid-template-columns:repeat(auto-fill,180px);gap:18px;align-items:start}
 .dashboard-create-event-card{width:180px;height:180px;border:1px dashed #cfd7dc;border-radius:12px;background:white;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-decoration:none;color:var(--ink);transition:border-color .16s,background .16s,transform .16s,box-shadow .16s}
 .dashboard-create-event-card:hover{border-color:var(--coral);background:#fff8f5;transform:translateY(-2px);box-shadow:0 10px 24px #172d420c}
 .dashboard-create-event-plus{width:54px;height:54px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:var(--soft-coral);color:var(--coral);font-size:36px;font-weight:300;line-height:1}
 .dashboard-create-event-card strong{font-size:13px;font-weight:700}
 @media(max-width:520px){.dashboard-create-event-card{width:150px;height:150px}}
+
+.dashboard-event-card{width:180px;height:180px;border:1px solid var(--line);border-radius:12px;background:white;padding:18px;display:flex;flex-direction:column;text-decoration:none;color:var(--ink);transition:border-color .16s,background .16s,transform .16s,box-shadow .16s}
+.dashboard-event-card:hover{border-color:var(--coral);background:#fffaf8;transform:translateY(-2px);box-shadow:0 10px 24px #172d420c}
+.dashboard-event-card-label{font-size:8px;letter-spacing:1.2px;color:var(--coral);font-weight:750;margin-bottom:16px}
+.dashboard-event-card>strong{font-size:16px;line-height:1.35;overflow-wrap:anywhere}
+.dashboard-event-created{margin-top:auto;font-size:9px;color:var(--muted);line-height:1.5}
+@media(max-width:520px){
+  .dashboard-events-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+  .dashboard-create-event-card,.dashboard-event-card{width:100%;height:150px}
+}

@@ -107,3 +107,32 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "Couldn’t update the event. Please try again." }, { status: 500 });
   }
 }
+
+
+export async function DELETE(request: Request) {
+  if (!(await authorized())) {
+    return NextResponse.json({ error: "Unauthorized." }, { status: 401 });
+  }
+
+  const eventId = Number(new URL(request.url).searchParams.get("id"));
+  if (!Number.isInteger(eventId) || eventId < 1) {
+    return NextResponse.json({ error: "Invalid event." }, { status: 400 });
+  }
+
+  try {
+    const result = await getDatabase().query(
+      "DELETE FROM public.bbc_event_content WHERE id = $1",
+      [eventId],
+    );
+
+    if (!result.rowCount) {
+      return NextResponse.json({ error: "Event not found." }, { status: 404 });
+    }
+
+    return NextResponse.json({ ok: true, eventId });
+  } catch (error) {
+    const diagnostic = error && typeof error === "object" && "code" in error ? String(error.code) : undefined;
+    console.error("Event could not be deleted.", { code: diagnostic });
+    return NextResponse.json({ error: "Couldn’t delete the event. Please try again." }, { status: 500 });
+  }
+}

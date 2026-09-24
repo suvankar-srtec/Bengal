@@ -235,10 +235,16 @@ export function RegistrationForm() {
           <div className="fee-row"><div><span className="fee-label">Participation fees <span className="required">*</span></span><span className="fee-price">{formatMoney(PRICES.participation)} <small>/ person</small></span></div><div className="participant-fee-count" aria-label="Participant count"><span>{participationQuantity}</span> {participationQuantity === 1 ? "person" : "people"}</div></div>
           <div className="fee-row"><div><span className="fee-label">Standee placement <span className="optional">Optional</span></span><span className="fee-price">{formatMoney(PRICES.standee)} <small>/ standee</small></span></div><Quantity label="Standee" value={standeeQuantity} minimum={0} maximum={LIMITS.standee} onChange={setStandeeQuantity} /></div>
           <div className={`fee-row meal-option${mealChoice ? " selected" : ""}`}>
-            <div><span className="fee-label">Meal preference <span className="optional">Optional</span></span><span className="fee-description">Choose Lunch or Dinner</span></div>
+            <div><span className="fee-label">Meal preference <span className="optional">Optional</span></span></div>
             <div className="meal-radio-group" role="radiogroup" aria-label="Meal preference">
-              <label><input type="radio" name="mealChoice" value="lunch" checked={mealChoice === "lunch"} onChange={() => setMealChoice("lunch")} /><span>Lunch</span></label>
-              <label><input type="radio" name="mealChoice" value="dinner" checked={mealChoice === "dinner"} onChange={() => setMealChoice("dinner")} /><span>Dinner</span></label>
+              <label onDoubleClick={() => mealChoice === "lunch" && setMealChoice(null)} title="Double-click the selected option to clear">
+                <input type="radio" name="mealChoice" value="lunch" checked={mealChoice === "lunch"} onChange={() => setMealChoice("lunch")} />
+                <span>Lunch</span>
+              </label>
+              <label onDoubleClick={() => mealChoice === "dinner" && setMealChoice(null)} title="Double-click the selected option to clear">
+                <input type="radio" name="mealChoice" value="dinner" checked={mealChoice === "dinner"} onChange={() => setMealChoice("dinner")} />
+                <span>Dinner</span>
+              </label>
             </div>
           </div>
           <label className={`fee-row presentation-option${presentationSelected ? " selected" : ""}`} htmlFor="presentationSelected"><div><span className="fee-label">Company presentation</span><span className="fee-description">20-minute presentation slot</span><span className="fee-price">{formatMoney(PRICES.presentation)}</span></div><input id="presentationSelected" name="presentationSelected" type="checkbox" checked={presentationSelected} onChange={(event) => setPresentationSelected(event.target.checked)} /></label>

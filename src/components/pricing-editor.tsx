@@ -2,7 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { formatMoney, type ParticipationPrices } from "@/lib/registration";
+import { formatMoney, mealChoiceLabel, type MealChoice, type ParticipationPrices } from "@/lib/registration";
 
 function rupees(paise: number) {
   return (paise / 100).toFixed(2);
@@ -27,6 +27,10 @@ export function PricingEditor({
   const [participation, setParticipation] = useState(rupees(initial.participation));
   const [standee, setStandee] = useState(rupees(initial.standee));
   const [presentation, setPresentation] = useState(rupees(initial.presentation));
+  const [mealOption, setMealOption] = useState<MealChoice>(initial.mealOption);
+  const [snacks, setSnacks] = useState(rupees(initial.snacks));
+  const [lunch, setLunch] = useState(rupees(initial.lunch));
+  const [dinner, setDinner] = useState(rupees(initial.dinner));
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
@@ -37,8 +41,18 @@ export function PricingEditor({
     const participationPaise = toPaise(participation);
     const standeePaise = toPaise(standee);
     const presentationPaise = toPaise(presentation);
+    const snacksPaise = toPaise(snacks);
+    const lunchPaise = toPaise(lunch);
+    const dinnerPaise = toPaise(dinner);
 
-    if (participationPaise === null || standeePaise === null || presentationPaise === null) {
+    if (
+      participationPaise === null ||
+      standeePaise === null ||
+      presentationPaise === null ||
+      snacksPaise === null ||
+      lunchPaise === null ||
+      dinnerPaise === null
+    ) {
       setMessage({ type: "error", text: "Enter valid amounts of zero or more." });
       return;
     }
@@ -55,6 +69,10 @@ export function PricingEditor({
           participationPaise,
           standeePaise,
           presentationPaise,
+          mealOption,
+          snacksPaise,
+          lunchPaise,
+          dinnerPaise,
         }),
       });
 
@@ -104,6 +122,38 @@ export function PricingEditor({
         <div className="pricing-money-input"><span>₹</span><input type="number" min="0" step="0.01" value={presentation} onChange={(event) => setPresentation(event.target.value)} required /></div>
         <small>Current: {formatMoney(initial.presentation)}</small>
       </label>
+    </div>
+
+    <div className="pricing-meal-section">
+      <div className="pricing-meal-heading">
+        <div>
+          <span>MEAL PREFERENCE</span>
+          <h3>Choose one meal option for this event</h3>
+          <p>Only the selected option will appear on the registration form. Guests may select it or leave it unselected.</p>
+        </div>
+      </div>
+
+      <div className="pricing-meal-grid">
+        {([
+          { key: "snacks" as const, label: "Snacks", value: snacks, setValue: setSnacks, current: initial.snacks },
+          { key: "lunch" as const, label: "Lunch", value: lunch, setValue: setLunch, current: initial.lunch },
+          { key: "dinner" as const, label: "Dinner", value: dinner, setValue: setDinner, current: initial.dinner },
+        ]).map((item) => <label className={`pricing-meal-card${mealOption === item.key ? " selected" : ""}`} key={item.key}>
+          <div className="pricing-meal-card-title">
+            <input
+              type="checkbox"
+              checked={mealOption === item.key}
+              onChange={() => setMealOption(item.key)}
+              aria-label={`Use ${item.label} for this event`}
+            />
+            <strong>{item.label}</strong>
+          </div>
+          <div className="pricing-money-input"><span>₹</span><input type="number" min="0" step="0.01" value={item.value} onChange={(event) => item.setValue(event.target.value)} required /></div>
+          <small>Current: {formatMoney(item.current)}</small>
+        </label>)}
+      </div>
+
+      <div className="pricing-active-meal">Active option: <strong>{mealChoiceLabel(mealOption)}</strong></div>
     </div>
 
     {message && <div className={`pricing-message ${message.type}`} role="status">{message.text}</div>}

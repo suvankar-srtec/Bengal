@@ -42,71 +42,84 @@ async function createParticipantPassImage(input: {
   mealLabel: string;
 }) {
   const canvas = document.createElement("canvas");
-  canvas.width = 900;
-  canvas.height = 1250;
+
+  // 2.5 inch x 3.5 inch at 300 DPI
+  canvas.width = 750;
+  canvas.height = 1050;
+
   const context = canvas.getContext("2d");
   if (!context) throw new Error("Canvas is not available.");
 
   context.fillStyle = "#ffffff";
   context.fillRect(0, 0, canvas.width, canvas.height);
 
+  // Top strip
   context.fillStyle = "#c74c40";
-  context.fillRect(0, 0, canvas.width, 16);
+  context.fillRect(0, 0, canvas.width, 14);
 
+  // Header
   context.fillStyle = "#182f46";
-  context.font = '700 28px "Segoe UI", Arial, sans-serif';
-  context.fillText("BENGAL BUSINESS COUNCIL", 70, 85);
+  context.font = '700 24px "Segoe UI", Arial, sans-serif';
+  context.fillText("BENGAL BUSINESS COUNCIL", 45, 72);
 
   context.fillStyle = "#c74c40";
-  context.font = '700 18px "Segoe UI", Arial, sans-serif';
-  context.fillText("AALAP ALOCHONA · EVENT PASS", 70, 127);
+  context.font = '700 15px "Segoe UI", Arial, sans-serif';
+  context.fillText("AALAP ALOCHONA · EVENT PASS", 45, 104);
 
   context.strokeStyle = "#e5e8ea";
   context.lineWidth = 2;
   context.beginPath();
-  context.moveTo(70, 160);
-  context.lineTo(830, 160);
+  context.moveTo(45, 132);
+  context.lineTo(705, 132);
   context.stroke();
 
-  context.fillStyle = "#626f7b";
-  context.font = '600 17px "Segoe UI", Arial, sans-serif';
-  context.fillText(`PARTICIPANT ${input.participantNumber}`, 70, 220);
-
-  const nameSize = fitPassText(context, input.participantName, 760, 48);
-  context.font = `700 ${nameSize}px "Segoe UI", Arial, sans-serif`;
-  context.fillStyle = "#182f46";
-  context.fillText(input.participantName, 70, 278);
-
-  context.fillStyle = "#f8f9fa";
-  context.fillRect(70, 318, 760, 86);
-  context.fillStyle = "#626f7b";
-  context.font = '600 15px "Segoe UI", Arial, sans-serif';
-  context.fillText("MEAL PREFERENCE", 95, 349);
-  context.fillStyle = "#182f46";
-  context.font = '700 25px "Segoe UI", Arial, sans-serif';
-  context.fillText(input.mealLabel, 95, 383);
-
-  const qrImage = await loadPassImage(input.qrUrl);
-  context.fillStyle = "#ffffff";
-  context.fillRect(150, 445, 600, 600);
-  context.drawImage(qrImage, 180, 475, 540, 540);
-
+  // Participant label
   context.fillStyle = "#626f7b";
   context.font = '600 14px "Segoe UI", Arial, sans-serif';
-  context.textAlign = "center";
-  context.fillText("SCAN THIS PASS AT ENTRY", 450, 1078);
+  context.fillText(`PARTICIPANT ${input.participantNumber}`, 45, 184);
 
+  // Name
+  const nameSize = fitPassText(context, input.participantName, 660, 38, 20);
+  context.font = `700 ${nameSize}px "Segoe UI", Arial, sans-serif`;
   context.fillStyle = "#182f46";
-  context.font = '700 18px "Courier New", monospace';
-  context.fillText(input.passId, 450, 1120);
+  context.fillText(input.participantName, 45, 232);
+
+  // Meal box
+  context.fillStyle = "#f8f9fa";
+  context.fillRect(45, 258, 660, 64);
 
   context.fillStyle = "#626f7b";
-  context.font = '500 15px "Segoe UI", Arial, sans-serif';
-  context.fillText("29 September 2026 · Bengal Business Council", 450, 1174);
+  context.font = '600 12px "Segoe UI", Arial, sans-serif';
+  context.fillText("MEAL PREFERENCE", 60, 282);
+
+  context.fillStyle = "#182f46";
+  context.font = '700 22px "Segoe UI", Arial, sans-serif';
+  context.fillText(input.mealLabel, 60, 309);
+
+  // QR image (keep square)
+  const qrImage = await loadPassImage(input.qrUrl);
+
+  context.fillStyle = "#ffffff";
+  context.fillRect(135, 360, 480, 480);
+  context.drawImage(qrImage, 155, 380, 440, 440);
+
+  // Footer text
+  context.fillStyle = "#626f7b";
+  context.font = '600 12px "Segoe UI", Arial, sans-serif';
+  context.textAlign = "center";
+  context.fillText("SCAN THIS PASS AT ENTRY", 375, 875);
+
+  context.fillStyle = "#182f46";
+  context.font = '700 15px "Courier New", monospace';
+  context.fillText(input.passId, 375, 910);
+
+  context.fillStyle = "#626f7b";
+  context.font = '500 12px "Segoe UI", Arial, sans-serif';
+  context.fillText("29 September 2026 · Bengal Business Council", 375, 950);
 
   context.fillStyle = "#c74c40";
-  context.font = '700 14px "Segoe UI", Arial, sans-serif';
-  context.fillText("INDIVIDUAL PASS · NON-TRANSFERABLE", 450, 1212);
+  context.font = '700 11px "Segoe UI", Arial, sans-serif';
+  context.fillText("INDIVIDUAL PASS · NON-TRANSFERABLE", 375, 985);
 
   return canvas.toDataURL("image/png");
 }

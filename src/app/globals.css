@@ -315,12 +315,12 @@ input[type=checkbox]{height:19px;width:19px;accent-color:var(--coral);cursor:poi
 .bbc-logo{display:block;object-fit:contain}
 .bbc-logo-login{width:180px;height:auto}
 .bbc-logo-sidebar{width:150px;height:auto}
-.bbc-logo-header{width:170px;height:auto}
+.bbc-logo-header{width:118px;height:72px;object-fit:contain}
 .admin-login-card-brand{margin-bottom:28px}
 .admin-sidebar-brand{justify-content:flex-start}
 .brand{display:flex;align-items:center;text-decoration:none}
 @media(max-width:760px){
-  .bbc-logo-header{width:145px}
+  .bbc-logo-header{width:96px;height:58px}
   .bbc-logo-sidebar{width:135px}
 }
 
@@ -396,3 +396,5 @@ input[type=checkbox]{height:19px;width:19px;accent-color:var(--coral);cursor:poi
 .report-download-popover{position:absolute;top:44px;right:0;z-index:20;width:145px;background:white;border:1px solid var(--line);border-radius:8px;box-shadow:0 10px 28px #172d4220;padding:5px}
 .report-download-popover a{display:flex;align-items:center;height:34px;padding:0 10px;border-radius:5px;text-decoration:none;font-size:10px;color:var(--ink)}
 .report-download-popover a:hover{background:#f6f7f8;color:var(--coral)}
+
+.site-header .brand{height:100%;display:flex;align-items:center;overflow:hidden}

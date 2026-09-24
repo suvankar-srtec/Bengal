@@ -13,11 +13,6 @@ export const eventContentSchema = z.object({
   aboutParagraph2: z.string().trim().min(1).max(1500),
   bengaliParagraph1: z.string().trim().max(2000),
   bengaliParagraph2: z.string().trim().max(2000),
-  impactLabel: z.string().trim().min(1).max(180),
-  impactValue: z.string().trim().min(1).max(120),
-  impactCopy: z.string().trim().min(1).max(500),
-  value1: z.string().trim().min(1).max(120),
-  value2: z.string().trim().min(1).max(120),
 });
 
 export type EventContent = z.infer<typeof eventContentSchema>;
@@ -35,11 +30,6 @@ export const DEFAULT_EVENT_CONTENT: EventContent = {
   aboutParagraph2: "Understand each other’s businesses, explore collaborations, and grow together through trust and mutual support.",
   bengaliParagraph1: "‘আলাপ আলোচনা’ হলো Bengal Business Council-এর আনুষ্ঠানিক নেটওয়ার্কিং প্ল্যাটফর্ম, যার উদ্দেশ্য সদস্যদের মধ্যে শুধুমাত্র পরিচয়ের গণ্ডি পেরিয়ে অর্থবহ পেশাগত ও ব্যক্তিগত সম্পর্ক গড়ে তোলা।",
   bengaliParagraph2: "এই উদ্যোগ সদস্যদের একে অপরের ব্যবসা ও কর্মকাণ্ড সম্পর্কে আরও ভালোভাবে জানার, অভিজ্ঞতা ও ভাবনার আদান-প্রদান করার, পারস্পরিক সহযোগিতার সম্ভাবনা খুঁজে দেখার এবং সদস্যদের মধ্যে আস্থা, সৌহার্দ্য ও সহযোগিতার সম্পর্ক আরও দৃঢ় করার সুযোগ করে দেয়।",
-  impactLabel: "CONNECTIONS THAT CREATE IMPACT",
-  impactValue: "₹2,500+ crore",
-  impactCopy: "in business through connections built within the Council.",
-  value1: "Meaningful connections",
-  value2: "Shared growth",
 };
 
 function normalizeEventDate(value: unknown) {
@@ -72,10 +62,5 @@ export function eventContentFromRow(row: Record<string, unknown> | undefined): E
     aboutParagraph2: String(row.about_paragraph_2 ?? DEFAULT_EVENT_CONTENT.aboutParagraph2),
     bengaliParagraph1: String(row.bengali_paragraph_1 ?? DEFAULT_EVENT_CONTENT.bengaliParagraph1),
     bengaliParagraph2: String(row.bengali_paragraph_2 ?? DEFAULT_EVENT_CONTENT.bengaliParagraph2),
-    impactLabel: String(row.impact_label ?? DEFAULT_EVENT_CONTENT.impactLabel),
-    impactValue: String(row.impact_value ?? DEFAULT_EVENT_CONTENT.impactValue),
-    impactCopy: String(row.impact_copy ?? DEFAULT_EVENT_CONTENT.impactCopy),
-    value1: String(row.value_1 ?? DEFAULT_EVENT_CONTENT.value1),
-    value2: String(row.value_2 ?? DEFAULT_EVENT_CONTENT.value2),
   };
 }

@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { getDatabase } from "@/lib/db";
-import { calculateTotal, EVENT, PRICES, registrationSchema, registrationFieldKey } from "@/lib/registration";
+import { calculateTotal, EVENT, PRICES, participationPricesFromRow, registrationSchema, registrationFieldKey } from "@/lib/registration";
 
 export const runtime = "nodejs";
 
@@ -60,7 +60,6 @@ export async function POST(request: Request) {
   }
 
   const data = parsed.data;
-  const totalPaise = calculateTotal(data);
   const { additionalParticipantNames, ...originalFields } = data;
   // Keep the original single-participant fingerprint stable across this upgrade.
   const fingerprintData = additionalParticipantNames.length ? { ...originalFields, additionalParticipantNames } : originalFields;
@@ -75,10 +74,24 @@ export async function POST(request: Request) {
     let eventId: string = EVENT.id;
     let eventName: string = EVENT.name;
     let eventDate: string = EVENT.date;
+    let prices = PRICES;
 
     if (data.eventContentId) {
-      const eventResult = await database.query<{ id: number; title_en: string; event_date: Date | string }>(
-        "SELECT id, title_en, event_date FROM public.bbc_event_content WHERE id = $1",
+      const eventResult = await database.query<{
+        id: number;
+        title_en: string;
+        event_date: Date | string;
+        participation_unit_paise: number;
+        standee_unit_paise: number;
+        presentation_unit_paise: number;
+      }>(
+        `SELECT
+          id, title_en, event_date,
+          participation_unit_paise,
+          standee_unit_paise,
+          presentation_unit_paise
+        FROM public.bbc_event_content
+        WHERE id = $1`,
         [data.eventContentId],
       );
       const eventRecord = eventResult.rows[0];
@@ -91,7 +104,10 @@ export async function POST(request: Request) {
       eventDate = eventRecord.event_date instanceof Date
         ? eventRecord.event_date.toISOString().slice(0, 10)
         : String(eventRecord.event_date).slice(0, 10);
+      prices = participationPricesFromRow(eventRecord as unknown as Record<string, unknown>);
     }
+
+    const totalPaise = calculateTotal(data, prices);
 
     // The unique submission key makes retries safe if a response is lost.
     const inserted = await database.query<{
@@ -107,7 +123,7 @@ export async function POST(request: Request) {
       RETURNING id, reference, total_paise, payment_status, request_hash
     `, [id, data.submissionId, fingerprint, reference, eventId, eventName, eventDate,
       data.memberName, data.email, `+91${data.phone}`, data.billingDetails,
-      data.participationQuantity, data.standeeQuantity, data.mealChoice, data.presentationSelected, PRICES.participation, PRICES.standee, PRICES.presentation, totalPaise, participantNames]);
+      data.participationQuantity, data.standeeQuantity, data.mealChoice, data.presentationSelected, prices.participation, prices.standee, prices.presentation, totalPaise, participantNames]);
 
     const record = inserted.rows[0] ?? (await database.query<{
       id: string; reference: string; total_paise: number; payment_status: "unpaid"; request_hash: string;

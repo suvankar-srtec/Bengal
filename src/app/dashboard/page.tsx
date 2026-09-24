@@ -60,9 +60,11 @@ export default async function DashboardPage() {
         <article><span>Paid value</span><strong>{revenue}</strong><small>Successful payment value</small></article>
       </section>
 
-      <section className="admin-dashboard-card">
-        <div><span className="eyebrow">EVENT OPERATIONS</span><h2>Registration & QR passes</h2><p>Register members, complete payment, and generate one QR pass for every participant.</p></div>
-        <a href="/register">Start registration →</a>
+      <section className="dashboard-create-event-area" aria-label="Create event">
+        <a className="dashboard-create-event-card" href="/create-event" aria-label="Create or edit event">
+          <span className="dashboard-create-event-plus" aria-hidden="true">+</span>
+          <strong>Create Event</strong>
+        </a>
       </section>
     </main>
   </div>;

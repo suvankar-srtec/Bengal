@@ -18,7 +18,7 @@ type ExportRegistration = {
   email: string;
   phone: string;
   billing_details: string;
-  meal_choice: "lunch" | "dinner" | null;
+  meal_choice: "snacks" | "lunch" | "dinner" | null;
   standee_quantity: number;
   presentation_selected: boolean;
   total_paise: number;

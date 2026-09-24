@@ -18,7 +18,7 @@ function Quantity({ label, value, minimum, maximum, onChange }: {
 export function RegistrationForm() {
   const [additionalParticipantNames, setAdditionalParticipantNames] = useState<string[]>([]);
   const [standeeQuantity, setStandeeQuantity] = useState(0);
-  const [lunchDinnerSelected, setLunchDinnerSelected] = useState(false);
+  const [mealChoice, setMealChoice] = useState<"lunch" | "dinner" | null>(null);
   const [presentationSelected, setPresentationSelected] = useState(false);
   const [fields, setFields] = useState({ memberName: "", email: "", phone: "", billingDetails: "" });
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -106,7 +106,7 @@ export function RegistrationForm() {
     event.preventDefault();
     if (inFlight.current) return;
     setErrorMessage("");
-    const values = { ...fields, email: fields.email.trim(), participationQuantity, standeeQuantity, lunchDinnerSelected, presentationSelected, additionalParticipantNames: participantNames.slice(1) };
+    const values = { ...fields, email: fields.email.trim(), participationQuantity, standeeQuantity, mealChoice, presentationSelected, additionalParticipantNames: participantNames.slice(1) };
     const key = JSON.stringify(values);
     if (!submission.current || submission.current.key !== key) submission.current = { key, id: crypto.randomUUID() };
     const parsed = registrationSchema.safeParse({ ...values, submissionId: submission.current.id });
@@ -192,7 +192,7 @@ export function RegistrationForm() {
     </div>
     <button className="new-registration" type="button" onClick={() => {
       setReceipt(null); setFields({ memberName: "", email: "", phone: "", billingDetails: "" });
-      setAdditionalParticipantNames([]); setStandeeQuantity(0); setLunchDinnerSelected(false); setPresentationSelected(false);
+      setAdditionalParticipantNames([]); setStandeeQuantity(0); setMealChoice(null); setPresentationSelected(false);
       setQrPasses([]); setQrError(""); submission.current = null;
     }}>Register another member <Icon name="arrow" size={16} /></button>
   </div>;
@@ -234,11 +234,11 @@ export function RegistrationForm() {
         <div className="fee-options">
           <div className="fee-row"><div><span className="fee-label">Participation fees <span className="required">*</span></span><span className="fee-price">{formatMoney(PRICES.participation)} <small>/ person</small></span></div><div className="participant-fee-count" aria-label="Participant count"><span>{participationQuantity}</span> {participationQuantity === 1 ? "person" : "people"}</div></div>
           <div className="fee-row"><div><span className="fee-label">Standee placement <span className="optional">Optional</span></span><span className="fee-price">{formatMoney(PRICES.standee)} <small>/ standee</small></span></div><Quantity label="Standee" value={standeeQuantity} minimum={0} maximum={LIMITS.standee} onChange={setStandeeQuantity} /></div>
-          <div className={`fee-row meal-option${lunchDinnerSelected ? " selected" : ""}`}>
-            <div><span className="fee-label">Lunch &amp; Dinner <span className="optional">Optional</span></span><span className="fee-description">Include meals with your registration</span></div>
-            <div className="meal-radio-group" role="radiogroup" aria-label="Lunch and Dinner">
-              <label><input type="radio" name="lunchDinnerSelected" value="yes" checked={lunchDinnerSelected} onChange={() => setLunchDinnerSelected(true)} /><span>Yes</span></label>
-              <label><input type="radio" name="lunchDinnerSelected" value="no" checked={!lunchDinnerSelected} onChange={() => setLunchDinnerSelected(false)} /><span>No</span></label>
+          <div className={`fee-row meal-option${mealChoice ? " selected" : ""}`}>
+            <div><span className="fee-label">Meal preference <span className="optional">Optional</span></span><span className="fee-description">Choose Lunch or Dinner</span></div>
+            <div className="meal-radio-group" role="radiogroup" aria-label="Meal preference">
+              <label><input type="radio" name="mealChoice" value="lunch" checked={mealChoice === "lunch"} onChange={() => setMealChoice("lunch")} /><span>Lunch</span></label>
+              <label><input type="radio" name="mealChoice" value="dinner" checked={mealChoice === "dinner"} onChange={() => setMealChoice("dinner")} /><span>Dinner</span></label>
             </div>
           </div>
           <label className={`fee-row presentation-option${presentationSelected ? " selected" : ""}`} htmlFor="presentationSelected"><div><span className="fee-label">Company presentation</span><span className="fee-description">20-minute presentation slot</span><span className="fee-price">{formatMoney(PRICES.presentation)}</span></div><input id="presentationSelected" name="presentationSelected" type="checkbox" checked={presentationSelected} onChange={(event) => setPresentationSelected(event.target.checked)} /></label>
@@ -246,7 +246,7 @@ export function RegistrationForm() {
 
         <p className="participant-count-hint" role="status">Participant fee is calculated automatically from the {participationQuantity} member {participationQuantity === 1 ? "name" : "names"} above.</p>
 
-        <div className="total-row"><div><span>Total amount</span><small>{participationQuantity} {participationQuantity === 1 ? "participant" : "participants"}{standeeQuantity > 0 ? ` · ${standeeQuantity} ${standeeQuantity === 1 ? "standee" : "standees"}` : ""}{lunchDinnerSelected ? " · Lunch & Dinner" : ""}{presentationSelected ? " · Presentation" : ""}</small></div><output aria-label="Total amount" aria-live="polite">{formatMoney(total)}</output></div>
+        <div className="total-row"><div><span>Total amount</span><small>{participationQuantity} {participationQuantity === 1 ? "participant" : "participants"}{standeeQuantity > 0 ? ` · ${standeeQuantity} ${standeeQuantity === 1 ? "standee" : "standees"}` : ""}{mealChoice === "lunch" ? " · Lunch" : mealChoice === "dinner" ? " · Dinner" : ""}{presentationSelected ? " · Presentation" : ""}</small></div><output aria-label="Total amount" aria-live="polite">{formatMoney(total)}</output></div>
         {errorMessage && <div className="error-banner" role="alert">{errorMessage}</div>}
         <button className="submit-button" type="submit" disabled={isSubmitting}>{isSubmitting ? <><span className="spinner" /> Preparing payment…</> : <>Proceed to payment <Icon name="arrow" size={19} /></>}</button>
         <p className="submit-note">Payment opens directly. Your registration is confirmed only after successful payment.</p>

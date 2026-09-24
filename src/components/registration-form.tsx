@@ -16,7 +16,6 @@ function Quantity({ label, value, minimum, maximum, onChange }: {
 }
 
 export function RegistrationForm() {
-  const [participationQuantity, setParticipationQuantity] = useState(1);
   const [additionalParticipantNames, setAdditionalParticipantNames] = useState<string[]>([]);
   const [standeeQuantity, setStandeeQuantity] = useState(0);
   const [lunchDinnerSelected, setLunchDinnerSelected] = useState(false);
@@ -33,9 +32,8 @@ export function RegistrationForm() {
   const submission = useRef<{ key: string; id: string } | null>(null);
   const inFlight = useRef(false);
   const confirmationHeading = useRef<HTMLHeadingElement>(null);
-  const participantNames = [fields.memberName, ...Array.from(
-    { length: participationQuantity - 1 }, (_, index) => additionalParticipantNames[index] ?? "",
-  )];
+  const participationQuantity = 1 + additionalParticipantNames.length;
+  const participantNames = [fields.memberName, ...additionalParticipantNames];
   const total = calculateTotal({ participationQuantity, standeeQuantity, presentationSelected });
   const participantKey = participantNames.map((name) => name.trim()).join("\u001f");
 
@@ -91,8 +89,15 @@ export function RegistrationForm() {
     setErrorMessage("");
   }
 
-  function updateParticipationQuantity(value: number) {
-    setParticipationQuantity(value);
+  function addParticipantName() {
+    if (participationQuantity >= LIMITS.participation) return;
+    setAdditionalParticipantNames((current) => [...current, ""]);
+    setErrors((current) => Object.fromEntries(Object.entries(current).filter(([key]) => !key.startsWith("participantName"))));
+    setErrorMessage("");
+  }
+
+  function removeParticipantName(index: number) {
+    setAdditionalParticipantNames((current) => current.filter((_, currentIndex) => currentIndex !== index));
     setErrors((current) => Object.fromEntries(Object.entries(current).filter(([key]) => !key.startsWith("participantName"))));
     setErrorMessage("");
   }
@@ -187,7 +192,7 @@ export function RegistrationForm() {
     </div>
     <button className="new-registration" type="button" onClick={() => {
       setReceipt(null); setFields({ memberName: "", email: "", phone: "", billingDetails: "" });
-      setAdditionalParticipantNames([]); setParticipationQuantity(1); setStandeeQuantity(0); setLunchDinnerSelected(false); setPresentationSelected(false);
+      setAdditionalParticipantNames([]); setStandeeQuantity(0); setLunchDinnerSelected(false); setPresentationSelected(false);
       setQrPasses([]); setQrError(""); submission.current = null;
     }}>Register another member <Icon name="arrow" size={16} /></button>
   </div>;
@@ -201,7 +206,14 @@ export function RegistrationForm() {
         <legend className="sr-only">Event registration details</legend>
         <div className="form-section-heading"><span className="step-number">01</span><h3>Your details</h3><span className="required-note">* Required</span></div>
         <div className="fields-grid">
-          <div className="field full-width"><label htmlFor="memberName">Member name <span className="required">*</span></label><input id="memberName" name="memberName" autoComplete="name" placeholder="Your full name" value={fields.memberName} onChange={(event) => updateField("memberName", event.target.value)} maxLength={120} required aria-invalid={Boolean(errors.memberName)} aria-describedby={errors.memberName ? "memberName-error" : undefined} />{errors.memberName && <span className="field-error" id="memberName-error">{errors.memberName}</span>}</div>
+          <div className="field full-width">
+            <div className="member-name-label-row">
+              <label htmlFor="memberName">Member name <span className="required">*</span></label>
+              <button className="member-add-button" type="button" onClick={addParticipantName} disabled={participationQuantity >= LIMITS.participation} aria-label="Add another member name"><Icon name="plus" size={15} /></button>
+            </div>
+            <input id="memberName" name="memberName" autoComplete="name" placeholder="Your full name" value={fields.memberName} onChange={(event) => updateField("memberName", event.target.value)} maxLength={120} required aria-invalid={Boolean(errors.memberName)} aria-describedby={errors.memberName ? "memberName-error" : undefined} />
+            {errors.memberName && <span className="field-error" id="memberName-error">{errors.memberName}</span>}
+          </div>
           {participantNames.slice(1).map((name, index) => {
             const fieldId = `participantName${index + 2}` as const;
             return <div className="field full-width participant-name-field" key={fieldId}>
@@ -211,19 +223,19 @@ export function RegistrationForm() {
             </div>;
           })}
           <div className="field full-width"><label htmlFor="email">Email address <span className="required">*</span></label><input id="email" name="email" type="email" autoComplete="email" placeholder="you@company.com" value={fields.email} onChange={(event) => updateField("email", event.target.value)} maxLength={254} required aria-invalid={Boolean(errors.email)} aria-describedby={errors.email ? "email-error" : undefined} />{errors.email && <span className="field-error" id="email-error">{errors.email}</span>}</div>
-          <div className="field full-width"><label htmlFor="phone">Phone number <span className="required">*</span></label><div className={`phone-input${errors.phone ? " invalid" : ""}`}><span><span className="sr-only">India country code </span>IN <span>+91</span></span><input id="phone" name="phone" type="tel" autoComplete="tel-national" inputMode="numeric" placeholder="10-digit mobile number" value={fields.phone} onChange={(event) => updateField("phone", event.target.value.replace(/\D/g, "").slice(0, 10))} maxLength={10} required aria-invalid={Boolean(errors.phone)} aria-describedby={errors.phone ? "phone-error" : undefined} /></div>{errors.phone && <span className="field-error" id="phone-error">{errors.phone}</span>}</div>
+          <div className="field full-width"><label htmlFor="phone">WhatsApp number <span className="required">*</span></label><div className={`phone-input${errors.phone ? " invalid" : ""}`}><span><span className="sr-only">India country code </span>IN <span>+91</span></span><input id="phone" name="phone" type="tel" autoComplete="tel-national" inputMode="numeric" placeholder="10-digit WhatsApp number" value={fields.phone} onChange={(event) => updateField("phone", event.target.value.replace(/\D/g, "").slice(0, 10))} maxLength={10} required aria-invalid={Boolean(errors.phone)} aria-describedby={errors.phone ? "phone-error" : undefined} /></div>{errors.phone && <span className="field-error" id="phone-error">{errors.phone}</span>}</div>
           <div className="field full-width"><label htmlFor="billingDetails">Billing details <span className="required">*</span></label><input id="billingDetails" name="billingDetails" autoCapitalize="characters" spellCheck={false} placeholder="GST number or PAN number" value={fields.billingDetails} onChange={(event) => updateField("billingDetails", event.target.value.toUpperCase())} maxLength={15} required aria-invalid={Boolean(errors.billingDetails)} aria-describedby={`billing-hint${errors.billingDetails ? " billingDetails-error" : ""}`} /><span className="field-hint" id="billing-hint">Enter your company GSTIN or personal PAN.</span>{errors.billingDetails && <span className="field-error" id="billingDetails-error">{errors.billingDetails}</span>}</div>
         </div>
 
         <div className="form-section-heading participation-heading"><span className="step-number">02</span><h3>Your participation</h3><span className="currency-label">INR</span></div>
         <div className="fee-options">
-          <div className="fee-row"><div><span className="fee-label">Participation fees <span className="required">*</span></span><span className="fee-price">{formatMoney(PRICES.participation)} <small>/ person</small></span></div><Quantity label="Participation" value={participationQuantity} minimum={1} maximum={LIMITS.participation} onChange={updateParticipationQuantity} /></div>
+          <div className="fee-row"><div><span className="fee-label">Participation fees <span className="required">*</span></span><span className="fee-price">{formatMoney(PRICES.participation)} <small>/ person</small></span></div><div className="participant-fee-count" aria-label="Participant count"><span>{participationQuantity}</span> {participationQuantity === 1 ? "person" : "people"}</div></div>
           <div className="fee-row"><div><span className="fee-label">Standee placement <span className="optional">Optional</span></span><span className="fee-price">{formatMoney(PRICES.standee)} <small>/ standee</small></span></div><Quantity label="Standee" value={standeeQuantity} minimum={0} maximum={LIMITS.standee} onChange={setStandeeQuantity} /></div>
           <label className={`fee-row meal-option${lunchDinnerSelected ? " selected" : ""}`} htmlFor="lunchDinnerSelected"><div><span className="fee-label">Lunch &amp; Dinner <span className="optional">Optional</span></span><span className="fee-description">Include meals with your registration</span></div><input id="lunchDinnerSelected" name="lunchDinnerSelected" type="checkbox" checked={lunchDinnerSelected} onChange={(event) => setLunchDinnerSelected(event.target.checked)} /></label>
           <label className={`fee-row presentation-option${presentationSelected ? " selected" : ""}`} htmlFor="presentationSelected"><div><span className="fee-label">Company presentation</span><span className="fee-description">20-minute presentation slot</span><span className="fee-price">{formatMoney(PRICES.presentation)}</span></div><input id="presentationSelected" name="presentationSelected" type="checkbox" checked={presentationSelected} onChange={(event) => setPresentationSelected(event.target.checked)} /></label>
         </div>
 
-        {participationQuantity > 1 && <p className="participant-count-hint" role="status">Add all {participationQuantity} participant names in Your details above.</p>}
+        <p className="participant-count-hint" role="status">Participant fee is calculated automatically from the {participationQuantity} member {participationQuantity === 1 ? "name" : "names"} above.</p>
 
         <div className="total-row"><div><span>Total amount</span><small>{participationQuantity} {participationQuantity === 1 ? "participant" : "participants"}{standeeQuantity > 0 ? ` · ${standeeQuantity} ${standeeQuantity === 1 ? "standee" : "standees"}` : ""}{lunchDinnerSelected ? " · Lunch & Dinner" : ""}{presentationSelected ? " · Presentation" : ""}</small></div><output aria-label="Total amount" aria-live="polite">{formatMoney(total)}</output></div>
         {errorMessage && <div className="error-banner" role="alert">{errorMessage}</div>}

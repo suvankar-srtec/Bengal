@@ -435,3 +435,18 @@ input[type=checkbox]{height:19px;width:19px;accent-color:var(--coral);cursor:poi
   .pricing-event-selector{min-width:0}
   .pricing-fields{grid-template-columns:1fr}
 }
+
+.pricing-meal-section{margin-top:24px;padding-top:22px;border-top:1px solid var(--line)}
+.pricing-meal-heading>div>span{font-size:8px;letter-spacing:1.4px;color:var(--coral);font-weight:750}
+.pricing-meal-heading h3{margin:7px 0 6px;font-size:16px}
+.pricing-meal-heading p{margin:0;color:var(--muted);font-size:10px}
+.pricing-meal-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-top:18px}
+.pricing-meal-card{border:1px solid #dce2e6;border-radius:9px;padding:14px;background:white;display:flex;flex-direction:column;gap:10px}
+.pricing-meal-card.selected{border-color:var(--coral);background:#fff8f5;box-shadow:0 0 0 1px #d04d4018 inset}
+.pricing-meal-card-title{display:flex;align-items:center;gap:8px}
+.pricing-meal-card-title input{width:16px;height:16px;accent-color:var(--coral)}
+.pricing-meal-card-title strong{font-size:11px}
+.pricing-meal-card>small{font-size:9px;color:var(--muted)}
+.pricing-active-meal{margin-top:12px;font-size:10px;color:var(--muted)}
+.pricing-active-meal strong{color:var(--ink)}
+@media(max-width:900px){.pricing-meal-grid{grid-template-columns:1fr}}

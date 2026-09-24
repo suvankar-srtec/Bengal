@@ -4,6 +4,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { calculateTotal, formatMoney, LIMITS, PRICES, registrationSchema, registrationFieldKey, type FieldErrors, type RegistrationReceipt } from "@/lib/registration";
 import { Icon } from "./icon";
 import { PaymentCheckout } from "./payment-checkout";
+import { BBC_LOGO_DATA_URL } from "@/lib/bbc-logo";
 
 function Quantity({ label, value, minimum, maximum, onChange }: {
   label: string; value: number; minimum: number; maximum: number; onChange: (value: number) => void;
@@ -66,42 +67,47 @@ async function createParticipantPassImage(input: {
   context.font = '700 15px "Segoe UI", Arial, sans-serif';
   context.fillText("AALAP ALOCHONA · EVENT PASS", 45, 104);
 
+  const logoImage = await loadPassImage(BBC_LOGO_DATA_URL);
+  const logoWidth = 175;
+  const logoHeight = 118;
+  context.drawImage(logoImage, canvas.width - logoWidth - 40, 34, logoWidth, logoHeight);
+
   context.strokeStyle = "#e5e8ea";
   context.lineWidth = 2;
   context.beginPath();
-  context.moveTo(45, 132);
-  context.lineTo(705, 132);
+  context.moveTo(45, 148);
+  context.lineTo(705, 148);
   context.stroke();
 
   // Participant label
   context.fillStyle = "#626f7b";
   context.font = '600 14px "Segoe UI", Arial, sans-serif';
-  context.fillText(`PARTICIPANT ${input.participantNumber}`, 45, 184);
+  context.fillText(`PARTICIPANT ${input.participantNumber}`, 45, 198);
 
   // Name
   const nameSize = fitPassText(context, input.participantName, 660, 38, 20);
   context.font = `700 ${nameSize}px "Segoe UI", Arial, sans-serif`;
   context.fillStyle = "#182f46";
-  context.fillText(input.participantName, 45, 232);
+  context.fillText(input.participantName, 45, 246);
 
   // Meal box
   context.fillStyle = "#f8f9fa";
-  context.fillRect(45, 258, 660, 64);
+  context.fillRect(45, 272, 660, 64);
 
   context.fillStyle = "#626f7b";
   context.font = '600 12px "Segoe UI", Arial, sans-serif';
-  context.fillText("MEAL PREFERENCE", 60, 282);
+  context.fillText("MEAL PREFERENCE", 60, 296);
 
   context.fillStyle = "#182f46";
   context.font = '700 22px "Segoe UI", Arial, sans-serif';
-  context.fillText(input.mealLabel, 60, 309);
+  context.fillText(input.mealLabel, 60, 323);
 
   // QR image (keep square)
   const qrImage = await loadPassImage(input.qrUrl);
 
   context.fillStyle = "#ffffff";
-  context.fillRect(135, 360, 480, 480);
-  context.drawImage(qrImage, 155, 380, 440, 440);
+  context.fillRect(135, 374, 480, 480);
+  context.drawImage(qrImage, 155, 394, 440, 440);
 
   // Footer text
   context.fillStyle = "#626f7b";

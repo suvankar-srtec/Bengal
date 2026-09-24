@@ -100,7 +100,8 @@ export type RegistrationReceipt = {
 };
 
 export function calculateTotal(
-  input: Pick<RegistrationInput, "participationQuantity" | "standeeQuantity" | "mealChoice" | "presentationSelected">,
+  input: Pick<RegistrationInput, "participationQuantity" | "standeeQuantity" | "presentationSelected">
+    & { mealChoice?: MealChoice | null },
   prices: ParticipationPrices = PRICES,
 ) {
   const mealTotal = input.mealChoice

@@ -217,8 +217,11 @@ export function RegistrationForm() {
           {participantNames.slice(1).map((name, index) => {
             const fieldId = `participantName${index + 2}` as const;
             return <div className="field full-width participant-name-field" key={fieldId}>
-              <label htmlFor={fieldId}>Participant {index + 2} name <span className="required">*</span></label>
-              <input id={fieldId} name={fieldId} autoComplete="off" placeholder={`Participant ${index + 2} full name`} value={name} onChange={(event) => updateParticipantName(index, event.target.value)} maxLength={120} required aria-invalid={Boolean(errors[fieldId])} aria-describedby={errors[fieldId] ? `${fieldId}-error` : undefined} />
+              <div className="member-name-label-row">
+                <label htmlFor={fieldId}>Member name {index + 2} <span className="required">*</span></label>
+                <button className="member-remove-button" type="button" onClick={() => removeParticipantName(index)} aria-label={`Remove member ${index + 2}`} title="Remove member"><Icon name="minus" size={15} /></button>
+              </div>
+              <input id={fieldId} name={fieldId} autoComplete="off" placeholder={`Member ${index + 2} full name`} value={name} onChange={(event) => updateParticipantName(index, event.target.value)} maxLength={120} required aria-invalid={Boolean(errors[fieldId])} aria-describedby={errors[fieldId] ? `${fieldId}-error` : undefined} />
               {errors[fieldId] && <span className="field-error" id={`${fieldId}-error`}>{errors[fieldId]}</span>}
             </div>;
           })}
@@ -231,7 +234,13 @@ export function RegistrationForm() {
         <div className="fee-options">
           <div className="fee-row"><div><span className="fee-label">Participation fees <span className="required">*</span></span><span className="fee-price">{formatMoney(PRICES.participation)} <small>/ person</small></span></div><div className="participant-fee-count" aria-label="Participant count"><span>{participationQuantity}</span> {participationQuantity === 1 ? "person" : "people"}</div></div>
           <div className="fee-row"><div><span className="fee-label">Standee placement <span className="optional">Optional</span></span><span className="fee-price">{formatMoney(PRICES.standee)} <small>/ standee</small></span></div><Quantity label="Standee" value={standeeQuantity} minimum={0} maximum={LIMITS.standee} onChange={setStandeeQuantity} /></div>
-          <label className={`fee-row meal-option${lunchDinnerSelected ? " selected" : ""}`} htmlFor="lunchDinnerSelected"><div><span className="fee-label">Lunch &amp; Dinner <span className="optional">Optional</span></span><span className="fee-description">Include meals with your registration</span></div><input id="lunchDinnerSelected" name="lunchDinnerSelected" type="checkbox" checked={lunchDinnerSelected} onChange={(event) => setLunchDinnerSelected(event.target.checked)} /></label>
+          <div className={`fee-row meal-option${lunchDinnerSelected ? " selected" : ""}`}>
+            <div><span className="fee-label">Lunch &amp; Dinner <span className="optional">Optional</span></span><span className="fee-description">Include meals with your registration</span></div>
+            <div className="meal-radio-group" role="radiogroup" aria-label="Lunch and Dinner">
+              <label><input type="radio" name="lunchDinnerSelected" value="yes" checked={lunchDinnerSelected} onChange={() => setLunchDinnerSelected(true)} /><span>Yes</span></label>
+              <label><input type="radio" name="lunchDinnerSelected" value="no" checked={!lunchDinnerSelected} onChange={() => setLunchDinnerSelected(false)} /><span>No</span></label>
+            </div>
+          </div>
           <label className={`fee-row presentation-option${presentationSelected ? " selected" : ""}`} htmlFor="presentationSelected"><div><span className="fee-label">Company presentation</span><span className="fee-description">20-minute presentation slot</span><span className="fee-price">{formatMoney(PRICES.presentation)}</span></div><input id="presentationSelected" name="presentationSelected" type="checkbox" checked={presentationSelected} onChange={(event) => setPresentationSelected(event.target.checked)} /></label>
         </div>
 

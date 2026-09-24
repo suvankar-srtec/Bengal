@@ -130,7 +130,7 @@ async function createParticipantPassImage(input: {
   return canvas.toDataURL("image/png");
 }
 
-export function RegistrationForm() {
+export function RegistrationForm({ eventContentId }: { eventContentId: number | null }) {
   const [additionalParticipantNames, setAdditionalParticipantNames] = useState<string[]>([]);
   const [standeeQuantity, setStandeeQuantity] = useState(0);
   const [mealChoice, setMealChoice] = useState<"lunch" | "dinner" | null>(null);
@@ -231,7 +231,7 @@ export function RegistrationForm() {
     event.preventDefault();
     if (inFlight.current) return;
     setErrorMessage("");
-    const values = { ...fields, email: fields.email.trim(), participationQuantity, standeeQuantity, mealChoice, presentationSelected, additionalParticipantNames: participantNames.slice(1) };
+    const values = { eventContentId, ...fields, email: fields.email.trim(), participationQuantity, standeeQuantity, mealChoice, presentationSelected, additionalParticipantNames: participantNames.slice(1) };
     const key = JSON.stringify(values);
     if (!submission.current || submission.current.key !== key) submission.current = { key, id: crypto.randomUUID() };
     const parsed = registrationSchema.safeParse({ ...values, submissionId: submission.current.id });

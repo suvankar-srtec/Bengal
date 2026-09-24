@@ -19,7 +19,6 @@ type EventOption = {
 
 type RegistrationRow = {
   id: string;
-  reference: string;
   member_name: string;
   email: string;
   phone: string;
@@ -86,7 +85,7 @@ export default async function ReportPage({
 
       const registrationResult = await database.query<RegistrationRow>(`
         SELECT
-          id, reference, member_name, email, phone, billing_details,
+          id, member_name, email, phone, billing_details,
           participation_quantity, standee_quantity, meal_choice,
           presentation_selected, total_paise, payment_status,
           participant_names, created_at
@@ -142,7 +141,6 @@ export default async function ReportPage({
             <table className="report-table">
               <thead>
                 <tr>
-                  <th>Reference</th>
                   <th>Primary member</th>
                   <th>Participants</th>
                   <th>Email</th>
@@ -158,7 +156,6 @@ export default async function ReportPage({
               </thead>
               <tbody>
                 {registrations.map((registration) => <tr key={registration.id}>
-                  <td><code>{registration.reference}</code></td>
                   <td><strong>{registration.member_name}</strong></td>
                   <td>
                     <div className="report-participant-names">

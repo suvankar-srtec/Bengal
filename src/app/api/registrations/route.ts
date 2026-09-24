@@ -14,6 +14,20 @@ async function readBody(request: Request): Promise<string> {
   const chunks: Uint8Array[] = [];
   let length = 0;
   while (true) {
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     const { done, value } = await reader.read();
     if (done) break;
     length += value.byteLength;
@@ -71,6 +85,28 @@ export async function POST(request: Request) {
 
   try {
     const database = getDatabase();
+
+    let eventId = EVENT.id;
+    let eventName = EVENT.name;
+    let eventDate = EVENT.date;
+
+    if (data.eventContentId) {
+      const eventResult = await database.query<{ id: number; title_en: string; event_date: Date | string }>(
+        "SELECT id, title_en, event_date FROM public.bbc_event_content WHERE id = $1",
+        [data.eventContentId],
+      );
+      const eventRecord = eventResult.rows[0];
+      if (!eventRecord) {
+        return json({ error: "The selected event no longer exists. Return to the dashboard and choose an event again." }, 409);
+      }
+
+      eventId = String(eventRecord.id);
+      eventName = eventRecord.title_en;
+      eventDate = eventRecord.event_date instanceof Date
+        ? eventRecord.event_date.toISOString().slice(0, 10)
+        : String(eventRecord.event_date).slice(0, 10);
+    }
+
     // The unique submission key makes retries safe if a response is lost.
     const inserted = await database.query<{
       id: string; reference: string; total_paise: number; payment_status: "unpaid"; request_hash: string;
@@ -83,7 +119,7 @@ export async function POST(request: Request) {
       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20)
       ON CONFLICT (submission_id) DO NOTHING
       RETURNING id, reference, total_paise, payment_status, request_hash
-    `, [id, data.submissionId, fingerprint, reference, EVENT.id, EVENT.name, EVENT.date,
+    `, [id, data.submissionId, fingerprint, reference, eventId, eventName, eventDate,
       data.memberName, data.email, `+91${data.phone}`, data.billingDetails,
       data.participationQuantity, data.standeeQuantity, data.mealChoice, data.presentationSelected, PRICES.participation, PRICES.standee, PRICES.presentation, totalPaise, participantNames]);
 

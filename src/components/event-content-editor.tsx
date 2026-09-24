@@ -27,7 +27,8 @@ export function EventContentEditor({ initial, eventId }: { initial: EventContent
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Couldn’t save event content.");
-      window.location.assign("/dashboard");
+      const savedEventId = Number(result.eventId);
+      window.location.assign(Number.isInteger(savedEventId) && savedEventId > 0 ? `/register?id=${savedEventId}` : "/register");
     } catch (error) {
       setMessage({ type: "error", text: error instanceof Error ? error.message : "Couldn’t save event content." });
     } finally {

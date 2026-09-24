@@ -67,7 +67,6 @@ export default async function ReportPage({
   let events: EventOption[] = [];
   let selectedEvent: EventOption | null = null;
   let registrations: RegistrationRow[] = [];
-  let totals = { registrations: 0, paid: 0, unpaid: 0, participants: 0, revenue: 0 };
 
   try {
     const database = getDatabase();
@@ -97,17 +96,6 @@ export default async function ReportPage({
       `, [String(selectedId)]);
       registrations = registrationResult.rows;
 
-      totals = registrations.reduce((summary, registration) => {
-        summary.registrations += 1;
-        summary.participants += Number(registration.participation_quantity || 0);
-        if (registration.payment_status === "paid") {
-          summary.paid += 1;
-          summary.revenue += Number(registration.total_paise || 0);
-        } else if (registration.payment_status === "unpaid") {
-          summary.unpaid += 1;
-        }
-        return summary;
-      }, { registrations: 0, paid: 0, unpaid: 0, participants: 0, revenue: 0 });
     }
   } catch (error) {
     console.error("Event report could not be loaded.", {
@@ -145,24 +133,6 @@ export default async function ReportPage({
       </div>
 
       {selectedEvent ? <>
-        <section className="report-event-summary">
-          <div>
-            <span>Selected event</span>
-            <strong>{selectedEvent.title_en}</strong>
-            <small>{selectedEvent.title_bn}</small>
-          </div>
-          <div><span>Event date</span><strong>{dateLabel(selectedEvent.event_date)}</strong></div>
-          <div><span>Organizer</span><strong>{selectedEvent.organizer}</strong></div>
-          <div><span>Created</span><strong>{dateLabel(selectedEvent.created_at)}</strong></div>
-        </section>
-
-        <section className="admin-stat-grid report-stat-grid" aria-label="Selected event summary">
-          <article><span>Total registrations</span><strong>{totals.registrations}</strong><small>For this event</small></article>
-          <article><span>Paid registrations</span><strong>{totals.paid}</strong><small>{totals.unpaid} unpaid</small></article>
-          <article><span>Total participants</span><strong>{totals.participants}</strong><small>Individual attendees</small></article>
-          <article><span>Paid value</span><strong>{money(totals.revenue)}</strong><small>Successful payment value</small></article>
-        </section>
-
         <section className="report-table-card">
           <div className="report-table-heading">
             <div><h2>Registrations</h2><p>{registrations.length} record{registrations.length === 1 ? "" : "s"} for {selectedEvent.title_en}</p></div>

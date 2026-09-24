@@ -42,7 +42,40 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await getDatabase().query<{ id: number }>(
+    const database = getDatabase();
+    const eventValues = values(parsed.data);
+
+    const duplicate = await database.query<{ id: number }>(
+      `SELECT id
+       FROM public.bbc_event_content
+       WHERE section_label = $1
+         AND title_bn = $2
+         AND title_en = $3
+         AND tagline_line_1 = $4
+         AND tagline_line_2 = $5
+         AND event_date = $6::date
+         AND organizer = $7
+         AND about_title = $8
+         AND about_paragraph_1 = $9
+         AND about_paragraph_2 = $10
+         AND bengali_paragraph_1 = $11
+         AND bengali_paragraph_2 = $12
+       ORDER BY id
+       LIMIT 1`,
+      eventValues,
+    );
+
+    if (duplicate.rows[0]) {
+      return NextResponse.json(
+        {
+          error: "This event already exists.",
+          eventId: duplicate.rows[0].id,
+        },
+        { status: 409 },
+      );
+    }
+
+    const result = await database.query<{ id: number }>(
       `INSERT INTO public.bbc_event_content (
         section_label, title_bn, title_en, tagline_line_1, tagline_line_2,
         event_date, organizer, about_title, about_paragraph_1, about_paragraph_2,
@@ -51,7 +84,7 @@ export async function POST(request: Request) {
         $1, $2, $3, $4, $5, $6::date, $7, $8, $9, $10, $11, $12
       )
       RETURNING id`,
-      values(parsed.data),
+      eventValues,
     );
     return NextResponse.json({ ok: true, eventId: result.rows[0]?.id }, { status: 201 });
   } catch (error) {

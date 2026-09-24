@@ -11,6 +11,7 @@ export default async function DashboardPage() {
   if (!validAdminSession(store.get(ADMIN_SESSION_COOKIE)?.value)) redirect("/");
 
   let totals = { registrations: 0, paid: 0, participants: 0, revenue: 0 };
+  let events: Array<{ id: number; title: string; createdAt: string }> = [];
   try {
     const result = await getDatabase().query<{
       registrations: string;
@@ -32,6 +33,32 @@ export default async function DashboardPage() {
       participants: Number(row?.participants ?? 0),
       revenue: Number(row?.revenue ?? 0),
     };
+
+    const eventResult = await getDatabase().query<{
+      id: number;
+      title_en: string;
+      created_at: Date | string;
+    }>(`
+      SELECT id, title_en, created_at
+      FROM public.bbc_event_content
+      ORDER BY created_at DESC, id DESC
+    `);
+
+    events = eventResult.rows.map((event) => {
+      const created = event.created_at instanceof Date ? event.created_at : new Date(event.created_at);
+      return {
+        id: Number(event.id),
+        title: event.title_en,
+        createdAt: Number.isNaN(created.getTime())
+          ? ""
+          : new Intl.DateTimeFormat("en-GB", {
+              day: "2-digit",
+              month: "short",
+              year: "numeric",
+              timeZone: "UTC",
+            }).format(created),
+      };
+    });
   } catch {
     // Dashboard remains usable even if the database is temporarily unavailable.
   }
@@ -60,11 +87,17 @@ export default async function DashboardPage() {
         <article><span>Paid value</span><strong>{revenue}</strong><small>Successful payment value</small></article>
       </section>
 
-      <section className="dashboard-create-event-area" aria-label="Create event">
-        <a className="dashboard-create-event-card" href="/create-event" aria-label="Create or edit event">
+      <section className="dashboard-events-grid" aria-label="Events">
+        <a className="dashboard-create-event-card" href="/create-event" aria-label="Create event">
           <span className="dashboard-create-event-plus" aria-hidden="true">+</span>
           <strong>Create Event</strong>
         </a>
+
+        {events.map((event) => <a className="dashboard-event-card" href={`/create-event?id=${event.id}`} key={event.id}>
+          <span className="dashboard-event-card-label">EVENT</span>
+          <strong>{event.title}</strong>
+          <span className="dashboard-event-created">Created {event.createdAt}</span>
+        </a>)}
       </section>
     </main>
   </div>;

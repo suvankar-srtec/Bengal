@@ -41,8 +41,7 @@ export default async function CreateEventPage({
       </a>
       <nav className="admin-nav">
         <a href="/dashboard">Dashboard</a>
-        <a className="active" href="/create-event">Create Event</a>
-        <a href="/register">Event registration</a>
+        <a href="/report">Report</a>
       </nav>
       <div className="admin-sidebar-footer"><AdminLogoutButton /></div>
     </aside>

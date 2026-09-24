@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { calculateTotal, formatMoney, LIMITS, PRICES, registrationSchema, registrationFieldKey, type FieldErrors, type RegistrationReceipt } from "@/lib/registration";
+import { calculateTotal, formatMoney, LIMITS, registrationSchema, registrationFieldKey, type FieldErrors, type ParticipationPrices, type RegistrationReceipt } from "@/lib/registration";
 import { Icon } from "./icon";
 import { PaymentCheckout } from "./payment-checkout";
 import { BBC_LOGO_DATA_URL } from "@/lib/bbc-logo";
@@ -130,7 +130,7 @@ async function createParticipantPassImage(input: {
   return canvas.toDataURL("image/png");
 }
 
-export function RegistrationForm({ eventContentId }: { eventContentId: number | null }) {
+export function RegistrationForm({ eventContentId, prices }: { eventContentId: number | null; prices: ParticipationPrices }) {
   const [additionalParticipantNames, setAdditionalParticipantNames] = useState<string[]>([]);
   const [standeeQuantity, setStandeeQuantity] = useState(0);
   const [mealChoice, setMealChoice] = useState<"lunch" | "dinner" | null>(null);
@@ -149,7 +149,7 @@ export function RegistrationForm({ eventContentId }: { eventContentId: number | 
   const confirmationHeading = useRef<HTMLHeadingElement>(null);
   const participationQuantity = 1 + additionalParticipantNames.length;
   const participantNames = [fields.memberName, ...additionalParticipantNames];
-  const total = calculateTotal({ participationQuantity, standeeQuantity, presentationSelected });
+  const total = calculateTotal({ participationQuantity, standeeQuantity, presentationSelected }, prices);
   const participantKey = participantNames.map((name) => name.trim()).join("\u001f");
 
   useEffect(() => {
@@ -358,8 +358,8 @@ export function RegistrationForm({ eventContentId }: { eventContentId: number | 
 
         <div className="form-section-heading participation-heading"><span className="step-number">02</span><h3>Your participation</h3><span className="currency-label">INR</span></div>
         <div className="fee-options">
-          <div className="fee-row"><div><span className="fee-label">Participation fees <span className="required">*</span></span><span className="fee-price">{formatMoney(PRICES.participation)} <small>/ person</small></span></div><div className="participant-fee-count" aria-label="Participant count"><span>{participationQuantity}</span> {participationQuantity === 1 ? "person" : "people"}</div></div>
-          <div className="fee-row"><div><span className="fee-label">Standee placement <span className="optional">Optional</span></span><span className="fee-price">{formatMoney(PRICES.standee)} <small>/ standee</small></span></div><Quantity label="Standee" value={standeeQuantity} minimum={0} maximum={LIMITS.standee} onChange={setStandeeQuantity} /></div>
+          <div className="fee-row"><div><span className="fee-label">Participation fees <span className="required">*</span></span><span className="fee-price">{formatMoney(prices.participation)} <small>/ person</small></span></div><div className="participant-fee-count" aria-label="Participant count"><span>{participationQuantity}</span> {participationQuantity === 1 ? "person" : "people"}</div></div>
+          <div className="fee-row"><div><span className="fee-label">Standee placement <span className="optional">Optional</span></span><span className="fee-price">{formatMoney(prices.standee)} <small>/ standee</small></span></div><Quantity label="Standee" value={standeeQuantity} minimum={0} maximum={LIMITS.standee} onChange={setStandeeQuantity} /></div>
           <div className={`fee-row meal-option${mealChoice ? " selected" : ""}`}>
             <div><span className="fee-label">Meal preference <span className="optional">Optional</span></span></div>
             <div className="meal-radio-group" role="radiogroup" aria-label="Meal preference">
@@ -373,7 +373,7 @@ export function RegistrationForm({ eventContentId }: { eventContentId: number | 
               </label>
             </div>
           </div>
-          <label className={`fee-row presentation-option${presentationSelected ? " selected" : ""}`} htmlFor="presentationSelected"><div><span className="fee-label">Company presentation</span><span className="fee-description">20-minute presentation slot</span><span className="fee-price">{formatMoney(PRICES.presentation)}</span></div><input id="presentationSelected" name="presentationSelected" type="checkbox" checked={presentationSelected} onChange={(event) => setPresentationSelected(event.target.checked)} /></label>
+          <label className={`fee-row presentation-option${presentationSelected ? " selected" : ""}`} htmlFor="presentationSelected"><div><span className="fee-label">Company presentation</span><span className="fee-description">20-minute presentation slot</span><span className="fee-price">{formatMoney(prices.presentation)}</span></div><input id="presentationSelected" name="presentationSelected" type="checkbox" checked={presentationSelected} onChange={(event) => setPresentationSelected(event.target.checked)} /></label>
         </div>
 
         <p className="participant-count-hint" role="status">Participant fee is calculated automatically from the {participationQuantity} member {participationQuantity === 1 ? "name" : "names"} above.</p>

@@ -86,7 +86,7 @@ export async function POST(request: Request) {
       id: string;
       reference: string;
       payment_status: string;
-      meal_choice: "lunch" | "dinner" | null;
+      meal_choice: "snacks" | "lunch" | "dinner" | null;
       participant_names: string[];
     }>(`
       SELECT id, reference, payment_status, meal_choice, participant_names
@@ -167,7 +167,7 @@ export async function POST(request: Request) {
 
     const previousResult = await database.query<{
       participant_name: string;
-      meal_choice: "lunch" | "dinner";
+      meal_choice: "snacks" | "lunch" | "dinner";
       redeemed_at: Date | string;
     }>(`
       SELECT participant_name, meal_choice, redeemed_at

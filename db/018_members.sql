@@ -12,3 +12,25 @@ CREATE TABLE IF NOT EXISTS public.bbc_members (
 
 CREATE INDEX IF NOT EXISTS bbc_members_updated_at_idx
   ON public.bbc_members (updated_at DESC);
+
+
+INSERT INTO public.bbc_members (
+  id, primary_name, participant_names, email, phone, billing_details, created_at, updated_at
+)
+SELECT DISTINCT ON (email)
+  id,
+  member_name,
+  COALESCE(participant_names[2:array_length(participant_names, 1)], '{}'::text[]),
+  email,
+  phone,
+  billing_details,
+  created_at,
+  created_at
+FROM public.bbc_event_registrations
+ORDER BY email, created_at DESC
+ON CONFLICT (email) DO UPDATE SET
+  primary_name = EXCLUDED.primary_name,
+  participant_names = EXCLUDED.participant_names,
+  phone = EXCLUDED.phone,
+  billing_details = EXCLUDED.billing_details,
+  updated_at = GREATEST(public.bbc_members.updated_at, EXCLUDED.updated_at);

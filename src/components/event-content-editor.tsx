@@ -3,7 +3,6 @@
 import { useState, type FormEvent } from "react";
 import type { EventContent } from "@/lib/event-content";
 import {
-  PRICES,
   formatMoney,
   mealChoiceLabel,
   type MealChoice,
@@ -22,23 +21,25 @@ function toPaise(value: string) {
 
 export function EventContentEditor({
   initial,
+  initialPrices,
   eventId,
 }: {
   initial: EventContent;
+  initialPrices: ParticipationPrices;
   eventId?: number;
 }) {
   const [form, setForm] = useState(initial);
-  const [step, setStep] = useState<"pricing" | "content">(eventId ? "content" : "pricing");
+  const [step, setStep] = useState<"pricing" | "content">("pricing");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
-  const [participation, setParticipation] = useState(rupees(PRICES.participation));
-  const [standee, setStandee] = useState(rupees(PRICES.standee));
-  const [presentation, setPresentation] = useState(rupees(PRICES.presentation));
-  const [mealOption, setMealOption] = useState<MealChoice>(PRICES.mealOption);
-  const [snacks, setSnacks] = useState(rupees(PRICES.snacks));
-  const [lunch, setLunch] = useState(rupees(PRICES.lunch));
-  const [dinner, setDinner] = useState(rupees(PRICES.dinner));
+  const [participation, setParticipation] = useState(rupees(initialPrices.participation));
+  const [standee, setStandee] = useState(rupees(initialPrices.standee));
+  const [presentation, setPresentation] = useState(rupees(initialPrices.presentation));
+  const [mealOption, setMealOption] = useState<MealChoice>(initialPrices.mealOption);
+  const [snacks, setSnacks] = useState(rupees(initialPrices.snacks));
+  const [lunch, setLunch] = useState(rupees(initialPrices.lunch));
+  const [dinner, setDinner] = useState(rupees(initialPrices.dinner));
 
   function set<K extends keyof EventContent>(key: K, value: EventContent[K]) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -90,8 +91,8 @@ export function EventContentEditor({
     event.preventDefault();
     if (busy) return;
 
-    const pricing = eventId ? null : pricingPayload();
-    if (!eventId && !pricing) {
+    const pricing = pricingPayload();
+    if (!pricing) {
       setMessage({ type: "error", text: "Pricing is incomplete. Go back and complete Step 1." });
       setStep("pricing");
       return;
@@ -101,18 +102,17 @@ export function EventContentEditor({
     setMessage(null);
 
     try {
-      const payload = eventId
-        ? { ...form, eventId }
-        : {
-            ...form,
-            participationPaise: pricing!.participation,
-            standeePaise: pricing!.standee,
-            presentationPaise: pricing!.presentation,
-            mealOption: pricing!.mealOption,
-            snacksPaise: pricing!.snacks,
-            lunchPaise: pricing!.lunch,
-            dinnerPaise: pricing!.dinner,
-          };
+      const payload = {
+        ...form,
+        ...(eventId ? { eventId } : {}),
+        participationPaise: pricing.participation,
+        standeePaise: pricing.standee,
+        presentationPaise: pricing.presentation,
+        mealOption: pricing.mealOption,
+        snacksPaise: pricing.snacks,
+        lunchPaise: pricing.lunch,
+        dinnerPaise: pricing.dinner,
+      };
 
       const response = await fetch("/api/event-content", {
         method: eventId ? "PUT" : "POST",
@@ -139,9 +139,9 @@ export function EventContentEditor({
     }
   }
 
-  if (!eventId && step === "pricing") {
+  if (step === "pricing") {
     return <div className="event-create-wizard">
-      <div className="event-create-steps" aria-label="Create event steps">
+      <div className="event-create-steps" aria-label={eventId ? "Edit event steps" : "Create event steps"}>
         <span className="active"><b>1</b> Participation Fees</span>
         <span><b>2</b> Event Details</span>
       </div>
@@ -150,7 +150,7 @@ export function EventContentEditor({
         <div className="event-step-heading">
           <span className="eyebrow">STEP 01</span>
           <h2>Participation Fees</h2>
-          <p>Set pricing for this event. These amounts are saved with the event and cannot be changed from a global pricing page later.</p>
+          <p>{eventId ? "Review or update pricing for this event only. Other events are not affected." : "Set pricing for this event. These amounts are stored only with this event."}</p>
         </div>
 
         <div className="pricing-fields">
@@ -204,10 +204,10 @@ export function EventContentEditor({
   }
 
   return <form className="event-editor-form" onSubmit={submit}>
-    {!eventId && <div className="event-create-steps" aria-label="Create event steps">
+    <div className="event-create-steps" aria-label={eventId ? "Edit event steps" : "Create event steps"}>
       <span><b>1</b> Participation Fees</span>
       <span className="active"><b>2</b> Event Details</span>
-    </div>}
+    </div>
 
     <section className="event-editor-section">
       <h2>Hero content</h2>
@@ -236,7 +236,7 @@ export function EventContentEditor({
     {message && <div className={`event-editor-message ${message.type}`} role="status">{message.text}</div>}
 
     <div className="event-editor-actions">
-      {!eventId && <button type="button" className="secondary-event-button" onClick={() => setStep("pricing")}>Back to pricing</button>}
+      <button type="button" className="secondary-event-button" onClick={() => setStep("pricing")}>Back to pricing</button>
       {eventId && <a href={`/register?id=${eventId}`} target="_blank" rel="noreferrer">Preview registration</a>}
       <button type="submit" disabled={busy}>{busy ? "Saving…" : eventId ? "Update event" : "Create event"}</button>
     </div>

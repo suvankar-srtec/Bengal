@@ -5,6 +5,7 @@ import { calculateTotal, formatMoney, LIMITS, mealChoiceLabel, mealPriceForChoic
 import { Icon } from "./icon";
 import { PaymentCheckout } from "./payment-checkout";
 import { BBC_LOGO_DATA_URL } from "@/lib/bbc-logo";
+import { DEMO_MEMBER_PROFILES } from "@/lib/demo-members";
 
 function Quantity({ label, value, minimum, maximum, onChange }: {
   label: string; value: number; minimum: number; maximum: number; onChange: (value: number) => void;
@@ -136,6 +137,7 @@ export function RegistrationForm({ eventContentId, prices }: { eventContentId: n
   const [mealChoice, setMealChoice] = useState<MealChoice | null>(null);
   const [presentationSelected, setPresentationSelected] = useState(false);
   const [fields, setFields] = useState({ memberName: "", email: "", phone: "", billingDetails: "" });
+  const [selectedDemoId, setSelectedDemoId] = useState("");
   const [errors, setErrors] = useState<FieldErrors>({});
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -197,6 +199,30 @@ export function RegistrationForm({ eventContentId, prices }: { eventContentId: n
 
     return () => { cancelled = true; };
   }, [receipt?.id, receipt?.reference, receipt?.paymentStatus, participantKey, mealChoice, qrRetryKey]);
+
+  function selectDemoMember(profileId: string) {
+    setSelectedDemoId(profileId);
+
+    const profile = DEMO_MEMBER_PROFILES.find((item) => item.id === profileId);
+    if (!profile) {
+      setFields({ memberName: "", email: "", phone: "", billingDetails: "" });
+      setAdditionalParticipantNames([]);
+      setErrors({});
+      setErrorMessage("");
+      return;
+    }
+
+    setFields({
+      memberName: profile.primaryName,
+      email: profile.email,
+      phone: profile.phone,
+      billingDetails: profile.billingDetails,
+    });
+    setAdditionalParticipantNames(profile.participantNames.slice(0, LIMITS.participation - 1));
+    setErrors({});
+    setErrorMessage("");
+    submission.current = null;
+  }
 
   function updateField(field: keyof typeof fields, value: string) {
     setFields((current) => ({ ...current, [field]: value }));
@@ -317,7 +343,7 @@ export function RegistrationForm({ eventContentId, prices }: { eventContentId: n
       </article>)}
     </div>
     <button className="new-registration" type="button" onClick={() => {
-      setReceipt(null); setFields({ memberName: "", email: "", phone: "", billingDetails: "" });
+      setReceipt(null); setFields({ memberName: "", email: "", phone: "", billingDetails: "" }); setSelectedDemoId("");
       setAdditionalParticipantNames([]); setStandeeQuantity(0); setMealChoice(null); setPresentationSelected(false);
       setQrPasses([]); setQrError(""); submission.current = null;
     }}>Register another member <Icon name="arrow" size={16} /></button>
@@ -337,7 +363,19 @@ export function RegistrationForm({ eventContentId, prices }: { eventContentId: n
               <label htmlFor="memberName">Member name <span className="required">*</span></label>
               <button className="member-add-button" type="button" onClick={addParticipantName} disabled={participationQuantity >= LIMITS.participation} aria-label="Add another member name"><Icon name="plus" size={15} /></button>
             </div>
-            <input id="memberName" name="memberName" autoComplete="name" placeholder="Your full name" value={fields.memberName} onChange={(event) => updateField("memberName", event.target.value)} maxLength={120} required aria-invalid={Boolean(errors.memberName)} aria-describedby={errors.memberName ? "memberName-error" : undefined} />
+            <select
+              id="memberName"
+              name="memberName"
+              className="member-profile-select"
+              value={selectedDemoId}
+              onChange={(event) => selectDemoMember(event.target.value)}
+              required
+              aria-invalid={Boolean(errors.memberName)}
+              aria-describedby={errors.memberName ? "memberName-error" : undefined}
+            >
+              <option value="">Select primary member</option>
+              {DEMO_MEMBER_PROFILES.map((profile) => <option key={profile.id} value={profile.id}>{profile.primaryName}</option>)}
+            </select>
             {errors.memberName && <span className="field-error" id="memberName-error">{errors.memberName}</span>}
           </div>
           {participantNames.slice(1).map((name, index) => {

@@ -1,8 +1,10 @@
 "use client";
 
 import { useState, type FormEvent } from "react";
+import { useRouter } from "next/navigation";
 
 export function AdminLoginForm() {
+  const router = useRouter();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -22,7 +24,8 @@ export function AdminLoginForm() {
       });
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Login failed.");
-      window.location.assign("/dashboard");
+      router.replace("/dashboard");
+      router.refresh();
     } catch (error) {
       setError(error instanceof Error ? error.message : "Login failed.");
     } finally {

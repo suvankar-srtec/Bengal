@@ -146,6 +146,27 @@ export async function POST(request: Request) {
     if (!record || record.request_hash !== fingerprint) {
       return json({ error: "This submission was already saved with different details. Start a new registration to make changes." }, 409);
     }
+
+    await database.query(
+      `INSERT INTO public.bbc_members (
+        id, primary_name, participant_names, email, phone, billing_details, updated_at
+      ) VALUES ($1, $2, $3, $4, $5, $6, NOW())
+      ON CONFLICT (email) DO UPDATE SET
+        primary_name = EXCLUDED.primary_name,
+        participant_names = EXCLUDED.participant_names,
+        phone = EXCLUDED.phone,
+        billing_details = EXCLUDED.billing_details,
+        updated_at = NOW()`,
+      [
+        randomUUID(),
+        data.memberName,
+        participantNames.slice(1),
+        data.email,
+        `+91${data.phone}`,
+        data.billingDetails,
+      ],
+    );
+
     return json({ registration: {
       id: record.id, reference: record.reference,
       totalPaise: record.total_paise, paymentStatus: record.payment_status,

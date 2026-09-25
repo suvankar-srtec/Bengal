@@ -158,7 +158,7 @@ export function PaymentCheckout({
     </button>}
 
     <p className="payment-qr-note">
-      After the payment is received, confirm it here to generate the participant pass{registration.participantNames.length === 1 ? "" : "es"}.
+      After the payment is received, confirm it here to generate the participant pass or passes.
     </p>
   </section>;
 }

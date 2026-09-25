@@ -70,6 +70,11 @@ export const registrationSchema = z.object({
     /^(?:[A-Z]{5}[0-9]{4}[A-Z]|[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][A-Z0-9]Z[A-Z0-9])$/,
     "Enter a valid 10-character PAN or 15-character GSTIN.",
   ),
+  photoDataUrl: z.string()
+    .max(220000, "Photo is too large.")
+    .regex(/^data:image\/(?:jpeg|png|webp);base64,/, "Choose a valid JPG, PNG or WebP photo.")
+    .nullable()
+    .default(null),
   participationQuantity: z.number().int().min(1).max(LIMITS.participation),
   standeeQuantity: z.number().int().min(0).max(LIMITS.standee),
   mealChoice: z.enum(["snacks", "lunch", "dinner"]).nullable().default(null),

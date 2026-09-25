@@ -529,3 +529,33 @@ body{font-size:14px;line-height:1.5}
   .admin-sidebar-brand{padding-left:2px;padding-right:2px}
   .bbc-logo-sidebar{max-width:132px;height:auto}
 }
+
+.link-copied-modal-backdrop{position:fixed;inset:0;z-index:1000;background:rgba(18,29,39,.58);backdrop-filter:blur(2px);display:flex;align-items:center;justify-content:center;padding:24px;animation:modalFadeIn .18s ease-out}
+.link-copied-modal{position:relative;width:min(500px,100%);background:white;border:1px solid #e6e9eb;border-radius:22px;padding:36px 42px 32px;text-align:center;box-shadow:0 28px 80px rgba(14,29,43,.28);animation:modalScaleIn .2s ease-out}
+.link-copied-modal-close{position:absolute;top:17px;right:18px;width:36px;height:36px;border:0;border-radius:50%;background:transparent;color:#7a838a;display:grid;place-items:center;font-size:29px;font-weight:300;line-height:1}
+.link-copied-modal-close:hover{background:#f3f5f6;color:var(--ink)}
+.link-copied-modal-icon{position:relative;width:92px;height:92px;margin:0 auto 18px;border-radius:50%;background:#fff0ed;color:#b51f19;display:grid;place-items:center}
+.link-copied-modal-icon svg{position:relative;z-index:2}
+.link-copied-modal-icon .link-ray{position:absolute;width:11px;height:3px;border-radius:99px;background:#efa39a}
+.link-copied-modal-icon .ray-1{left:-14px;top:31px;transform:rotate(18deg)}
+.link-copied-modal-icon .ray-2{left:-15px;bottom:29px;transform:rotate(-18deg)}
+.link-copied-modal-icon .ray-3{right:-14px;top:31px;transform:rotate(-18deg)}
+.link-copied-modal-icon .ray-4{right:-15px;bottom:29px;transform:rotate(18deg)}
+.link-copied-modal h2{margin:0;color:var(--ink);font-size:28px;line-height:1.2;letter-spacing:-.5px}
+.link-copied-modal p{max-width:390px;margin:12px auto 0;color:var(--muted);font-size:16px;line-height:1.55}
+.link-copied-modal-actions{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:30px}
+.link-copied-modal-actions button{min-width:138px;height:48px;border-radius:10px;font-size:15px;font-weight:700}
+.link-copied-copy-again{border:1px solid transparent;background:white;color:#b51f19}
+.link-copied-copy-again:hover{background:#fff3ef;border-color:#f0cdc6}
+.link-copied-done{border:0;background:#bb1714;color:white;box-shadow:0 6px 14px rgba(187,23,20,.18)}
+.link-copied-done:hover{background:#a91412}
+@keyframes modalFadeIn{from{opacity:0}to{opacity:1}}
+@keyframes modalScaleIn{from{opacity:0;transform:translateY(8px) scale(.97)}to{opacity:1;transform:translateY(0) scale(1)}}
+@media(max-width:520px){
+  .link-copied-modal{border-radius:18px;padding:32px 22px 24px}
+  .link-copied-modal-icon{width:78px;height:78px}
+  .link-copied-modal h2{font-size:23px}
+  .link-copied-modal p{font-size:14px}
+  .link-copied-modal-actions{flex-direction:column-reverse;gap:8px}
+  .link-copied-modal-actions button{width:100%}
+}

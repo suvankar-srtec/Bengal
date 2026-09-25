@@ -47,7 +47,7 @@ ORDER BY created_at DESC;
 - Standee placement: ₹2,950 per standee; 0–10 per registration.
 - Company presentation: ₹35,400 for a 20-minute slot.
 
-Prices come from the supplied screenshot and are configured in `src/lib/registration.ts`. The quantity limits are configurable application defaults. The form stores the pending registration data, opens payment directly, and shows the registration confirmation only after a successful payment. Successful demo/test payments mark the registration `paid` and enable a downloadable QR code. See [PAYMENTS.md](PAYMENTS.md) for configuration, database details, and test commands.
+Event pricing is stored per event. After registration, the server generates a standard UPI payment intent with the authoritative total amount and the configured recipient. The QR encodes only the UPI payment URI; it does not include attendee or registration text. Configure `PAYMENT_UPI_ID` and optional `PAYMENT_PAYEE_NAME` in the server/Vercel environment. A compatible phone camera or UPI scanner can hand the payment intent to installed UPI apps such as Google Pay, PhonePe, Paytm, BHIM, or supported bank apps. The application must still confirm receipt before participant passes are generated.
 
 ## Integration verification
 

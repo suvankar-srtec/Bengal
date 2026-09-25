@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 export function ReportEventSelector({
   events,
@@ -12,6 +12,12 @@ export function ReportEventSelector({
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    for (const event of events) {
+      router.prefetch(`/report?eventId=${event.id}`);
+    }
+  }, [events, router]);
 
   function change(value: string) {
     if (!value) return;
@@ -33,7 +39,7 @@ export function ReportEventSelector({
           {event.title} · {event.eventDate}
         </option>)}
       </select>
-      {busy && <span className="report-select-loading">Loading…</span>}
+      {busy && <span className="report-select-loading" aria-label="Loading selected event"><span className="mini-route-spinner" /></span>}
     </div>
   </div>;
 }

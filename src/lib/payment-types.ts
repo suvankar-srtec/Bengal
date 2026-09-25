@@ -9,7 +9,7 @@ export type PaymentAttempt = {
   status: "created" | "succeeded" | "failed" | "cancelled";
   method: string | null;
 };
-export type CheckoutOrder = PaymentAttempt & { keyId?: string };
+export type CheckoutOrder = PaymentAttempt & { paymentUri?: string };
 export type RazorpayProof = {
   razorpay_order_id: string;
   razorpay_payment_id: string;

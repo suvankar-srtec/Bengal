@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { eventPublicPath } from "@/lib/event-public-link";
 
 export function DashboardEventCard({
   id,
@@ -35,6 +36,18 @@ export function DashboardEventCard({
       document.removeEventListener("keydown", closeOnEscape);
     };
   }, []);
+
+  async function copyPublicLink() {
+    const path = eventPublicPath(id, title);
+    const url = new URL(path, window.location.origin).toString();
+    try {
+      await navigator.clipboard.writeText(url);
+      setOpen(false);
+      window.alert("Public registration link copied.");
+    } catch {
+      window.prompt("Copy this registration link:", url);
+    }
+  }
 
   async function deleteEvent() {
     if (deleting) return;
@@ -82,6 +95,7 @@ export function DashboardEventCard({
 
       {open && <div className="dashboard-event-menu-popover" role="menu">
         <a role="menuitem" href={`/create-event?id=${id}`} onClick={() => setOpen(false)}>Edit</a>
+        <button role="menuitem" type="button" onClick={() => void copyPublicLink()}>Copy public link</button>
         <button role="menuitem" type="button" className="delete" disabled={deleting} onClick={() => void deleteEvent()}>
           {deleting ? "Deleting…" : "Delete"}
         </button>

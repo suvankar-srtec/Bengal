@@ -15,7 +15,18 @@ export const eventContentSchema = z.object({
   bengaliParagraph2: z.string().trim().max(2000),
 });
 
+export const createEventSchema = eventContentSchema.extend({
+  participationPaise: z.number().int().min(0),
+  standeePaise: z.number().int().min(0),
+  presentationPaise: z.number().int().min(0),
+  mealOption: z.enum(["snacks", "lunch", "dinner"]),
+  snacksPaise: z.number().int().min(0),
+  lunchPaise: z.number().int().min(0),
+  dinnerPaise: z.number().int().min(0),
+});
+
 export type EventContent = z.infer<typeof eventContentSchema>;
+export type CreateEventInput = z.infer<typeof createEventSchema>;
 
 export const DEFAULT_EVENT_CONTENT: EventContent = {
   sectionLabel: "THE CONVERSATIONS THAT CONNECT US",

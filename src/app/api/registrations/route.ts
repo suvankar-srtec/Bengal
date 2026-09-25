@@ -158,14 +158,14 @@ export async function POST(request: Request) {
     console.error("Registration could not be saved to the database.", diagnostic);
 
     const databaseCode = diagnostic.code;
-    const error = databaseCode === "23514"
+    const responseMessage = databaseCode === "23514"
       ? "The registration pricing rules were out of date. Refresh the page and try again."
       : databaseCode === "42703"
         ? "The registration database is still updating. Please try again after the deployment finishes."
         : "We couldn’t save your registration right now. Your details are still here; please try again.";
 
     return json({
-      error,
+      error: responseMessage,
       diagnosticCode: databaseCode ?? "DB_ERROR",
     }, 503);
   }

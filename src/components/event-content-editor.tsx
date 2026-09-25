@@ -2,6 +2,8 @@
 
 import { useState, type FormEvent } from "react";
 import type { EventContent } from "@/lib/event-content";
+import { eventPublicPath } from "@/lib/event-public-link";
+import { EventPublicLinkCard } from "@/components/event-public-link-card";
 import {
   formatMoney,
   mealChoiceLabel,
@@ -32,6 +34,7 @@ export function EventContentEditor({
   const [step, setStep] = useState<"pricing" | "content">("pricing");
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
+  const [publicLink, setPublicLink] = useState<string | null>(null);
 
   const [participation, setParticipation] = useState(rupees(initialPrices.participation));
   const [standee, setStandee] = useState(rupees(initialPrices.standee));
@@ -124,11 +127,17 @@ export function EventContentEditor({
       if (!response.ok) throw new Error(result.error || "Couldn’t save event content.");
 
       const savedEventId = Number(result.eventId);
-      window.location.assign(
-        Number.isInteger(savedEventId) && savedEventId > 0
-          ? `/register?id=${savedEventId}`
-          : "/register",
-      );
+      if (!Number.isInteger(savedEventId) || savedEventId < 1) {
+        throw new Error("The event was saved, but its registration link could not be generated.");
+      }
+
+      if (eventId) {
+        window.location.assign(`/register?id=${savedEventId}`);
+        return;
+      }
+
+      setPublicLink(eventPublicPath(savedEventId, form.titleEn));
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (error) {
       setMessage({
         type: "error",
@@ -137,6 +146,10 @@ export function EventContentEditor({
     } finally {
       setBusy(false);
     }
+  }
+
+  if (publicLink) {
+    return <EventPublicLinkCard title={form.titleEn} path={publicLink} />;
   }
 
   if (step === "pricing") {

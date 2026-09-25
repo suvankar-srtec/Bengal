@@ -14,11 +14,13 @@ export default async function MembersPage() {
       <a className="admin-sidebar-brand" href="/dashboard" aria-label="Bengal Business Council">
         <img className="bbc-logo bbc-logo-sidebar" src={BBC_LOGO_DATA_URL} alt="Bengal Business Council" />
       </a>
+
       <nav className="admin-nav">
         <a href="/dashboard">Dashboard</a>
         <a className="active" href="/members">Members</a>
         <a href="/report">Report</a>
       </nav>
+
       <div className="admin-sidebar-footer"><AdminLogoutButton /></div>
     </aside>
 
@@ -26,24 +28,49 @@ export default async function MembersPage() {
       <div className="members-heading">
         <div>
           <h1>Members</h1>
-          <p>Read-only demo member directory used by the registration form.</p>
+          <p>Read-only member directory used to prefill event registrations.</p>
         </div>
         <span>{DEMO_MEMBER_PROFILES.length} members</span>
       </div>
 
-      <section className="members-grid" aria-label="Member directory">
-        {DEMO_MEMBER_PROFILES.map((member) => <article className="member-directory-card" key={member.id}>
-          <div className="member-directory-photo"><img src={member.photo} alt={member.primaryName} /></div>
-          <div className="member-directory-content">
-            <h2>{member.primaryName}</h2>
-            <dl>
-              <div><dt>Email</dt><dd>{member.email}</dd></div>
-              <div><dt>WhatsApp</dt><dd>+91 {member.phone}</dd></div>
-              <div><dt>Billing</dt><dd>{member.billingDetails}</dd></div>
-              <div><dt>Members</dt><dd>{member.participantNames.join(", ")}</dd></div>
-            </dl>
+      <section className="members-table-card">
+        <div className="members-table-heading">
+          <div>
+            <h2>Member directory</h2>
+            <p>Member information is fixed and cannot be edited from this page.</p>
           </div>
-        </article>)}
+        </div>
+
+        <div className="members-table-wrap">
+          <table className="members-table">
+            <thead>
+              <tr>
+                <th>Photo</th>
+                <th>Primary member</th>
+                <th>Associated members</th>
+                <th>Email</th>
+                <th>WhatsApp</th>
+                <th>Billing details</th>
+              </tr>
+            </thead>
+            <tbody>
+              {DEMO_MEMBER_PROFILES.map((member) => <tr key={member.id}>
+                <td>
+                  <img className="members-table-photo" src={member.photo} alt={member.primaryName} />
+                </td>
+                <td><strong>{member.primaryName}</strong></td>
+                <td>
+                  <div className="members-table-associated">
+                    {member.participantNames.map((name) => <span key={name}>{name}</span>)}
+                  </div>
+                </td>
+                <td>{member.email}</td>
+                <td>+91 {member.phone}</td>
+                <td>{member.billingDetails}</td>
+              </tr>)}
+            </tbody>
+          </table>
+        </div>
       </section>
     </main>
   </div>;

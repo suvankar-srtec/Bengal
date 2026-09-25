@@ -117,7 +117,6 @@ export default async function ReportPage({
 
       <nav className="admin-nav">
         <a href="/dashboard">Dashboard</a>
-        <a href="/pricing">Participation Pricing</a>
         <a className="active" href="/report">Report</a>
       </nav>
 

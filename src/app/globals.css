@@ -517,3 +517,9 @@ body{font-size:14px;line-height:1.5}
 .breadcrumb{font-size:12px}
 .event-values{font-size:12px}
 .site-footer{font-size:11px}
+
+.global-route-loading{min-height:100vh;display:flex;align-items:center;justify-content:center;gap:12px;background:#fafbfc;color:var(--ink);font-size:14px}
+.global-route-spinner,.mini-route-spinner{display:inline-block;border-radius:50%;border:3px solid #e7ebee;border-top-color:var(--coral);animation:spin .7s linear infinite}
+.global-route-spinner{width:28px;height:28px}
+.mini-route-spinner{width:14px;height:14px;border-width:2px}
+.report-select-loading{display:flex;align-items:center;justify-content:center;right:38px;background:transparent}

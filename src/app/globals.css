@@ -579,3 +579,33 @@ body{font-size:14px;line-height:1.5}
 .member-profile-select{width:100%;height:42px;border:1px solid #dce2e6;border-radius:7px;background:#fff;color:var(--ink);padding:0 38px 0 12px;font-size:14px;appearance:auto}
 .member-profile-select:focus{outline:none;border-color:var(--coral);box-shadow:0 0 0 3px rgba(199,76,64,.08)}
 .member-profile-select[aria-invalid="true"]{border-color:#c74c40}
+
+.members-main{min-width:0}
+.members-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:24px}
+.members-heading h1{margin:0;font-size:30px;line-height:1.15;letter-spacing:-.7px}
+.members-heading p{margin:7px 0 0;color:var(--muted);font-size:13px}
+.members-heading>span{display:inline-flex;align-items:center;justify-content:center;min-width:94px;height:38px;border:1px solid var(--line);border-radius:999px;background:white;color:var(--muted);font-size:12px;font-weight:700}
+.members-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px}
+.member-directory-card{display:grid;grid-template-columns:112px minmax(0,1fr);gap:16px;background:white;border:1px solid var(--line);border-radius:12px;padding:16px}
+.member-directory-photo{width:112px;height:112px;border-radius:12px;overflow:hidden;background:#f3f5f6}
+.member-directory-photo img{width:100%;height:100%;object-fit:cover;display:block}
+.member-directory-content{min-width:0}
+.member-directory-content h2{margin:2px 0 12px;font-size:18px}
+.member-directory-content dl{margin:0;display:grid;gap:8px}
+.member-directory-content dl>div{display:grid;grid-template-columns:78px minmax(0,1fr);gap:8px}
+.member-directory-content dt{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase;letter-spacing:.35px}
+.member-directory-content dd{margin:0;font-size:12.5px;line-height:1.45;overflow-wrap:anywhere}
+.member-selected-photo{display:flex;align-items:center;gap:10px;margin-top:10px;padding:9px 10px;border:1px solid var(--line);border-radius:9px;background:#fafbfc}
+.member-selected-photo img{width:52px;height:52px;border-radius:9px;object-fit:cover;display:block}
+.member-selected-photo div{display:flex;flex-direction:column;gap:3px}
+.member-selected-photo strong{font-size:13px}
+.member-selected-photo span{font-size:11px;color:var(--muted)}
+@media(max-width:900px){
+  .members-grid{grid-template-columns:1fr}
+}
+@media(max-width:560px){
+  .members-heading{align-items:flex-start;flex-direction:column}
+  .member-directory-card{grid-template-columns:78px minmax(0,1fr)}
+  .member-directory-photo{width:78px;height:78px}
+  .member-directory-content dl>div{grid-template-columns:1fr}
+}

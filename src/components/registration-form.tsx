@@ -5,7 +5,7 @@ import { calculateTotal, formatMoney, LIMITS, mealChoiceLabel, mealPriceForChoic
 import { Icon } from "./icon";
 import { PaymentCheckout } from "./payment-checkout";
 import { BBC_LOGO_DATA_URL } from "@/lib/bbc-logo";
-import { DEMO_MEMBER_PROFILES } from "@/lib/demo-members";
+import { DEMO_MEMBER_PROFILES, memberPhotoDataUri } from "@/lib/demo-members";
 
 function Quantity({ label, value, minimum, maximum, onChange }: {
   label: string; value: number; minimum: number; maximum: number; onChange: (value: number) => void;
@@ -42,6 +42,7 @@ async function createParticipantPassImage(input: {
   participantNumber: number;
   passId: string;
   mealLabel: string;
+  photoUrl: string;
 }) {
   const canvas = document.createElement("canvas");
 
@@ -90,6 +91,15 @@ async function createParticipantPassImage(input: {
   context.font = `700 ${nameSize}px "Segoe UI", Arial, sans-serif`;
   context.fillStyle = "#182f46";
   context.fillText(input.participantName, 45, 246);
+
+  // Participant photo
+  const participantPhoto = await loadPassImage(input.photoUrl);
+  context.save();
+  context.beginPath();
+  context.arc(635, 220, 46, 0, Math.PI * 2);
+  context.clip();
+  context.drawImage(participantPhoto, 589, 174, 92, 92);
+  context.restore();
 
   // Meal box
   context.fillStyle = "#f8f9fa";
@@ -153,6 +163,7 @@ export function RegistrationForm({ eventContentId, prices }: { eventContentId: n
   const participantNames = [fields.memberName, ...additionalParticipantNames];
   const total = calculateTotal({ participationQuantity, standeeQuantity, mealChoice, presentationSelected }, prices);
   const participantKey = participantNames.map((name) => name.trim()).join("\u001f");
+  const selectedDemoProfile = DEMO_MEMBER_PROFILES.find((profile) => profile.id === selectedDemoId) ?? null;
 
   useEffect(() => {
     if (receipt?.paymentStatus === "paid") confirmationHeading.current?.focus();
@@ -179,6 +190,10 @@ export function RegistrationForm({ eventContentId, prices }: { eventContentId: n
         const participantNumber = index + 1;
         const cleanName = participantName.trim();
         const passId = `${receipt.reference}-P${participantNumber}`;
+        const selectedProfile = DEMO_MEMBER_PROFILES.find((profile) => profile.id === selectedDemoId);
+        const photoUrl = index === 0 && selectedProfile
+          ? selectedProfile.photo
+          : memberPhotoDataUri(cleanName, index + 20);
         const payload = `BBC|EVENT:AALAP-ALOCHONA-2026-09-29|REG:${receipt.id}|REF:${receipt.reference}|PARTICIPANT:${participantNumber}|PASS:${passId}|NAME:${encodeURIComponent(cleanName)}|MEAL:${mealCode}`;
         const qrUrl = await QRCode.toDataURL(payload, { width: 720, margin: 2, errorCorrectionLevel: "M" });
         const passUrl = await createParticipantPassImage({
@@ -187,6 +202,7 @@ export function RegistrationForm({ eventContentId, prices }: { eventContentId: n
           participantNumber,
           passId,
           mealLabel,
+          photoUrl,
         });
         return { participantNumber, participantName: cleanName, passId, mealLabel, qrUrl, passUrl };
       }));
@@ -376,6 +392,10 @@ export function RegistrationForm({ eventContentId, prices }: { eventContentId: n
               <option value="">Select primary member</option>
               {DEMO_MEMBER_PROFILES.map((profile) => <option key={profile.id} value={profile.id}>{profile.primaryName}</option>)}
             </select>
+            {selectedDemoProfile && <div className="member-selected-photo">
+              <img src={selectedDemoProfile.photo} alt={`${selectedDemoProfile.primaryName} profile`} />
+              <div><strong>{selectedDemoProfile.primaryName}</strong><span>Member photo</span></div>
+            </div>}
             {errors.memberName && <span className="field-error" id="memberName-error">{errors.memberName}</span>}
           </div>
           {participantNames.slice(1).map((name, index) => {

@@ -70,32 +70,55 @@ export default async function ReportPage({
 
   try {
     const database = getDatabase();
-    const eventResult = await database.query<EventOption>(`
-      SELECT id, title_en, title_bn, event_date, organizer, created_at
-      FROM public.bbc_event_content
-      ORDER BY created_at DESC, id DESC
-    `);
-    events = eventResult.rows;
 
-    const selectedId = Number.isInteger(requestedEventId) && requestedEventId > 0
-      ? requestedEventId
-      : events[0]?.id ?? null;
+    if (Number.isInteger(requestedEventId) && requestedEventId > 0) {
+      const [eventResult, registrationResult] = await Promise.all([
+        database.query<EventOption>(`
+          SELECT id, title_en, title_bn, event_date, organizer, created_at
+          FROM public.bbc_event_content
+          ORDER BY created_at DESC, id DESC
+        `),
+        database.query<RegistrationRow>(`
+          SELECT
+            id, member_name, email, phone, billing_details,
+            participation_quantity, standee_quantity, meal_choice,
+            presentation_selected, total_paise, payment_status,
+            participant_names, created_at
+          FROM public.bbc_event_registrations
+          WHERE event_id = $1
+          ORDER BY created_at DESC
+        `, [String(requestedEventId)]),
+      ]);
 
-    if (selectedId) {
-      selectedEvent = events.find((event) => Number(event.id) === selectedId) ?? null;
-
-      const registrationResult = await database.query<RegistrationRow>(`
-        SELECT
-          id, member_name, email, phone, billing_details,
-          participation_quantity, standee_quantity, meal_choice,
-          presentation_selected, total_paise, payment_status,
-          participant_names, created_at
-        FROM public.bbc_event_registrations
-        WHERE event_id = $1
-        ORDER BY created_at DESC
-      `, [String(selectedId)]);
+      events = eventResult.rows;
+      selectedEvent = events.find((event) => Number(event.id) === requestedEventId) ?? null;
       registrations = registrationResult.rows;
+    } else {
+      const eventResult = await database.query<EventOption>(`
+        SELECT id, title_en, title_bn, event_date, organizer, created_at
+        FROM public.bbc_event_content
+        ORDER BY created_at DESC, id DESC
+      `);
+      events = eventResult.rows;
 
+      const selectedId = events[0]?.id ?? null;
+      selectedEvent = selectedId
+        ? events.find((event) => Number(event.id) === Number(selectedId)) ?? null
+        : null;
+
+      if (selectedId) {
+        const registrationResult = await database.query<RegistrationRow>(`
+          SELECT
+            id, member_name, email, phone, billing_details,
+            participation_quantity, standee_quantity, meal_choice,
+            presentation_selected, total_paise, payment_status,
+            participant_names, created_at
+          FROM public.bbc_event_registrations
+          WHERE event_id = $1
+          ORDER BY created_at DESC
+        `, [String(selectedId)]);
+        registrations = registrationResult.rows;
+      }
     }
   } catch (error) {
     console.error("Event report could not be loaded.", {

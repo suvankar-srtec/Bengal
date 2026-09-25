@@ -3,11 +3,36 @@ import { redirect } from "next/navigation";
 import { ADMIN_SESSION_COOKIE, validAdminSession } from "@/lib/admin-auth";
 import { AdminLogoutButton } from "@/components/admin-logout-button";
 import { BBC_LOGO_DATA_URL } from "@/lib/bbc-logo";
-import { DEMO_MEMBER_PROFILES } from "@/lib/demo-members";
+import { getDatabase } from "@/lib/db";
+import { memberPhotoDataUri } from "@/lib/demo-members";
+
+export const dynamic = "force-dynamic";
+
+type MemberRow = {
+  id: string;
+  primary_name: string;
+  participant_names: string[];
+  email: string;
+  phone: string;
+  billing_details: string;
+  updated_at: Date | string;
+};
 
 export default async function MembersPage() {
   const store = await cookies();
   if (!validAdminSession(store.get(ADMIN_SESSION_COOKIE)?.value)) redirect("/");
+
+  let members: MemberRow[] = [];
+  try {
+    const result = await getDatabase().query<MemberRow>(`
+      SELECT id, primary_name, participant_names, email, phone, billing_details, updated_at
+      FROM public.bbc_members
+      ORDER BY updated_at DESC, primary_name ASC
+    `);
+    members = result.rows;
+  } catch (error) {
+    console.error("Members directory could not be loaded.", error);
+  }
 
   return <div className="admin-dashboard-shell">
     <aside className="admin-sidebar">
@@ -28,16 +53,16 @@ export default async function MembersPage() {
       <div className="members-heading">
         <div>
           <h1>Members</h1>
-          <p>Read-only member directory used to prefill event registrations.</p>
+          <p>Read-only member directory created automatically from submitted registrations.</p>
         </div>
-        <span>{DEMO_MEMBER_PROFILES.length} members</span>
+        <span>{members.length} {members.length === 1 ? "member" : "members"}</span>
       </div>
 
       <section className="members-table-card">
         <div className="members-table-heading">
           <div>
             <h2>Member directory</h2>
-            <p>Member information is fixed and cannot be edited from this page.</p>
+            <p>Member details are saved from the registration form and cannot be edited here.</p>
           </div>
         </div>
 
@@ -54,20 +79,29 @@ export default async function MembersPage() {
               </tr>
             </thead>
             <tbody>
-              {DEMO_MEMBER_PROFILES.map((member) => <tr key={member.id}>
+              {members.length ? members.map((member, index) => <tr key={member.id}>
                 <td>
-                  <img className="members-table-photo" src={member.photo} alt={member.primaryName} />
+                  <img className="members-table-photo" src={memberPhotoDataUri(member.primary_name, index)} alt={member.primary_name} />
                 </td>
-                <td><strong>{member.primaryName}</strong></td>
+                <td><strong>{member.primary_name}</strong></td>
                 <td>
                   <div className="members-table-associated">
-                    {member.participantNames.map((name) => <span key={name}>{name}</span>)}
+                    {member.participant_names.length
+                      ? member.participant_names.map((name) => <span key={name}>{name}</span>)
+                      : <span>—</span>}
                   </div>
                 </td>
                 <td>{member.email}</td>
-                <td>+91 {member.phone}</td>
-                <td>{member.billingDetails}</td>
-              </tr>)}
+                <td>{member.phone}</td>
+                <td>{member.billing_details}</td>
+              </tr>) : <tr>
+                <td colSpan={6}>
+                  <div className="members-empty-state">
+                    <strong>No members saved yet</strong>
+                    <span>Members will appear here automatically after a registration is submitted.</span>
+                  </div>
+                </td>
+              </tr>}
             </tbody>
           </table>
         </div>

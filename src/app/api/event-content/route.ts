@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { ADMIN_SESSION_COOKIE, validAdminSession } from "@/lib/admin-auth";
-import { eventContentSchema } from "@/lib/event-content";
+import { createEventSchema, eventContentSchema } from "@/lib/event-content";
 import { getDatabase } from "@/lib/db";
 
 export const runtime = "nodejs";
@@ -36,9 +36,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
 
-  const parsed = eventContentSchema.safeParse(body);
+  const parsed = createEventSchema.safeParse(body);
   if (!parsed.success) {
-    return NextResponse.json({ error: "Please complete all event content fields." }, { status: 400 });
+    return NextResponse.json({ error: "Please complete pricing and event content before creating the event." }, { status: 400 });
   }
 
   try {
@@ -79,12 +79,24 @@ export async function POST(request: Request) {
       `INSERT INTO public.bbc_event_content (
         section_label, title_bn, title_en, tagline_line_1, tagline_line_2,
         event_date, organizer, about_title, about_paragraph_1, about_paragraph_2,
-        bengali_paragraph_1, bengali_paragraph_2
+        bengali_paragraph_1, bengali_paragraph_2,
+        participation_unit_paise, standee_unit_paise, presentation_unit_paise,
+        meal_option, snacks_unit_paise, lunch_unit_paise, dinner_unit_paise
       ) VALUES (
-        $1, $2, $3, $4, $5, $6::date, $7, $8, $9, $10, $11, $12
+        $1, $2, $3, $4, $5, $6::date, $7, $8, $9, $10, $11, $12,
+        $13, $14, $15, $16, $17, $18, $19
       )
       RETURNING id`,
-      eventValues,
+      [
+        ...eventValues,
+        parsed.data.participationPaise,
+        parsed.data.standeePaise,
+        parsed.data.presentationPaise,
+        parsed.data.mealOption,
+        parsed.data.snacksPaise,
+        parsed.data.lunchPaise,
+        parsed.data.dinnerPaise,
+      ],
     );
     return NextResponse.json({ ok: true, eventId: result.rows[0]?.id }, { status: 201 });
   } catch (error) {

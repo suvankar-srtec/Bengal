@@ -24,10 +24,6 @@ function errorText(error: unknown) {
     : "The connection was interrupted. Please retry; your registration is already saved.";
 }
 
-function amountText(paise: number) {
-  return (paise / 100).toFixed(2);
-}
-
 export function PaymentCheckout({
   registration,
   submissionId,
@@ -72,15 +68,11 @@ export function PaymentCheckout({
         return;
       }
 
-      const payload = [
-        "BENGAL BUSINESS COUNCIL",
-        "PAYMENT",
-        `Registration: ${registration.reference}`,
-        `Total amount: INR ${amountText(registration.totalPaise)}`,
-        "Currency: INR",
-      ].join("\n");
+      if (!checkoutOrder.paymentUri?.startsWith("upi://pay?")) {
+        throw new Error("UPI payment QR is not configured.");
+      }
 
-      const image = await QRCode.toDataURL(payload, {
+      const image = await QRCode.toDataURL(checkoutOrder.paymentUri, {
         width: 520,
         margin: 2,
         errorCorrectionLevel: "M",
@@ -124,8 +116,8 @@ export function PaymentCheckout({
   return <section className="payment-qr-panel" aria-label="Payment QR">
     <div className="payment-qr-heading">
       <span className="eyebrow">PAYMENT QR</span>
-      <h3>Scan to view the amount</h3>
-      <p>Scan this QR with any QR scanner. It contains this registration reference and the exact total amount.</p>
+      <h3>Scan to pay</h3>
+      <p>Scan with your phone camera or any UPI app. Compatible phones can open installed payment apps such as Google Pay, PhonePe, Paytm, BHIM, or your bank’s UPI app.</p>
     </div>
 
     <div className="payment-qr-amount">
@@ -141,11 +133,6 @@ export function PaymentCheckout({
     {qrUrl && <div className="payment-qr-image-wrap">
       <img src={qrUrl} alt={`Payment QR for ${formatMoney(registration.totalPaise)}`} />
     </div>}
-
-    <div className="payment-qr-reference">
-      <span>Registration reference</span>
-      <code>{registration.reference}</code>
-    </div>
 
     {error && <div className="error-banner" role="alert">{error}</div>}
 

@@ -15,19 +15,31 @@ export default async function DashboardPage() {
   let totals = { registrations: 0, paid: 0, participants: 0, revenue: 0 };
   let events: Array<{ id: number; title: string; createdAt: string }> = [];
   try {
-    const result = await getDatabase().query<{
-      registrations: string;
-      paid: string;
-      participants: string;
-      revenue: string;
-    }>(`
-      SELECT
-        COUNT(*)::text AS registrations,
-        COUNT(*) FILTER (WHERE payment_status = 'paid')::text AS paid,
-        COALESCE(SUM(participation_quantity), 0)::text AS participants,
-        COALESCE(SUM(total_paise) FILTER (WHERE payment_status = 'paid'), 0)::text AS revenue
-      FROM public.bbc_event_registrations
-    `);
+    const database = getDatabase();
+    const [result, eventResult] = await Promise.all([
+      database.query<{
+        registrations: string;
+        paid: string;
+        participants: string;
+        revenue: string;
+      }>(`
+        SELECT
+          COUNT(*)::text AS registrations,
+          COUNT(*) FILTER (WHERE payment_status = 'paid')::text AS paid,
+          COALESCE(SUM(participation_quantity), 0)::text AS participants,
+          COALESCE(SUM(total_paise) FILTER (WHERE payment_status = 'paid'), 0)::text AS revenue
+        FROM public.bbc_event_registrations
+      `),
+      database.query<{
+        id: number;
+        title_en: string;
+        created_at: Date | string;
+      }>(`
+        SELECT id, title_en, created_at
+        FROM public.bbc_event_content
+        ORDER BY created_at DESC, id DESC
+      `),
+    ]);
     const row = result.rows[0];
     totals = {
       registrations: Number(row?.registrations ?? 0),
@@ -35,16 +47,6 @@ export default async function DashboardPage() {
       participants: Number(row?.participants ?? 0),
       revenue: Number(row?.revenue ?? 0),
     };
-
-    const eventResult = await getDatabase().query<{
-      id: number;
-      title_en: string;
-      created_at: Date | string;
-    }>(`
-      SELECT id, title_en, created_at
-      FROM public.bbc_event_content
-      ORDER BY created_at DESC, id DESC
-    `);
 
     events = eventResult.rows.map((event) => {
       const created = event.created_at instanceof Date ? event.created_at : new Date(event.created_at);

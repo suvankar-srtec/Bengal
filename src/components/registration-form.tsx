@@ -379,23 +379,24 @@ export function RegistrationForm({ eventContentId, prices }: { eventContentId: n
               <label htmlFor="memberName">Member name <span className="required">*</span></label>
               <button className="member-add-button" type="button" onClick={addParticipantName} disabled={participationQuantity >= LIMITS.participation} aria-label="Add another member name"><Icon name="plus" size={15} /></button>
             </div>
-            <select
-              id="memberName"
-              name="memberName"
-              className="member-profile-select"
-              value={selectedDemoId}
-              onChange={(event) => selectDemoMember(event.target.value)}
-              required
-              aria-invalid={Boolean(errors.memberName)}
-              aria-describedby={errors.memberName ? "memberName-error" : undefined}
-            >
-              <option value="">Select primary member</option>
-              {DEMO_MEMBER_PROFILES.map((profile) => <option key={profile.id} value={profile.id}>{profile.primaryName}</option>)}
-            </select>
-            {selectedDemoProfile && <div className="member-selected-photo">
-              <img src={selectedDemoProfile.photo} alt={`${selectedDemoProfile.primaryName} profile`} />
-              <div><strong>{selectedDemoProfile.primaryName}</strong><span>Member photo</span></div>
-            </div>}
+            <div className="member-profile-picker">
+              {selectedDemoProfile
+                ? <img className="member-profile-picker-photo" src={selectedDemoProfile.photo} alt={`${selectedDemoProfile.primaryName} profile`} />
+                : <span className="member-profile-picker-placeholder" aria-hidden="true"><Icon name="users" size={22} /></span>}
+              <select
+                id="memberName"
+                name="memberName"
+                className="member-profile-select"
+                value={selectedDemoId}
+                onChange={(event) => selectDemoMember(event.target.value)}
+                required
+                aria-invalid={Boolean(errors.memberName)}
+                aria-describedby={errors.memberName ? "memberName-error" : undefined}
+              >
+                <option value="">Select primary member</option>
+                {DEMO_MEMBER_PROFILES.map((profile) => <option key={profile.id} value={profile.id}>{profile.primaryName}</option>)}
+              </select>
+            </div>
             {errors.memberName && <span className="field-error" id="memberName-error">{errors.memberName}</span>}
           </div>
           {participantNames.slice(1).map((name, index) => {

@@ -120,9 +120,9 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "Invalid event." }, { status: 400 });
   }
 
-  const parsed = eventContentSchema.safeParse(candidate);
+  const parsed = createEventSchema.safeParse(candidate);
   if (!parsed.success) {
-    return NextResponse.json({ error: "Please complete all event content fields." }, { status: 400 });
+    return NextResponse.json({ error: "Please complete pricing and event content before updating the event." }, { status: 400 });
   }
 
   try {
@@ -140,9 +140,26 @@ export async function PUT(request: Request) {
         about_paragraph_2 = $10,
         bengali_paragraph_1 = $11,
         bengali_paragraph_2 = $12,
+        participation_unit_paise = $13,
+        standee_unit_paise = $14,
+        presentation_unit_paise = $15,
+        meal_option = $16,
+        snacks_unit_paise = $17,
+        lunch_unit_paise = $18,
+        dinner_unit_paise = $19,
         updated_at = NOW()
-      WHERE id = $13`,
-      [...values(parsed.data), eventId],
+      WHERE id = $20`,
+      [
+        ...values(parsed.data),
+        parsed.data.participationPaise,
+        parsed.data.standeePaise,
+        parsed.data.presentationPaise,
+        parsed.data.mealOption,
+        parsed.data.snacksPaise,
+        parsed.data.lunchPaise,
+        parsed.data.dinnerPaise,
+        eventId,
+      ],
     );
     if (!result.rowCount) return NextResponse.json({ error: "Event not found." }, { status: 404 });
     return NextResponse.json({ ok: true, eventId });

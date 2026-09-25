@@ -6,6 +6,7 @@ import { EventContentEditor } from "@/components/event-content-editor";
 import { DEFAULT_EVENT_CONTENT, eventContentFromRow } from "@/lib/event-content";
 import { getDatabase } from "@/lib/db";
 import { BBC_LOGO_DATA_URL } from "@/lib/bbc-logo";
+import { PRICES, participationPricesFromRow, type ParticipationPrices } from "@/lib/registration";
 
 export const dynamic = "force-dynamic";
 
@@ -20,6 +21,7 @@ export default async function CreateEventPage({
   const params = await searchParams;
   const eventId = Number(params.id);
   let content = DEFAULT_EVENT_CONTENT;
+  let pricing: ParticipationPrices = PRICES;
   let editingId: number | undefined;
 
   if (Number.isInteger(eventId) && eventId > 0) {
@@ -27,6 +29,7 @@ export default async function CreateEventPage({
       const result = await getDatabase().query("SELECT * FROM public.bbc_event_content WHERE id = $1", [eventId]);
       if (result.rows[0]) {
         content = eventContentFromRow(result.rows[0]);
+        pricing = participationPricesFromRow(result.rows[0]);
         editingId = eventId;
       }
     } catch {
@@ -51,10 +54,10 @@ export default async function CreateEventPage({
         <div>
           <span className="eyebrow">EVENT CONTENT</span>
           <h1>{editingId ? "Edit Event" : "Create Event"}</h1>
-          <p>These fields control only the left side of the registration page. The registration form remains fixed.</p>
+          <p>{editingId ? "Review this event’s participation fees first, then edit the event details." : "Set participation fees first, then create the event details."}</p>
         </div>
       </div>
-      <EventContentEditor initial={content} eventId={editingId} />
+      <EventContentEditor initial={content} initialPrices={pricing} eventId={editingId} />
     </main>
   </div>;
 }

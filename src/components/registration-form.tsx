@@ -278,9 +278,9 @@ export function RegistrationForm({ eventContentId, prices }: { eventContentId: n
   }
 
   if (receipt && receipt.paymentStatus !== "paid") return <div className="registration-card payment-stage-card">
-    <span className="eyebrow">SECURE CHECKOUT</span>
-    <h2>Complete payment</h2>
-    <p>Complete payment to confirm your event registration.</p>
+    <span className="eyebrow">PAYMENT</span>
+    <h2>Scan the payment QR</h2>
+    <p>Scan the QR below to view the exact total amount for this registration.</p>
     <PaymentCheckout autoStart registration={receipt} submissionId={submission.current?.id ?? ""} member={fields} onPaid={() => setReceipt((current) => current ? { ...current, paymentStatus: "paid" } : current)} />
   </div>;
 
@@ -385,8 +385,8 @@ export function RegistrationForm({ eventContentId, prices }: { eventContentId: n
 
         <div className="total-row"><div><span>Total amount</span><small>{participationQuantity} {participationQuantity === 1 ? "participant" : "participants"}{standeeQuantity > 0 ? ` · ${standeeQuantity} ${standeeQuantity === 1 ? "standee" : "standees"}` : ""}{mealChoice ? ` · ${mealChoiceLabel(mealChoice)}` : ""}{presentationSelected ? " · Presentation" : ""}</small></div><output aria-label="Total amount" aria-live="polite">{formatMoney(total)}</output></div>
         {errorMessage && <div className="error-banner" role="alert">{errorMessage}</div>}
-        <button className="submit-button" type="submit" disabled={isSubmitting}>{isSubmitting ? <><span className="spinner" /> Preparing payment…</> : <>Proceed to payment <Icon name="arrow" size={19} /></>}</button>
-        <p className="submit-note">Payment opens directly. Your registration is confirmed only after successful payment.</p>
+        <button className="submit-button" type="submit" disabled={isSubmitting}>{isSubmitting ? <><span className="spinner" /> Preparing payment QR…</> : <>Proceed to payment <Icon name="arrow" size={19} /></>}</button>
+        <p className="submit-note">Your payment QR is generated after the registration details are saved.</p>
       </fieldset>
     </form>
   </div>;

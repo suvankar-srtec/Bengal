@@ -450,3 +450,16 @@ input[type=checkbox]{height:19px;width:19px;accent-color:var(--coral);cursor:poi
 .pricing-active-meal{margin-top:12px;font-size:10px;color:var(--muted)}
 .pricing-active-meal strong{color:var(--ink)}
 @media(max-width:900px){.pricing-meal-grid{grid-template-columns:1fr}}
+
+.event-create-steps{display:flex;align-items:center;gap:10px;margin-bottom:18px}
+.event-create-steps span{display:flex;align-items:center;gap:7px;padding:8px 11px;border:1px solid var(--line);border-radius:999px;background:white;color:var(--muted);font-size:10px;font-weight:650}
+.event-create-steps span b{width:20px;height:20px;border-radius:50%;display:grid;place-items:center;background:#eef2f4;color:var(--muted);font-size:9px}
+.event-create-steps span.active{border-color:var(--coral);color:var(--coral);background:#fff8f5}
+.event-create-steps span.active b{background:var(--coral);color:white}
+.event-step-heading{margin-bottom:4px}
+.event-step-heading h2{margin:7px 0 7px!important;font-size:21px!important}
+.event-step-heading p{margin:0;color:var(--muted);font-size:11px;line-height:1.6}
+.event-pricing-step .pricing-fields{margin-top:22px}
+.event-editor-actions .secondary-event-button{border:1px solid #dce2e6;background:white;color:var(--ink)}
+.event-editor-actions .secondary-event-button:hover{border-color:var(--coral);color:var(--coral);background:#fff8f5}
+@media(max-width:600px){.event-create-steps{align-items:stretch;flex-direction:column}.event-create-steps span{border-radius:8px}}

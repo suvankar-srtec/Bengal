@@ -575,3 +575,7 @@ body{font-size:14px;line-height:1.5}
 .payment-qr-reference code{font-size:12px;overflow-wrap:anywhere}
 .payment-qr-confirm{margin-top:4px}
 .payment-qr-note{font-size:11.5px!important;color:var(--muted)!important;line-height:1.6!important;margin:12px auto 0!important;max-width:360px}
+
+.member-profile-select{width:100%;height:42px;border:1px solid #dce2e6;border-radius:7px;background:#fff;color:var(--ink);padding:0 38px 0 12px;font-size:14px;appearance:auto}
+.member-profile-select:focus{outline:none;border-color:var(--coral);box-shadow:0 0 0 3px rgba(199,76,64,.08)}
+.member-profile-select[aria-invalid="true"]{border-color:#c74c40}

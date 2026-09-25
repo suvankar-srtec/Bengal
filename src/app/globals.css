@@ -609,3 +609,33 @@ body{font-size:14px;line-height:1.5}
   .member-directory-photo{width:78px;height:78px}
   .member-directory-content dl>div{grid-template-columns:1fr}
 }
+
+.member-profile-picker{display:grid;grid-template-columns:52px minmax(0,1fr);gap:10px;align-items:center}
+.member-profile-picker-photo,.member-profile-picker-placeholder{width:52px;height:52px;border-radius:9px;display:block}
+.member-profile-picker-photo{object-fit:cover;border:1px solid var(--line);background:#f4f6f7}
+.member-profile-picker-placeholder{display:grid;place-items:center;border:1px dashed #ccd5da;background:#f8fafb;color:var(--muted)}
+.member-profile-picker .member-profile-select{height:52px}
+
+.members-table-card{background:white;border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.members-table-heading{padding:18px 20px;border-bottom:1px solid var(--line)}
+.members-table-heading h2{margin:0;font-size:18px}
+.members-table-heading p{margin:5px 0 0;color:var(--muted);font-size:12.5px}
+.members-table-wrap{overflow-x:auto}
+.members-table{width:100%;border-collapse:collapse;table-layout:auto}
+.members-table th,.members-table td{padding:13px 14px;border-bottom:1px solid #edf0f2;text-align:left;vertical-align:middle;font-size:12.5px;line-height:1.45;white-space:normal}
+.members-table th{background:#fafbfc;color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.3px}
+.members-table tbody tr:last-child td{border-bottom:0}
+.members-table tbody tr:hover{background:#fcfdfd}
+.members-table-photo{width:58px;height:58px;border-radius:10px;object-fit:cover;display:block;border:1px solid var(--line);background:#f4f6f7}
+.members-table-associated{display:flex;flex-direction:column;gap:3px}
+.members-table-associated span{font-size:12px}
+.members-table td:nth-child(1){width:82px}
+.members-table td:nth-child(2){min-width:150px}
+.members-table td:nth-child(3){min-width:170px}
+.members-table td:nth-child(4){min-width:210px}
+.members-table td:nth-child(5){min-width:135px}
+.members-table td:nth-child(6){min-width:135px}
+@media(max-width:700px){
+  .members-table-wrap{overflow-x:auto}
+  .members-table{min-width:850px}
+}

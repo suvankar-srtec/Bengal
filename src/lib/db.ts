@@ -13,9 +13,11 @@ export function getDatabase() {
   const pool = new Pool({
     connectionString: connection.toString(),
     enableChannelBinding: true,
-    max: 5,
-    connectionTimeoutMillis: 15000,
-    idleTimeoutMillis: 30000,
+    max: 4,
+    connectionTimeoutMillis: 8000,
+    idleTimeoutMillis: 60000,
+    keepAlive: true,
+    keepAliveInitialDelayMillis: 10000,
     statement_timeout: 10000,
   });
   pool.on("error", () => console.error("An idle database connection failed."));

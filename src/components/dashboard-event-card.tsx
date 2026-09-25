@@ -15,6 +15,8 @@ export function DashboardEventCard({
 }) {
   const [open, setOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
+  const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
+  const [copyAgainLabel, setCopyAgainLabel] = useState("Copy again");
   const menuRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
 
@@ -26,7 +28,10 @@ export function DashboardEventCard({
     }
 
     function closeOnEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") setOpen(false);
+      if (event.key === "Escape") {
+        setOpen(false);
+        setCopiedUrl(null);
+      }
     }
 
     document.addEventListener("mousedown", closeMenu);
@@ -40,12 +45,26 @@ export function DashboardEventCard({
   async function copyPublicLink() {
     const path = eventPublicPath(id, title);
     const url = new URL(path, window.location.origin).toString();
+
     try {
       await navigator.clipboard.writeText(url);
       setOpen(false);
-      window.alert("Public registration link copied.");
+      setCopyAgainLabel("Copy again");
+      setCopiedUrl(url);
     } catch {
       window.prompt("Copy this registration link:", url);
+    }
+  }
+
+  async function copyAgain() {
+    if (!copiedUrl) return;
+
+    try {
+      await navigator.clipboard.writeText(copiedUrl);
+      setCopyAgainLabel("Copied");
+      window.setTimeout(() => setCopyAgainLabel("Copy again"), 1400);
+    } catch {
+      window.prompt("Copy this registration link:", copiedUrl);
     }
   }
 
@@ -101,5 +120,52 @@ export function DashboardEventCard({
         </button>
       </div>}
     </div>
+
+    {copiedUrl && <div
+      className="link-copied-modal-backdrop"
+      role="presentation"
+      onMouseDown={(event) => {
+        if (event.currentTarget === event.target) setCopiedUrl(null);
+      }}
+    >
+      <div
+        className="link-copied-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={`link-copied-title-${id}`}
+      >
+        <button
+          className="link-copied-modal-close"
+          type="button"
+          aria-label="Close"
+          onClick={() => setCopiedUrl(null)}
+        >
+          <span aria-hidden="true">×</span>
+        </button>
+
+        <div className="link-copied-modal-icon" aria-hidden="true">
+          <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M10 13a5 5 0 0 0 7.1.1l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1" />
+            <path d="M14 11a5 5 0 0 0-7.1-.1l-2 2A5 5 0 0 0 12 20l1.1-1.1" />
+          </svg>
+          <i className="link-ray ray-1" />
+          <i className="link-ray ray-2" />
+          <i className="link-ray ray-3" />
+          <i className="link-ray ray-4" />
+        </div>
+
+        <h2 id={`link-copied-title-${id}`}>Link copied successfully</h2>
+        <p>The public registration link has been copied to your clipboard.</p>
+
+        <div className="link-copied-modal-actions">
+          <button className="link-copied-copy-again" type="button" onClick={() => void copyAgain()}>
+            {copyAgainLabel}
+          </button>
+          <button className="link-copied-done" type="button" onClick={() => setCopiedUrl(null)}>
+            Done
+          </button>
+        </div>
+      </div>
+    </div>}
   </div>;
 }

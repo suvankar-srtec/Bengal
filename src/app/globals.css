@@ -195,8 +195,8 @@ input[type=checkbox]{height:19px;width:19px;accent-color:var(--coral);cursor:poi
 .admin-login-button:disabled{opacity:.7}
 .admin-login-spinner{width:15px;height:15px;border:2px solid #ffffff66;border-top-color:white;border-radius:50%;animation:spin .8s linear infinite}
 .admin-login-hint{margin-top:16px;padding:10px 12px;background:var(--paper);border-radius:6px;font-size:12px;color:var(--muted);text-align:center}
-.admin-dashboard-shell{min-height:100vh;display:grid;grid-template-columns:250px 1fr;background:#f5f7f8}
-.admin-sidebar{background:#fff;border-right:1px solid var(--line);padding:28px 20px;display:flex;flex-direction:column}
+.admin-dashboard-shell{min-height:100vh;display:grid;grid-template-columns:190px minmax(0,1fr);background:#f5f7f8}
+.admin-sidebar{background:#fff;border-right:1px solid var(--line);padding:28px 14px;display:flex;flex-direction:column}
 .admin-sidebar-brand{display:flex;align-items:center;gap:11px;text-decoration:none;padding:0 6px 24px;border-bottom:1px solid var(--line)}
 .admin-sidebar-brand .brand-mark{font-size:38px;width:34px;height:38px}.admin-sidebar-brand .brand-name{font-size:15px;letter-spacing:2.2px}.admin-sidebar-brand .brand-name>span{font-size:11px}
 .admin-nav{display:flex;flex-direction:column;gap:6px;padding-top:22px}
@@ -205,7 +205,7 @@ input[type=checkbox]{height:19px;width:19px;accent-color:var(--coral);cursor:poi
 .admin-sidebar-footer{margin-top:auto;padding-top:20px;border-top:1px solid var(--line)}
 .dashboard-signout{width:100%;height:38px;border:1px solid #dce1e5;border-radius:7px;background:white;color:var(--ink);font-size:13px}
 .dashboard-signout:hover{border-color:var(--coral);color:var(--coral)}
-.admin-dashboard-main{padding:44px 48px}
+.admin-dashboard-main{padding:40px 32px}
 .admin-dashboard-header{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:28px}
 .admin-dashboard-header h1{font-family:"Segoe UI",Arial,sans-serif;font-size:34px;line-height:1;margin:10px 0 9px;letter-spacing:-1px}
 .admin-dashboard-header p{margin:0;font-size:14px;color:var(--muted)}
@@ -523,3 +523,9 @@ body{font-size:14px;line-height:1.5}
 .global-route-spinner{width:28px;height:28px}
 .mini-route-spinner{width:14px;height:14px;border-width:2px}
 .report-select-loading{display:flex;align-items:center;justify-content:center;right:38px;background:transparent}
+
+@media(min-width:901px){
+  .report-main{padding-left:26px;padding-right:26px}
+  .admin-sidebar-brand{padding-left:2px;padding-right:2px}
+  .bbc-logo-sidebar{max-width:132px;height:auto}
+}

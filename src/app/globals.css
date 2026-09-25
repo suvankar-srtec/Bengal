@@ -559,3 +559,19 @@ body{font-size:14px;line-height:1.5}
   .link-copied-modal-actions{flex-direction:column-reverse;gap:8px}
   .link-copied-modal-actions button{width:100%}
 }
+
+.payment-qr-panel{margin-top:20px;text-align:center}
+.payment-qr-heading>.eyebrow{justify-content:center;color:#7e625b}
+.payment-qr-heading h3{margin:9px 0 8px;font-size:22px;letter-spacing:-.4px}
+.payment-qr-heading p{margin:0 auto;color:var(--muted);font-size:13px;line-height:1.65;max-width:360px}
+.payment-qr-amount{display:flex;align-items:center;justify-content:space-between;gap:16px;margin:22px 0 18px;padding:15px 16px;border:1px solid var(--line);border-radius:9px;background:var(--paper)}
+.payment-qr-amount span{font-size:13px;color:var(--muted)}
+.payment-qr-amount strong{font-size:24px;letter-spacing:-.6px}
+.payment-qr-loading{min-height:260px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;color:var(--muted);font-size:13px}
+.payment-qr-image-wrap{width:min(320px,100%);margin:0 auto 18px;padding:14px;border:1px solid var(--line);border-radius:12px;background:white}
+.payment-qr-image-wrap img{display:block;width:100%;height:auto}
+.payment-qr-reference{display:flex;flex-direction:column;gap:6px;margin:0 0 18px}
+.payment-qr-reference span{font-size:12px;color:var(--muted)}
+.payment-qr-reference code{font-size:12px;overflow-wrap:anywhere}
+.payment-qr-confirm{margin-top:4px}
+.payment-qr-note{font-size:11.5px!important;color:var(--muted)!important;line-height:1.6!important;margin:12px auto 0!important;max-width:360px}

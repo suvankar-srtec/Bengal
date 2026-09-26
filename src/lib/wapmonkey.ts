@@ -21,7 +21,7 @@ export function whatsappConfiguration(env: Record<string, string | undefined> = 
 type Media = { url: string; name: string; caption: string };
 
 export async function sendWhatsAppPasses(
-  input: { phone: string; message: string; media?: Media[] },
+  input: { phone: string; message: string; media: Media[] },
   config = whatsappConfiguration(),
   request: typeof fetch = fetch,
 ) {
@@ -35,12 +35,8 @@ export async function sendWhatsAppPasses(
       method: "POST", redirect: "error", cache: "no-store",
       headers: { Authorization: config.apiKey, "Content-Type": "application/json" },
       body: JSON.stringify({
-        numbers,
-        message: input.message,
-        ...(media.length ? { media } : {}),
-        device_token: config.deviceToken,
-        delay: "0",
-        schedule: null,
+        numbers, message: input.message, media: input.media,
+        device_token: config.deviceToken, delay: "0", schedule: null,
       }),
       signal: AbortSignal.timeout(20000),
     });

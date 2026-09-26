@@ -832,3 +832,67 @@ body{font-size:14px;line-height:1.5}
 .password-visibility-toggle{position:absolute;top:50%;right:8px;transform:translateY(-50%);width:34px;height:34px;border:0;border-radius:7px;background:transparent;color:var(--muted);display:flex;align-items:center;justify-content:center;padding:0}
 .password-visibility-toggle:hover{background:#f3f5f6;color:var(--ink)}
 .password-visibility-toggle:focus-visible{outline:2px solid #a83d31;outline-offset:1px}
+
+
+/* Manager QR scanner */
+.scanner-main{min-width:0}
+.manager-scanner-card{background:white;border:1px solid var(--line);border-radius:12px;padding:22px}
+.manager-scanner-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;margin-bottom:20px}
+.manager-scanner-heading h2{margin:6px 0 6px;font-size:22px}
+.manager-scanner-heading p{margin:0;color:var(--muted);font-size:13px}
+.manager-scanner-heading>button{height:40px;border:0;border-radius:7px;background:var(--coral);color:white;padding:0 15px;font-size:13px;font-weight:700;white-space:nowrap}
+.manager-scanner-heading>button.secondary{background:white;color:var(--ink);border:1px solid #dce2e6}
+.manager-scanner-layout{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(320px,.85fr);gap:20px}
+.manager-scanner-camera{position:relative;min-height:420px;border:1px solid #dfe5e8;border-radius:12px;overflow:hidden;background:#101820}
+.manager-scanner-camera video{width:100%;height:100%;min-height:420px;object-fit:cover;display:block}
+.manager-scanner-placeholder{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;background:#f7f9fa;color:var(--muted);padding:30px}
+.manager-scanner-placeholder>span{font-size:48px;color:var(--coral);line-height:1}
+.manager-scanner-placeholder>strong{font-size:17px;color:var(--ink);margin-top:10px}
+.manager-scanner-placeholder>small{font-size:12px;max-width:280px;line-height:1.6;margin-top:6px}
+.manager-scanner-frame{position:absolute;left:50%;top:50%;width:min(58%,300px);aspect-ratio:1;transform:translate(-50%,-50%);border:3px solid white;border-radius:14px;box-shadow:0 0 0 999px rgba(0,0,0,.28)}
+.manager-scanner-side{display:flex;flex-direction:column;gap:14px}
+.manager-scanner-status{border:1px solid var(--line);border-radius:9px;background:#fafbfc;padding:12px 13px;font-size:13px;line-height:1.55;color:var(--muted)}
+.manager-scan-result{border:1px solid #cfe5d8;border-radius:10px;background:#f2faf5;padding:17px}
+.manager-scan-result>span{display:inline-flex;padding:4px 8px;border-radius:999px;background:#dff2e6;color:#28634e;font-size:10px;font-weight:800;letter-spacing:.08em}
+.manager-scan-result h3{margin:10px 0 14px;font-size:22px}
+.manager-scan-result dl{margin:0;display:grid;gap:9px}
+.manager-scan-result dl>div{display:grid;grid-template-columns:90px minmax(0,1fr);gap:10px}
+.manager-scan-result dt{font-size:11px;color:var(--muted);font-weight:700;text-transform:uppercase}
+.manager-scan-result dd{margin:0;font-size:13px;overflow-wrap:anywhere}
+.manager-manual-scan{margin-top:auto;border-top:1px solid var(--line);padding-top:15px}
+.manager-manual-scan>label{display:block;font-size:13px;font-weight:700}
+.manager-manual-scan>p{margin:4px 0 10px;color:var(--muted);font-size:11.5px;line-height:1.5}
+.manager-manual-scan>div{display:flex;gap:8px}
+.manager-manual-scan input{min-width:0;flex:1;height:42px;border:1px solid #dce2e6;border-radius:7px;padding:0 11px}
+.manager-manual-scan button{height:42px;border:0;border-radius:7px;background:var(--coral);color:white;padding:0 14px;font-weight:700}
+
+/* Public QR verification opened by a phone camera */
+.pass-verification-page{min-height:100vh;background:#f3f6f7;display:flex;align-items:center;justify-content:center;padding:24px}
+.pass-verification-card{width:min(520px,100%);background:white;border:1px solid var(--line);border-top:4px solid var(--coral);border-radius:16px;padding:30px;box-shadow:0 20px 50px rgba(24,47,70,.08);text-align:center}
+.pass-verification-card>img{width:132px;height:auto;display:block;margin:0 auto 18px}
+.pass-verification-badge{display:inline-flex;padding:7px 11px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.08em}
+.pass-verification-badge.valid{background:#e6f5ec;color:#28634e}
+.pass-verification-badge.invalid{background:#fff1ee;color:#a73b31}
+.pass-verification-card h1{font-family:"Segoe UI",Arial,sans-serif;font-size:30px;line-height:1.15;letter-spacing:-.7px;margin:16px 0 5px}
+.pass-verification-card>p{margin:0;color:var(--muted);font-size:14px}
+.pass-verification-card dl{margin:24px 0 0;text-align:left;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.pass-verification-card dl>div{display:grid;grid-template-columns:130px minmax(0,1fr);gap:12px;padding:12px 14px}
+.pass-verification-card dl>div+div{border-top:1px solid var(--line)}
+.pass-verification-card dt{font-size:11px;text-transform:uppercase;color:var(--muted);font-weight:700}
+.pass-verification-card dd{margin:0;font-size:13px;font-weight:600;overflow-wrap:anywhere}
+.pass-verification-card>small{display:block;margin-top:17px;color:var(--muted);font-size:11px;line-height:1.5}
+
+@media(max-width:850px){
+  .manager-scanner-layout{grid-template-columns:1fr}
+  .manager-scanner-camera,.manager-scanner-camera video{min-height:360px}
+}
+@media(max-width:560px){
+  .manager-scanner-card{padding:15px}
+  .manager-scanner-heading{flex-direction:column}
+  .manager-scanner-heading>button{width:100%}
+  .manager-scanner-camera,.manager-scanner-camera video{min-height:300px}
+  .manager-manual-scan>div{flex-direction:column}
+  .manager-manual-scan button{width:100%}
+  .pass-verification-card{padding:24px 18px}
+  .pass-verification-card dl>div{grid-template-columns:1fr;gap:3px}
+}

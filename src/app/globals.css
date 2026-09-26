@@ -1290,3 +1290,22 @@ body{font-size:14px;line-height:1.5}
   .report-type-tabs{display:flex;width:100%}
   .report-type-tabs a{flex:1}
 }
+
+
+/* Reports: date is the first column */
+.report-date-column{
+  width:92px!important;
+  min-width:92px!important;
+  max-width:92px!important;
+  white-space:nowrap!important;
+}
+.event-report-table th:nth-child(2),
+.event-report-table td:nth-child(2){width:18%}
+.event-report-table th:nth-child(3),
+.event-report-table td:nth-child(3){width:20%}
+.event-report-table th:nth-child(4),
+.event-report-table td:nth-child(4){width:15%}
+.event-report-table th:nth-child(5),
+.event-report-table td:nth-child(5){width:17%}
+.event-report-table th:nth-child(6),
+.event-report-table td:nth-child(6){width:30%}

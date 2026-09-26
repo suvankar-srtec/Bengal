@@ -19,6 +19,7 @@ type ExportRegistration = {
   phone: string;
   billing_details: string;
   meal_choice: "snacks" | "lunch" | "dinner" | null;
+  included_meals: ("snacks" | "lunch" | "dinner")[];
   standee_quantity: number;
   presentation_selected: boolean;
   total_paise: number;
@@ -65,7 +66,7 @@ function excelXml(event: ExportEvent, registrations: ExportRegistration[]) {
     "Email",
     "WhatsApp",
     "Billing",
-    "Meal",
+    "Meals included",
     "Standee",
     "Presentation",
     "Amount (INR)",
@@ -79,9 +80,11 @@ function excelXml(event: ExportEvent, registrations: ExportRegistration[]) {
     registration.email,
     registration.phone,
     registration.billing_details,
-    registration.meal_choice
-      ? registration.meal_choice[0].toUpperCase() + registration.meal_choice.slice(1)
-      : "None",
+    registration.included_meals?.length
+      ? registration.included_meals.map((meal) => meal[0].toUpperCase() + meal.slice(1)).join(", ")
+      : registration.meal_choice
+        ? registration.meal_choice[0].toUpperCase() + registration.meal_choice.slice(1)
+        : "None",
     registration.standee_quantity,
     registration.presentation_selected ? "Yes" : "No",
     money(registration.total_paise),
@@ -222,9 +225,11 @@ async function buildPdf(event: ExportEvent, registrations: ExportRegistration[])
   const lineHeight = 8.2;
 
   const rows: PdfRegistrationRow[] = registrations.map((registration) => {
-    const meal = registration.meal_choice
-      ? registration.meal_choice[0].toUpperCase() + registration.meal_choice.slice(1)
-      : "None";
+    const meal = registration.included_meals?.length
+      ? registration.included_meals.map((item) => item[0].toUpperCase() + item.slice(1)).join(", ")
+      : registration.meal_choice
+        ? registration.meal_choice[0].toUpperCase() + registration.meal_choice.slice(1)
+        : "None";
 
     const values = [
       registration.member_name,
@@ -583,6 +588,7 @@ export async function GET(request: Request) {
         phone,
         billing_details,
         meal_choice,
+        included_meals,
         standee_quantity,
         presentation_selected,
         total_paise,

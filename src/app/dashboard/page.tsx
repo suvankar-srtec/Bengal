@@ -87,7 +87,7 @@ export default async function DashboardPage() {
         <a className="active" href="/dashboard">Dashboard</a>
         {session.role === "admin" && <a href="/members">Members</a>}
         {session.role === "admin" && <a href="/managers">Manager</a>}
-        <a href="/scanner">Scanner</a>
+        <a className="mobile-scanner-nav" href="/scanner">Scanner</a>
         <a href={session.role === "manager" ? `/report?eventId=${session.eventId}` : "/report"}>Report</a>
       </nav>
       <div className="admin-sidebar-footer"><AdminLogoutButton /></div>
@@ -98,6 +98,7 @@ export default async function DashboardPage() {
         <span className="eyebrow">MANAGER ACCESS</span>
         <h1>Assigned event</h1>
         <p>You can view only the event assigned to your manager account.</p>
+        <a className="manager-mobile-scan-button" href="/scanner">Scan QR pass</a>
       </div>}
 
       <section className="dashboard-events-grid" aria-label="Events">

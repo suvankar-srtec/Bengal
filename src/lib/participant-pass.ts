@@ -16,7 +16,7 @@ export type PassRegistration = {
   participation_quantity: number;
   standee_quantity: number;
   meal_choice: MealChoice | null;
-  included_meals: MealChoice[];
+  included_meals?: MealChoice[];
   presentation_selected: boolean;
   participation_unit_paise: number;
   standee_unit_paise: number;

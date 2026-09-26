@@ -7,7 +7,7 @@ import { eventPublicPath } from "@/lib/event-public-link";
 export function DashboardEventCard({
   id,
   title,
-  createdAt,
+  eventDate,
   registrations,
   participants,
   revenue,
@@ -15,7 +15,7 @@ export function DashboardEventCard({
 }: {
   id: number;
   title: string;
-  createdAt: string;
+  eventDate: string;
   registrations: number;
   participants: number;
   revenue: number;
@@ -109,7 +109,6 @@ export function DashboardEventCard({
         <div className="dashboard-paid-value">
           <span>Paid value</span>
           <strong>{revenueLabel}</strong>
-          <small>Successful payments</small>
         </div>
 
         <div className="dashboard-event-counts">
@@ -128,7 +127,7 @@ export function DashboardEventCard({
         <div><span>Paid value</span><strong>{revenueLabel}</strong></div>
       </div>}
 
-      <span className="dashboard-event-created">Created {createdAt}</span>
+      <span className="dashboard-event-created">Event date {eventDate}</span>
     </a>
 
     {canManage && <div className="dashboard-event-menu" ref={menuRef}>

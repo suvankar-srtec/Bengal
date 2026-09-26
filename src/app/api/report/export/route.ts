@@ -1,5 +1,5 @@
 import { cookies } from "next/headers";
-import { ADMIN_SESSION_COOKIE, validAdminSession } from "@/lib/admin-auth";
+import { ADMIN_SESSION_COOKIE, readAdminSession } from "@/lib/admin-auth";
 import { getDatabase } from "@/lib/db";
 import { BBC_LOGO_DATA_URL } from "@/lib/bbc-logo";
 
@@ -551,12 +551,17 @@ async function buildPdf(event: ExportEvent, registrations: ExportRegistration[])
 
 export async function GET(request: Request) {
   const store = await cookies();
-  if (!validAdminSession(store.get(ADMIN_SESSION_COOKIE)?.value)) {
+  const session = readAdminSession(store.get(ADMIN_SESSION_COOKIE)?.value);
+  if (!session) {
     return Response.json({ error: "Unauthorized." }, { status: 401 });
   }
 
   const url = new URL(request.url);
   const eventId = Number(url.searchParams.get("eventId"));
+
+  if (session.role === "manager" && eventId !== session.eventId) {
+    return Response.json({ error: "This event is not assigned to your manager account." }, { status: 403 });
+  }
   const format = url.searchParams.get("format");
 
   if (!Number.isInteger(eventId) || eventId < 1) {

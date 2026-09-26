@@ -101,15 +101,32 @@ export function DashboardEventCard({
   const href = canManage ? `/create-event?id=${id}` : `/report?eventId=${id}`;
 
   return <div className="dashboard-event-card-shell">
-    <a className="dashboard-event-card" href={href}>
+    <a className={`dashboard-event-card ${canManage ? "admin-event-card" : "manager-event-card"}`} href={href}>
       <span className="dashboard-event-card-label">EVENT</span>
       <strong>{title}</strong>
 
-      <div className="dashboard-event-stats">
+      {canManage ? <>
+        <div className="dashboard-paid-value">
+          <span>Paid value</span>
+          <strong>{revenueLabel}</strong>
+          <small>Successful payments</small>
+        </div>
+
+        <div className="dashboard-event-counts">
+          <div>
+            <span>Registrations</span>
+            <strong>{registrations}</strong>
+          </div>
+          <div>
+            <span>Participants</span>
+            <strong>{participants}</strong>
+          </div>
+        </div>
+      </> : <div className="dashboard-event-stats">
         <div><span>Registrations</span><strong>{registrations}</strong></div>
         <div><span>Participants</span><strong>{participants}</strong></div>
         <div><span>Paid value</span><strong>{revenueLabel}</strong></div>
-      </div>
+      </div>}
 
       <span className="dashboard-event-created">Created {createdAt}</span>
     </a>

@@ -45,6 +45,11 @@ ALTER TABLE public.bbc_event_registrations
     total_paise = participation_quantity * participation_unit_paise
       + standee_quantity * standee_unit_paise
       + CASE
+          WHEN meal_choice IS NOT NULL
+            THEN participation_quantity * meal_unit_paise
+          ELSE 0
+        END
+      + CASE
           WHEN presentation_selected
             THEN presentation_unit_paise
           ELSE 0

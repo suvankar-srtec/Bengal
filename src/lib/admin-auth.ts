@@ -55,8 +55,9 @@ export function readAdminSession(token: string | undefined): AdminSession | null
       parsed.role === "manager" &&
       typeof parsed.managerId === "string" &&
       typeof parsed.userId === "string" &&
+      typeof parsed.eventId === "number" &&
       Number.isInteger(parsed.eventId) &&
-      Number(parsed.eventId) > 0
+      parsed.eventId > 0
     ) {
       return {
         role: "manager",

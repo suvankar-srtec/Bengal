@@ -13,18 +13,19 @@ async function authorized() {
 
 function values(data: ReturnType<typeof eventContentSchema.parse>) {
   return [
-    data.sectionLabel,
+    "",
     data.titleBn,
     data.titleEn,
-    data.taglineLine1,
-    data.taglineLine2,
+    data.aboutTagline1,
+    data.aboutTagline2,
     data.eventDate,
+    data.eventTime,
     data.organizer,
-    data.aboutTitle,
+    data.aboutTagline1,
     data.aboutParagraph1,
     data.aboutParagraph2,
-    data.bengaliParagraph1,
-    data.bengaliParagraph2,
+    "",
+    "",
   ];
 }
 
@@ -48,18 +49,11 @@ export async function POST(request: Request) {
     const duplicate = await database.query<{ id: number }>(
       `SELECT id
        FROM public.bbc_event_content
-       WHERE section_label = $1
-         AND title_bn = $2
+       WHERE title_bn = $2
          AND title_en = $3
-         AND tagline_line_1 = $4
-         AND tagline_line_2 = $5
          AND event_date = $6::date
-         AND organizer = $7
-         AND about_title = $8
-         AND about_paragraph_1 = $9
-         AND about_paragraph_2 = $10
-         AND bengali_paragraph_1 = $11
-         AND bengali_paragraph_2 = $12
+         AND event_time = $7::time
+         AND organizer = $8
        ORDER BY id
        LIMIT 1`,
       eventValues,
@@ -78,13 +72,13 @@ export async function POST(request: Request) {
     const result = await database.query<{ id: number }>(
       `INSERT INTO public.bbc_event_content (
         section_label, title_bn, title_en, tagline_line_1, tagline_line_2,
-        event_date, organizer, about_title, about_paragraph_1, about_paragraph_2,
+        event_date, event_time, organizer, about_title, about_paragraph_1, about_paragraph_2,
         bengali_paragraph_1, bengali_paragraph_2,
         participation_unit_paise, standee_unit_paise, presentation_unit_paise,
         meal_option, snacks_unit_paise, lunch_unit_paise, dinner_unit_paise, included_meals
       ) VALUES (
-        $1, $2, $3, $4, $5, $6::date, $7, $8, $9, $10, $11, $12,
-        $13, $14, $15, $16, 0, 0, 0, $17
+        $1, $2, $3, $4, $5, $6::date, $7::time, $8, $9, $10, $11, $12, $13,
+        $14, $15, $16, $17, 0, 0, 0, $18
       )
       RETURNING id`,
       [
@@ -132,22 +126,23 @@ export async function PUT(request: Request) {
         tagline_line_1 = $4,
         tagline_line_2 = $5,
         event_date = $6::date,
-        organizer = $7,
-        about_title = $8,
-        about_paragraph_1 = $9,
-        about_paragraph_2 = $10,
-        bengali_paragraph_1 = $11,
-        bengali_paragraph_2 = $12,
-        participation_unit_paise = $13,
-        standee_unit_paise = $14,
-        presentation_unit_paise = $15,
-        meal_option = $16,
+        event_time = $7::time,
+        organizer = $8,
+        about_title = $9,
+        about_paragraph_1 = $10,
+        about_paragraph_2 = $11,
+        bengali_paragraph_1 = $12,
+        bengali_paragraph_2 = $13,
+        participation_unit_paise = $14,
+        standee_unit_paise = $15,
+        presentation_unit_paise = $16,
+        meal_option = $17,
         snacks_unit_paise = 0,
         lunch_unit_paise = 0,
         dinner_unit_paise = 0,
-        included_meals = $17,
+        included_meals = $18,
         updated_at = NOW()
-      WHERE id = $18`,
+      WHERE id = $19`,
       [
         ...values(parsed.data),
         parsed.data.participationPaise,
@@ -166,7 +161,6 @@ export async function PUT(request: Request) {
     return NextResponse.json({ error: "Couldn’t update the event. Please try again." }, { status: 500 });
   }
 }
-
 
 export async function DELETE(request: Request) {
   if (!(await authorized())) {

@@ -2,7 +2,7 @@ import QRCode from "qrcode";
 import sharp from "sharp";
 import { BBC_LOGO_DATA_URL } from "./bbc-logo";
 import { memberPhotoDataUri } from "./member-photo";
-import { mealChoiceLabel, type MealChoice } from "./registration";
+import { mealChoicesLabel, type MealChoice } from "./registration";
 
 export type PassRegistration = {
   id: string;
@@ -16,6 +16,7 @@ export type PassRegistration = {
   participation_quantity: number;
   standee_quantity: number;
   meal_choice: MealChoice | null;
+  included_meals: MealChoice[];
   presentation_selected: boolean;
   participation_unit_paise: number;
   standee_unit_paise: number;
@@ -103,14 +104,14 @@ export function participantPass(registration: PassRegistration, index: number) {
 
   const participantNumber = index + 1;
   const passId = `${registration.reference}-P${participantNumber}`;
-  const mealLabel = registration.meal_choice ? mealChoiceLabel(registration.meal_choice) : "No meal";
+  const mealLabel = mealChoicesLabel(registration.included_meals ?? (registration.meal_choice ? [registration.meal_choice] : []));
 
   const participationLine = `${paiseText(registration.participation_unit_paise)}/person x ${registration.participation_quantity}`;
   const standeeLine = registration.standee_quantity > 0
     ? `${registration.standee_quantity} x ${paiseText(registration.standee_unit_paise)}`
     : "None";
-  const mealLine = registration.meal_choice
-    ? `${mealLabel} (${paiseText(registration.meal_unit_paise)}/person)`
+  const mealLine = registration.included_meals?.length || registration.meal_choice
+    ? `${mealLabel} (included in participation fee)`
     : "None";
   const presentationLine = registration.presentation_selected
     ? `Yes (${paiseText(registration.presentation_unit_paise)})`
@@ -126,7 +127,7 @@ export function participantPass(registration: PassRegistration, index: number) {
       `Participant: ${participantName}`,
       `Participation fees: ${participationLine}`,
       `Standee placement: ${standeeLine}`,
-      `Meal preference: ${mealLine}`,
+      `Meals included: ${mealLine}`,
       `Company presentation: ${presentationLine}`,
     ].join("\n"),
   };
@@ -176,7 +177,7 @@ export async function renderParticipantPass(registration: PassRegistration, inde
     ${pixelText(registration.billing_details, 60, 390, 2.45, "#182f46", 28)}
 
     <rect x="45" y="420" width="660" height="62" rx="8" fill="#fff8f5"/>
-    ${pixelText("MEAL PREFERENCE", 60, 437, 1.9, "#8a6c64", 24)}
+    ${pixelText("MEALS INCLUDED", 60, 437, 1.9, "#8a6c64", 24)}
     ${pixelText(pass.mealLabel, 60, 462, 2.7, "#182f46", 24)}
 
     <image href="data:image/png;base64,${qr.split(",")[1]}" x="160" y="505" width="430" height="430"/>

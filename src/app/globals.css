@@ -639,3 +639,31 @@ body{font-size:14px;line-height:1.5}
   .members-table-wrap{overflow-x:auto}
   .members-table{min-width:850px}
 }
+
+.public-pass-page{min-height:100vh;background:#f5f7f8;padding:34px 22px 54px;color:var(--ink)}
+.public-pass-header{max-width:1120px;margin:0 auto 22px;background:white;border:1px solid var(--line);border-radius:16px;padding:22px 26px;display:flex;align-items:center;gap:20px}
+.public-pass-header img{width:108px;height:auto;display:block}
+.public-pass-header span{font-size:11px;font-weight:800;letter-spacing:.12em;color:#2f7d62}
+.public-pass-header h1{margin:5px 0 4px;font-size:30px;letter-spacing:-.7px}
+.public-pass-header p{margin:0;color:var(--muted);font-size:14px}
+.public-pass-summary{max-width:1120px;margin:0 auto 22px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.public-pass-summary>div{background:white;border:1px solid var(--line);border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:6px}
+.public-pass-summary span{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
+.public-pass-summary strong{font-size:16px}
+.public-pass-summary .paid-label{color:#2f7d62}
+.public-pass-list{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:18px}
+.public-pass-card{background:white;border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:14px}
+.public-pass-card-heading span{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+.public-pass-card-heading h2{margin:4px 0 3px;font-size:18px}
+.public-pass-card-heading p{margin:0;color:var(--muted);font-size:12px}
+.public-pass-card>img{display:block;width:100%;height:auto;border:1px solid var(--line);border-radius:10px;background:white}
+.public-pass-card>a{height:44px;border-radius:8px;background:var(--coral);color:white;text-decoration:none;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800}
+.public-pass-card>a:hover{filter:brightness(.96)}
+.public-pass-security{max-width:1120px;margin:18px auto 0;text-align:center;color:var(--muted);font-size:11px;line-height:1.5}
+@media(max-width:700px){
+  .public-pass-page{padding:18px 12px 36px}
+  .public-pass-header{padding:18px;align-items:flex-start}
+  .public-pass-header img{width:78px}
+  .public-pass-header h1{font-size:24px}
+  .public-pass-summary{grid-template-columns:1fr}
+}

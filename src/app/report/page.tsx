@@ -239,7 +239,7 @@ export default async function ReportPage({
             {reportType === "event" ? <table className="report-table manager-report-table event-report-table">
               <thead>
                 <tr>
-                  <th className="report-serial-column">#</th>
+                  <th className="report-date-column">Date</th>
                   <th>Primary member</th>
                   <th>Participants</th>
                   <th>WhatsApp</th>
@@ -248,7 +248,7 @@ export default async function ReportPage({
                 </tr>
               </thead>
               <tbody>
-                {registrations.map((registration, rowIndex) => {
+                {registrations.map((registration) => {
                   const participants = registration.participant_names ?? [registration.member_name];
                   const includedMeals = registration.included_meals?.length
                     ? registration.included_meals
@@ -257,7 +257,7 @@ export default async function ReportPage({
                       : [];
 
                   return <tr key={registration.id}>
-                    <td className="report-serial-column">{rowIndex + 1}</td>
+                    <td className="report-date-column">{dateLabel(registration.created_at)}</td>
                     <td><strong>{registration.member_name}</strong></td>
                     <td>
                       <div className="report-participant-names">
@@ -286,7 +286,7 @@ export default async function ReportPage({
             </table> : <table className="report-table registration-report-table">
               <thead>
                 <tr>
-                  <th className="report-serial-column">#</th>
+                  <th className="report-date-column">Date</th>
                   <th>Primary member</th>
                   <th>Participants</th>
                   <th>Email</th>
@@ -297,12 +297,11 @@ export default async function ReportPage({
                   <th>Presentation</th>
                   <th>Amount</th>
                   <th>Payment</th>
-                  <th>Registered</th>
                 </tr>
               </thead>
               <tbody>
-                {registrations.map((registration, rowIndex) => <tr key={registration.id}>
-                  <td className="report-serial-column">{rowIndex + 1}</td>
+                {registrations.map((registration) => <tr key={registration.id}>
+                  <td className="report-date-column">{dateLabel(registration.created_at)}</td>
                   <td><strong>{registration.member_name}</strong></td>
                   <td>
                     <div className="report-participant-names">
@@ -317,7 +316,6 @@ export default async function ReportPage({
                   <td>{registration.presentation_selected ? "Yes" : "No"}</td>
                   <td>{money(registration.total_paise)}</td>
                   <td><span className={`report-payment-status ${registration.payment_status}`}>{registration.payment_status}</span></td>
-                  <td>{dateLabel(registration.created_at)}</td>
                 </tr>)}
               </tbody>
             </table>}

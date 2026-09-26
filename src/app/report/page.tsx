@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { ADMIN_SESSION_COOKIE, validAdminSession } from "@/lib/admin-auth";
+import { ADMIN_SESSION_COOKIE, readAdminSession } from "@/lib/admin-auth";
 import { AdminLogoutButton } from "@/components/admin-logout-button";
 import { ReportEventSelector } from "@/components/report-event-selector";
 import { Icon } from "@/components/icon";
@@ -60,10 +60,11 @@ export default async function ReportPage({
   searchParams: Promise<{ eventId?: string }>;
 }) {
   const store = await cookies();
-  if (!validAdminSession(store.get(ADMIN_SESSION_COOKIE)?.value)) redirect("/");
+  const session = readAdminSession(store.get(ADMIN_SESSION_COOKIE)?.value);
+  if (!session) redirect("/");
 
   const params = await searchParams;
-  const requestedEventId = Number(params.eventId);
+  const requestedEventId = session.role === "manager" ? session.eventId : Number(params.eventId);
 
   let events: EventOption[] = [];
   let selectedEvent: EventOption | null = null;
@@ -71,14 +72,17 @@ export default async function ReportPage({
 
   try {
     const database = getDatabase();
+    const eventScope = session.role === "manager" ? "WHERE id = $1" : "";
+    const eventScopeParams = session.role === "manager" ? [session.eventId] : [];
 
     if (Number.isInteger(requestedEventId) && requestedEventId > 0) {
       const [eventResult, registrationResult] = await Promise.all([
         database.query<EventOption>(`
           SELECT id, title_en, title_bn, event_date, organizer, created_at
           FROM public.bbc_event_content
+          ${eventScope}
           ORDER BY created_at DESC, id DESC
-        `),
+        `, eventScopeParams),
         database.query<RegistrationRow>(`
           SELECT
             id, member_name, email, phone, billing_details,
@@ -98,8 +102,9 @@ export default async function ReportPage({
       const eventResult = await database.query<EventOption>(`
         SELECT id, title_en, title_bn, event_date, organizer, created_at
         FROM public.bbc_event_content
+        ${eventScope}
         ORDER BY created_at DESC, id DESC
-      `);
+      `, eventScopeParams);
       events = eventResult.rows;
 
       const selectedId = events[0]?.id ?? null;
@@ -141,7 +146,9 @@ export default async function ReportPage({
 
       <nav className="admin-nav">
         <a href="/dashboard">Dashboard</a>
-        <a className="active" href="/report">Report</a>
+        {session.role === "admin" && <a href="/members">Members</a>}
+        {session.role === "admin" && <a href="/managers">Manager</a>}
+        <a className="active" href={session.role === "manager" ? `/report?eventId=${session.eventId}` : "/report"}>Report</a>
       </nav>
 
       <div className="admin-sidebar-footer"><AdminLogoutButton /></div>

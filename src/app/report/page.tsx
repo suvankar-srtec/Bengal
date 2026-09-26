@@ -315,7 +315,7 @@ export default async function ReportPage({
                     registration.payment_status,
                     money(registration.total_paise),
                   ].join(" ")}
-                >>
+                >
                   <td className="report-date-column">{dateLabel(registration.created_at)}</td>
                   <td><strong>{registration.member_name}</strong></td>
                   <td>

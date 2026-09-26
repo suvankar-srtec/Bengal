@@ -34,6 +34,7 @@ export function EventContentEditor({
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [publicLink, setPublicLink] = useState<string | null>(null);
+  const [showSecondAbout, setShowSecondAbout] = useState(Boolean(initial.aboutTagline2 || initial.aboutParagraph2));
 
   const [participation, setParticipation] = useState(rupees(initialPrices.participation));
   const [standee, setStandee] = useState(rupees(initialPrices.standee));
@@ -219,25 +220,52 @@ export function EventContentEditor({
     <section className="event-editor-section">
       <h2>Hero content</h2>
       <div className="event-editor-grid">
-        <label><span>Section label</span><input value={form.sectionLabel} onChange={(e) => set("sectionLabel", e.target.value)} required /></label>
         <label><span>English title</span><input value={form.titleEn} onChange={(e) => set("titleEn", e.target.value)} required /></label>
-        <label className="full"><span>Bengali title</span><input value={form.titleBn} onChange={(e) => set("titleBn", e.target.value)} required /></label>
-        <label><span>Tagline line 1</span><input value={form.taglineLine1} onChange={(e) => set("taglineLine1", e.target.value)} required /></label>
-        <label><span>Tagline line 2</span><input value={form.taglineLine2} onChange={(e) => set("taglineLine2", e.target.value)} required /></label>
+        <label><span>Bengali title</span><input value={form.titleBn} onChange={(e) => set("titleBn", e.target.value)} required /></label>
         <label><span>Event date</span><input type="date" value={form.eventDate} onChange={(e) => set("eventDate", e.target.value)} required /></label>
-        <label><span>Organizer</span><input value={form.organizer} onChange={(e) => set("organizer", e.target.value)} required /></label>
+        <label><span>Event time</span><input type="time" value={form.eventTime} onChange={(e) => set("eventTime", e.target.value)} required /></label>
+        <label className="full"><span>Organizer</span><input value={form.organizer} onChange={(e) => set("organizer", e.target.value)} required /></label>
       </div>
     </section>
 
     <section className="event-editor-section">
-      <h2>About event</h2>
-      <div className="event-editor-grid">
-        <label className="full"><span>About heading</span><input value={form.aboutTitle} onChange={(e) => set("aboutTitle", e.target.value)} required /></label>
-        <label className="full"><span>Paragraph 1</span><textarea rows={4} value={form.aboutParagraph1} onChange={(e) => set("aboutParagraph1", e.target.value)} required /></label>
-        <label className="full"><span>Paragraph 2</span><textarea rows={4} value={form.aboutParagraph2} onChange={(e) => set("aboutParagraph2", e.target.value)} required /></label>
-        <label className="full"><span>Bengali paragraph 1</span><textarea rows={4} value={form.bengaliParagraph1} onChange={(e) => set("bengaliParagraph1", e.target.value)} /></label>
-        <label className="full"><span>Bengali paragraph 2</span><textarea rows={4} value={form.bengaliParagraph2} onChange={(e) => set("bengaliParagraph2", e.target.value)} /></label>
+      <div className="about-editor-heading">
+        <h2>About event</h2>
+        {!showSecondAbout && <button
+          type="button"
+          className="about-add-group"
+          aria-label="Add another tagline and paragraph"
+          title="Add another tagline and paragraph"
+          onClick={() => setShowSecondAbout(true)}
+        >+</button>}
       </div>
+
+      <div className="about-editor-group">
+        <span className="about-group-label">01</span>
+        <div className="event-editor-grid">
+          <label className="full"><span>Tagline</span><input value={form.aboutTagline1} onChange={(e) => set("aboutTagline1", e.target.value)} required /></label>
+          <label className="full"><span>Paragraph</span><textarea rows={4} value={form.aboutParagraph1} onChange={(e) => set("aboutParagraph1", e.target.value)} required /></label>
+        </div>
+      </div>
+
+      {showSecondAbout && <div className="about-editor-group">
+        <div className="about-group-top">
+          <span className="about-group-label">02</span>
+          <button
+            type="button"
+            className="about-remove-group"
+            onClick={() => {
+              set("aboutTagline2", "");
+              set("aboutParagraph2", "");
+              setShowSecondAbout(false);
+            }}
+          >Remove</button>
+        </div>
+        <div className="event-editor-grid">
+          <label className="full"><span>Tagline</span><input value={form.aboutTagline2} onChange={(e) => set("aboutTagline2", e.target.value)} /></label>
+          <label className="full"><span>Paragraph</span><textarea rows={4} value={form.aboutParagraph2} onChange={(e) => set("aboutParagraph2", e.target.value)} /></label>
+        </div>
+      </div>}
     </section>
 
     {message && <div className={`event-editor-message ${message.type}`} role="status">{message.text}</div>}

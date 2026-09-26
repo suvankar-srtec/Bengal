@@ -46,6 +46,7 @@ export default async function MembersPage() {
         <a href="/dashboard">Dashboard</a>
         <a className="active" href="/members">Members</a>
         <a href="/managers">Manager</a>
+        <a href="/scanner">Scanner</a>
         <a href="/report">Report</a>
       </nav>
 

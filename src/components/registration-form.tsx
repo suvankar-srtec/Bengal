@@ -187,7 +187,7 @@ export function RegistrationForm({ eventContentId, prices }: { eventContentId: n
           <span>Participant {pass.participantNumber}</span>
           <strong>{pass.participantName}</strong>
           <small>{pass.passId}</small>
-          <span className="qr-pass-meal">Meal: {pass.mealLabel}</span>
+          <span className="qr-pass-meal">Meals included: {pass.mealLabel}</span>
         </div>
         <button type="button" onClick={() => downloadParticipantPass(pass)}><Icon name="download" size={16} /> Download pass</button>
       </article>)}

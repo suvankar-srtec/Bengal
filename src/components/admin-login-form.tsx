@@ -2,6 +2,7 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
+import { PasswordInput } from "./password-input";
 
 export function AdminLoginForm() {
   const router = useRouter();
@@ -40,7 +41,7 @@ export function AdminLoginForm() {
     </div>
     <div className="admin-login-field">
       <label htmlFor="admin-password">Password</label>
-      <input id="admin-password" type="password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Enter password" required />
+      <PasswordInput id="admin-password" autoComplete="current-password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Enter password" required />
     </div>
     {error && <div className="admin-login-error" role="alert">{error}</div>}
     <button className="admin-login-button" type="submit" disabled={busy}>

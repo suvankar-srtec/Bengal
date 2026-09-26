@@ -25,8 +25,8 @@ export async function POST(request: Request) {
   if (!/^[A-Za-z0-9._-]{3,80}$/.test(userId)) {
     return NextResponse.json({ error: "User ID must be 3–80 characters using letters, numbers, dot, underscore or hyphen." }, { status: 400 });
   }
-  if (password.length < 6 || password.length > 128) {
-    return NextResponse.json({ error: "Password must be between 6 and 128 characters." }, { status: 400 });
+  if (!password) {
+    return NextResponse.json({ error: "Enter a password." }, { status: 400 });
   }
   if (!Number.isInteger(eventId) || eventId < 1) {
     return NextResponse.json({ error: "Select an event." }, { status: 400 });

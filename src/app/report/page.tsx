@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ADMIN_SESSION_COOKIE, readAdminSession } from "@/lib/admin-auth";
 import { AdminLogoutButton } from "@/components/admin-logout-button";
 import { ReportEventSelector } from "@/components/report-event-selector";
+import { ReportAutoSearch } from "@/components/report-auto-search";
 import { Icon } from "@/components/icon";
 import { getDatabase } from "@/lib/db";
 import { BBC_LOGO_DATA_URL } from "@/lib/bbc-logo";
@@ -179,7 +180,13 @@ export default async function ReportPage({
         {session.role === "admin" && <a href="/members">Members</a>}
         {session.role === "admin" && <a href="/managers">Manager</a>}
         <a className="mobile-scanner-nav" href="/scanner">Scanner</a>
-        <a className="active" href={session.role === "manager" ? `/report?eventId=${session.eventId}` : "/report"}>Report</a>
+        {session.role === "admin" ? <div className="admin-nav-group">
+          <span className="admin-nav-parent active">Report</span>
+          <div className="admin-nav-submenu">
+            <a className={reportType === "registration" ? "active" : ""} href={selectedEvent ? `/report?eventId=${selectedEvent.id}&report=registration` : "/report?report=registration"}>Registration Report</a>
+            <a className={reportType === "event" ? "active" : ""} href={selectedEvent ? `/report?eventId=${selectedEvent.id}&report=event` : "/report?report=event"}>Event Report</a>
+          </div>
+        </div> : <a className="active" href={`/report?eventId=${session.eventId}`}>Report</a>}
       </nav>
 
       <div className="admin-sidebar-footer"><AdminLogoutButton /></div>
@@ -199,24 +206,6 @@ export default async function ReportPage({
       </div>
 
       {selectedEvent ? <>
-        {session.role === "admin" && <div className="report-type-tabs" role="tablist" aria-label="Report type">
-          <a
-            className={reportType === "registration" ? "active" : ""}
-            href={`/report?eventId=${selectedEvent.id}&report=registration`}
-            role="tab"
-            aria-selected={reportType === "registration"}
-          >
-            Registration Report
-          </a>
-          <a
-            className={reportType === "event" ? "active" : ""}
-            href={`/report?eventId=${selectedEvent.id}&report=event`}
-            role="tab"
-            aria-selected={reportType === "event"}
-          >
-            Event Report
-          </a>
-        </div>}
 
         <section className="report-table-card">
           <div className="report-table-heading">
@@ -224,7 +213,9 @@ export default async function ReportPage({
               <h2>{reportType === "event" ? "Event Report" : "Registration Report"}</h2>
               <p>{registrations.length} record{registrations.length === 1 ? "" : "s"} for {selectedEvent.title_en}</p>
             </div>
-            <details className="report-download-menu">
+            <div className="report-heading-actions">
+              <ReportAutoSearch />
+              <details className="report-download-menu">
               <summary aria-label="Download registration report" title="Download report">
                 <Icon name="download" size={17} />
               </summary>
@@ -232,7 +223,8 @@ export default async function ReportPage({
                 <a href={`/api/report/export?eventId=${selectedEvent.id}&format=pdf&report=${reportType}`}>Download PDF</a>
                 <a href={`/api/report/export?eventId=${selectedEvent.id}&format=excel&report=${reportType}`}>Download Excel</a>
               </div>
-            </details>
+              </details>
+            </div>
           </div>
 
           {registrations.length ? <div className="report-table-scroll">
@@ -256,7 +248,16 @@ export default async function ReportPage({
                       ? [registration.meal_choice]
                       : [];
 
-                  return <tr key={registration.id}>
+                  const searchText = [
+                    dateLabel(registration.created_at),
+                    registration.member_name,
+                    ...participants,
+                    registration.phone,
+                    ...includedMeals,
+                    ...(registration.provided_meals ?? []).map((item) => item.meal),
+                  ].join(" ");
+
+                  return <tr key={registration.id} data-report-row data-report-search={searchText}>
                     <td className="report-date-column">{dateLabel(registration.created_at)}</td>
                     <td><strong>{registration.member_name}</strong></td>
                     <td>
@@ -300,7 +301,21 @@ export default async function ReportPage({
                 </tr>
               </thead>
               <tbody>
-                {registrations.map((registration) => <tr key={registration.id}>
+                {registrations.map((registration) => <tr
+                  key={registration.id}
+                  data-report-row
+                  data-report-search={[
+                    dateLabel(registration.created_at),
+                    registration.member_name,
+                    ...(registration.participant_names ?? [registration.member_name]),
+                    registration.email,
+                    registration.phone,
+                    registration.billing_details,
+                    ...(registration.included_meals ?? []),
+                    registration.payment_status,
+                    money(registration.total_paise),
+                  ].join(" ")}
+                >>
                   <td className="report-date-column">{dateLabel(registration.created_at)}</td>
                   <td><strong>{registration.member_name}</strong></td>
                   <td>
@@ -319,6 +334,7 @@ export default async function ReportPage({
                 </tr>)}
               </tbody>
             </table>}
+            <div className="report-search-empty" data-report-search-empty hidden>No matching records found.</div>
           </div> : <div className="report-empty-state">No registrations have been recorded for this event yet.</div>}
         </section>
       </> : <div className="report-empty-state">Create an event first to view event reports.</div>}

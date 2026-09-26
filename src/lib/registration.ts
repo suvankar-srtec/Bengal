@@ -13,6 +13,10 @@ export type ParticipationPrices = {
   participation: number;
   standee: number;
   presentation: number;
+  includedMeals: MealChoice[];
+
+  // Legacy meal fields are kept so older data and screens remain readable.
+  // New registrations never charge separately for meals.
   mealOption: MealChoice;
   snacks: number;
   lunch: number;
@@ -23,6 +27,7 @@ export const PRICES: ParticipationPrices = {
   participation: 118000,
   standee: 295000,
   presentation: 3540000,
+  includedMeals: ["lunch"],
   mealOption: "lunch",
   snacks: 0,
   lunch: 0,
@@ -37,6 +42,10 @@ export function mealChoiceLabel(choice: MealChoice) {
   return choice === "snacks" ? "Snacks" : choice === "lunch" ? "Lunch" : "Dinner";
 }
 
+export function mealChoicesLabel(choices: readonly MealChoice[]) {
+  return choices.length ? choices.map(mealChoiceLabel).join(", ") : "No meals";
+}
+
 export function participationPricesFromRow(row: Record<string, unknown> | undefined): ParticipationPrices {
   const read = (value: unknown, fallback: number) => {
     const number = Number(value);
@@ -47,10 +56,17 @@ export function participationPricesFromRow(row: Record<string, unknown> | undefi
     ? row.meal_option
     : "lunch";
 
+  const includedMeals = Array.isArray(row?.included_meals)
+    ? Array.from(new Set(row.included_meals.filter(
+        (value): value is MealChoice => value === "snacks" || value === "lunch" || value === "dinner",
+      )))
+    : [mealOption];
+
   return {
     participation: read(row?.participation_unit_paise, PRICES.participation),
     standee: read(row?.standee_unit_paise, PRICES.standee),
     presentation: read(row?.presentation_unit_paise, PRICES.presentation),
+    includedMeals,
     mealOption,
     snacks: read(row?.snacks_unit_paise, PRICES.snacks),
     lunch: read(row?.lunch_unit_paise, PRICES.lunch),
@@ -77,6 +93,7 @@ export const registrationSchema = z.object({
     .default(null),
   participationQuantity: z.number().int().min(1).max(LIMITS.participation),
   standeeQuantity: z.number().int().min(0).max(LIMITS.standee),
+  // Kept for compatibility with already-open forms. New forms do not expose meal selection.
   mealChoice: z.enum(["snacks", "lunch", "dinner"]).nullable().default(null),
   presentationSelected: z.boolean(),
   additionalParticipantNames: z.array(
@@ -105,17 +122,11 @@ export type RegistrationReceipt = {
 };
 
 export function calculateTotal(
-  input: Pick<RegistrationInput, "participationQuantity" | "standeeQuantity" | "presentationSelected">
-    & { mealChoice?: MealChoice | null },
+  input: Pick<RegistrationInput, "participationQuantity" | "standeeQuantity" | "presentationSelected">,
   prices: ParticipationPrices = PRICES,
 ) {
-  const mealTotal = input.mealChoice
-    ? input.participationQuantity * mealPriceForChoice(prices, input.mealChoice)
-    : 0;
-
   return input.participationQuantity * prices.participation
     + input.standeeQuantity * prices.standee
-    + mealTotal
     + (input.presentationSelected ? prices.presentation : 0);
 }
 

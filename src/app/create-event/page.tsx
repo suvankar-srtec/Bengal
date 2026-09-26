@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { ADMIN_SESSION_COOKIE, validAdminSession } from "@/lib/admin-auth";
+import { ADMIN_SESSION_COOKIE, readAdminSession } from "@/lib/admin-auth";
 import { AdminLogoutButton } from "@/components/admin-logout-button";
 import { EventContentEditor } from "@/components/event-content-editor";
 import { DEFAULT_EVENT_CONTENT, eventContentFromRow } from "@/lib/event-content";
@@ -16,7 +16,9 @@ export default async function CreateEventPage({
   searchParams: Promise<{ id?: string }>;
 }) {
   const store = await cookies();
-  if (!validAdminSession(store.get(ADMIN_SESSION_COOKIE)?.value)) redirect("/");
+  const session = readAdminSession(store.get(ADMIN_SESSION_COOKIE)?.value);
+  if (!session) redirect("/");
+  if (session.role !== "admin") redirect("/dashboard");
 
   const params = await searchParams;
   const eventId = Number(params.id);
@@ -45,6 +47,7 @@ export default async function CreateEventPage({
       <nav className="admin-nav">
         <a href="/dashboard">Dashboard</a>
         <a href="/members">Members</a>
+        <a href="/managers">Manager</a>
         <a href="/report">Report</a>
       </nav>
       <div className="admin-sidebar-footer"><AdminLogoutButton /></div>

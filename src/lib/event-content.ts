@@ -5,6 +5,7 @@ export const eventContentSchema = z.object({
   titleEn: z.string().trim().min(1).max(160),
   eventDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   eventTime: z.string().regex(/^\d{2}:\d{2}$/),
+  eventEndTime: z.string().regex(/^\d{2}:\d{2}$/),
   organizer: z.string().trim().min(1).max(160),
   aboutTagline1: z.string().trim().min(1).max(220),
   aboutParagraph1: z.string().trim().min(1).max(1500),
@@ -31,6 +32,7 @@ export const DEFAULT_EVENT_CONTENT: EventContent = {
   titleEn: "Aalap Alochona",
   eventDate: "2026-09-29",
   eventTime: "18:00",
+  eventEndTime: "20:00",
   organizer: "Bengal Business Council",
   aboutTagline1: "Good business begins with a conversation.",
   aboutParagraph1: "Aalap Alochona is the official networking format of the Bengal Business Council. A space to go beyond introductions, exchange ideas, and build meaningful professional and personal relationships.",
@@ -66,6 +68,7 @@ export function eventContentFromRow(row: Record<string, unknown> | undefined): E
     titleEn: String(row.title_en ?? DEFAULT_EVENT_CONTENT.titleEn),
     eventDate: normalizeEventDate(row.event_date ?? DEFAULT_EVENT_CONTENT.eventDate),
     eventTime: normalizeEventTime(row.event_time ?? DEFAULT_EVENT_CONTENT.eventTime),
+    eventEndTime: normalizeEventTime(row.event_end_time ?? DEFAULT_EVENT_CONTENT.eventEndTime),
     organizer: String(row.organizer ?? DEFAULT_EVENT_CONTENT.organizer),
     aboutTagline1: String(
       row.tagline_line_1 ??

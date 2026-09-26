@@ -134,6 +134,14 @@ export function ManagerQrScanner() {
     setActive(false);
   }
 
+  function closeMealPopup() {
+    stopCamera();
+    setResult(null);
+    setScannedValue("");
+    setMealMessage("");
+    setMessage("Start the camera and point it at an event QR pass.");
+  }
+
   useEffect(() => {
     if (!active || !videoRef.current || !window.BarcodeDetector) return;
 
@@ -195,6 +203,15 @@ export function ManagerQrScanner() {
 
         {result && <div className="manager-meal-popup-backdrop" role="presentation">
           <section className="manager-meal-popup" role="dialog" aria-modal="true" aria-labelledby="meal-popup-title">
+            <button
+              className="manager-meal-popup-close"
+              type="button"
+              aria-label="Close meal popup"
+              title="Close"
+              onClick={closeMealPopup}
+            >
+              <span aria-hidden="true">×</span>
+            </button>
             <span className="manager-meal-popup-badge">VALID PASS</span>
             <h3 id="meal-popup-title">{result.participantName}</h3>
             <p>{result.eventName} · Participant #{result.participantNumber}</p>

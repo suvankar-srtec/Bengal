@@ -4,8 +4,7 @@ import { useEffect, useRef, useState, type FormEvent } from "react";
 import { calculateTotal, formatMoney, LIMITS, mealChoiceLabel, mealPriceForChoice, registrationSchema, registrationFieldKey, type FieldErrors, type MealChoice, type ParticipationPrices, type RegistrationReceipt } from "@/lib/registration";
 import { Icon } from "./icon";
 import { PaymentCheckout } from "./payment-checkout";
-import { BBC_LOGO_DATA_URL } from "@/lib/bbc-logo";
-import { memberPhotoDataUri } from "@/lib/demo-members";
+import { WhatsAppDeliveryStatus } from "./whatsapp-delivery-status";
 
 function Quantity({ label, value, minimum, maximum, onChange }: {
   label: string; value: number; minimum: number; maximum: number; onChange: (value: number) => void;
@@ -15,130 +14,6 @@ function Quantity({ label, value, minimum, maximum, onChange }: {
     <output aria-label={`${label} quantity`} aria-live="polite">{value}</output>
     <button type="button" aria-label={`Increase ${label.toLowerCase()}`} disabled={value >= maximum} onClick={() => onChange(value + 1)}><Icon name="plus" size={14} /></button>
   </div>;
-}
-
-function loadPassImage(src: string) {
-  return new Promise<HTMLImageElement>((resolve, reject) => {
-    const image = new Image();
-    image.onload = () => resolve(image);
-    image.onerror = reject;
-    image.src = src;
-  });
-}
-
-function fitPassText(context: CanvasRenderingContext2D, text: string, maxWidth: number, initialSize: number, minimumSize = 24) {
-  let size = initialSize;
-  while (size > minimumSize) {
-    context.font = `700 ${size}px "Segoe UI", Arial, sans-serif`;
-    if (context.measureText(text).width <= maxWidth) break;
-    size -= 2;
-  }
-  return size;
-}
-
-async function createParticipantPassImage(input: {
-  qrUrl: string;
-  participantName: string;
-  participantNumber: number;
-  passId: string;
-  mealLabel: string;
-  photoUrl: string;
-}) {
-  const canvas = document.createElement("canvas");
-
-  // 2.5 inch x 3.5 inch at 300 DPI
-  canvas.width = 750;
-  canvas.height = 1050;
-
-  const context = canvas.getContext("2d");
-  if (!context) throw new Error("Canvas is not available.");
-
-  context.fillStyle = "#ffffff";
-  context.fillRect(0, 0, canvas.width, canvas.height);
-
-  // Top strip
-  context.fillStyle = "#c74c40";
-  context.fillRect(0, 0, canvas.width, 14);
-
-  // Header
-  context.fillStyle = "#182f46";
-  context.font = '700 24px "Segoe UI", Arial, sans-serif';
-  context.fillText("BENGAL BUSINESS COUNCIL", 45, 72);
-
-  context.fillStyle = "#c74c40";
-  context.font = '700 15px "Segoe UI", Arial, sans-serif';
-  context.fillText("AALAP ALOCHONA · EVENT PASS", 45, 104);
-
-  const logoImage = await loadPassImage(BBC_LOGO_DATA_URL);
-  const logoWidth = 175;
-  const logoHeight = 118;
-  context.drawImage(logoImage, canvas.width - logoWidth - 40, 34, logoWidth, logoHeight);
-
-  context.strokeStyle = "#e5e8ea";
-  context.lineWidth = 2;
-  context.beginPath();
-  context.moveTo(45, 148);
-  context.lineTo(705, 148);
-  context.stroke();
-
-  // Participant label
-  context.fillStyle = "#626f7b";
-  context.font = '600 14px "Segoe UI", Arial, sans-serif';
-  context.fillText(`PARTICIPANT ${input.participantNumber}`, 45, 198);
-
-  // Name
-  const nameSize = fitPassText(context, input.participantName, 660, 38, 20);
-  context.font = `700 ${nameSize}px "Segoe UI", Arial, sans-serif`;
-  context.fillStyle = "#182f46";
-  context.fillText(input.participantName, 45, 246);
-
-  // Participant photo
-  const participantPhoto = await loadPassImage(input.photoUrl);
-  context.save();
-  context.beginPath();
-  context.arc(635, 220, 46, 0, Math.PI * 2);
-  context.clip();
-  context.drawImage(participantPhoto, 589, 174, 92, 92);
-  context.restore();
-
-  // Meal box
-  context.fillStyle = "#f8f9fa";
-  context.fillRect(45, 272, 660, 64);
-
-  context.fillStyle = "#626f7b";
-  context.font = '600 12px "Segoe UI", Arial, sans-serif';
-  context.fillText("MEAL PREFERENCE", 60, 296);
-
-  context.fillStyle = "#182f46";
-  context.font = '700 22px "Segoe UI", Arial, sans-serif';
-  context.fillText(input.mealLabel, 60, 323);
-
-  // QR image (keep square)
-  const qrImage = await loadPassImage(input.qrUrl);
-
-  context.fillStyle = "#ffffff";
-  context.fillRect(135, 374, 480, 480);
-  context.drawImage(qrImage, 155, 394, 440, 440);
-
-  // Footer text
-  context.fillStyle = "#626f7b";
-  context.font = '600 12px "Segoe UI", Arial, sans-serif';
-  context.textAlign = "center";
-  context.fillText("SCAN THIS PASS AT ENTRY", 375, 875);
-
-  context.fillStyle = "#182f46";
-  context.font = '700 15px "Courier New", monospace';
-  context.fillText(input.passId, 375, 910);
-
-  context.fillStyle = "#626f7b";
-  context.font = '500 12px "Segoe UI", Arial, sans-serif';
-  context.fillText("29 September 2026 · Bengal Business Council", 375, 950);
-
-  context.fillStyle = "#c74c40";
-  context.font = '700 11px "Segoe UI", Arial, sans-serif';
-  context.fillText("INDIVIDUAL PASS · NON-TRANSFERABLE", 375, 985);
-
-  return canvas.toDataURL("image/png");
 }
 
 export function RegistrationForm({ eventContentId, prices }: { eventContentId: number | null; prices: ParticipationPrices }) {
@@ -151,7 +26,7 @@ export function RegistrationForm({ eventContentId, prices }: { eventContentId: n
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [receipt, setReceipt] = useState<RegistrationReceipt | null>(null);
-  const [qrPasses, setQrPasses] = useState<Array<{ participantNumber: number; participantName: string; passId: string; mealLabel: string; qrUrl: string; passUrl: string }>>([]);
+  const [qrPasses, setQrPasses] = useState<Array<{ participantNumber: number; participantName: string; passId: string; mealLabel: string; passUrl: string }>>([]);
   const [qrGenerating, setQrGenerating] = useState(false);
   const [qrError, setQrError] = useState("");
   const [qrRetryKey, setQrRetryKey] = useState(0);
@@ -181,26 +56,14 @@ export function RegistrationForm({ eventContentId, prices }: { eventContentId: n
     setQrError("");
 
     void (async () => {
-      const QRCode = (await import("qrcode")).default;
-      const mealLabel = mealChoice ? mealChoiceLabel(mealChoice) : "No meal";
-      const mealCode = mealChoice ?? "none";
-      const passes = await Promise.all(participantNames.map(async (participantName, index) => {
-        const participantNumber = index + 1;
-        const cleanName = participantName.trim();
-        const passId = `${receipt.reference}-P${participantNumber}`;
-        const photoUrl = memberPhotoDataUri(cleanName, index + 20);
-        const payload = `BBC|EVENT:AALAP-ALOCHONA-2026-09-29|REG:${receipt.id}|REF:${receipt.reference}|PARTICIPANT:${participantNumber}|PASS:${passId}|NAME:${encodeURIComponent(cleanName)}|MEAL:${mealCode}`;
-        const qrUrl = await QRCode.toDataURL(payload, { width: 720, margin: 2, errorCorrectionLevel: "M" });
-        const passUrl = await createParticipantPassImage({
-          qrUrl,
-          participantName: cleanName,
-          participantNumber,
-          passId,
-          mealLabel,
-          photoUrl,
-        });
-        return { participantNumber, participantName: cleanName, passId, mealLabel, qrUrl, passUrl };
-      }));
+      const response = await fetch("/api/passes", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ registrationId: receipt.id, submissionId: submission.current?.id }),
+        signal: AbortSignal.timeout(30000),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error);
+      const passes = result.passes;
       if (!cancelled) setQrPasses(passes);
     })().catch(() => {
       if (!cancelled) setQrError("We couldn’t generate the participant passes. Please retry.");
@@ -317,9 +180,10 @@ export function RegistrationForm({ eventContentId, prices }: { eventContentId: n
     <span className="eyebrow">PARTICIPANT PASSES READY</span>
     <h2 ref={confirmationHeading} tabIndex={-1}>Your passes are ready.</h2>
     <p>Each participant has an individual pass showing their name, meal preference and QR code.</p>
+    <WhatsAppDeliveryStatus registrationId={receipt.id} submissionId={submission.current?.id ?? ""} />
     <div className="qr-pass-grid">
       {qrPasses.map((pass) => <article className="qr-pass-card" key={pass.passId}>
-        <div className="qr-pass-image-wrap participant-pass-preview"><img src={pass.passUrl} alt={`Event pass for ${pass.participantName}`} /></div>
+        <div className="qr-pass-image-wrap participant-pass-preview"><img src={pass.passUrl} alt={`Event pass for ${pass.participantName}`} onError={() => setQrError("We could not load your pass image. Please retry.")} /></div>
         <div className="qr-pass-meta">
           <span>Participant {pass.participantNumber}</span>
           <strong>{pass.participantName}</strong>

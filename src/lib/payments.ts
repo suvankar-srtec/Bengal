@@ -1,6 +1,8 @@
 import "server-only";
 import { randomUUID } from "node:crypto";
 import { z } from "zod";
+import { after } from "next/server";
+import { deliverWhatsAppPassesSafely, queueWhatsAppPasses } from "./whatsapp-delivery";
 import { getDatabase } from "./db";
 import type { CheckoutOrder, PaymentAttempt, PaymentMode } from "./payment-types";
 
@@ -119,6 +121,12 @@ export async function paymentHandler(request: Request, action: "order" | "comple
       ? await createOrder(body)
       : await completePayment(body);
 
+    const attempt = "order" in result ? result.order : result.payment;
+    if (attempt.status === "succeeded") {
+      const { registrationId } = accessSchema.parse(body);
+      after(() => deliverWhatsAppPassesSafely(registrationId));
+    }
+
     return Response.json(result, {
       headers: { "Cache-Control": "no-store" },
     });
@@ -192,6 +200,7 @@ async function createOrder(body: unknown): Promise<{ order: CheckoutOrder }> {
         "UPDATE public.bbc_event_registrations SET payment_status = 'paid' WHERE id = $1",
         [data.registrationId],
       );
+      await queueWhatsAppPasses(client, data.registrationId);
     }
 
     if (!attempt) {
@@ -276,6 +285,7 @@ async function completePayment(body: unknown): Promise<{ payment: PaymentAttempt
           "UPDATE public.bbc_event_registrations SET payment_status = 'paid' WHERE id = $1",
           [data.registrationId],
         );
+        await queueWhatsAppPasses(client, data.registrationId);
       }
 
       await client.query("COMMIT");
@@ -300,6 +310,7 @@ async function completePayment(body: unknown): Promise<{ payment: PaymentAttempt
         "UPDATE public.bbc_event_registrations SET payment_status = 'paid' WHERE id = $1",
         [data.registrationId],
       );
+      await queueWhatsAppPasses(client, data.registrationId);
     }
 
     await client.query("COMMIT");

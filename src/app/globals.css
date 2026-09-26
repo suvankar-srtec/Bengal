@@ -1309,3 +1309,68 @@ body{font-size:14px;line-height:1.5}
 .event-report-table td:nth-child(5){width:17%}
 .event-report-table th:nth-child(6),
 .event-report-table td:nth-child(6){width:30%}
+
+
+/* Event editor: simplified hero and expandable about groups */
+.about-editor-heading{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:14px;
+}
+.about-editor-heading h2{margin:0!important}
+.about-add-group{
+  width:34px;
+  height:34px;
+  border:1px solid #e3d6d1;
+  border-radius:50%;
+  background:#fff8f5;
+  color:var(--coral);
+  font-size:24px;
+  line-height:1;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0;
+}
+.about-add-group:hover{background:#fff1ec;border-color:var(--coral)}
+.about-editor-group{
+  border:1px solid #e6e9eb;
+  border-radius:10px;
+  background:#fbfcfc;
+  padding:16px;
+}
+.about-editor-group+.about-editor-group{margin-top:14px}
+.about-group-top{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:10px;
+}
+.about-group-label{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-width:30px;
+  height:24px;
+  padding:0 8px;
+  border-radius:999px;
+  background:#eef2f4;
+  color:var(--muted);
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.08em;
+  margin-bottom:10px;
+}
+.about-group-top .about-group-label{margin-bottom:0}
+.about-remove-group{
+  border:0;
+  background:transparent;
+  color:#a43d33;
+  font-size:12px;
+  font-weight:700;
+  padding:4px 6px;
+}
+.about-title-secondary{margin-top:22px}

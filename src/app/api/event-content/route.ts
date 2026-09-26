@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { ADMIN_SESSION_COOKIE, validAdminSession } from "@/lib/admin-auth";
+import { ADMIN_SESSION_COOKIE, readAdminSession } from "@/lib/admin-auth";
 import { createEventSchema, eventContentSchema } from "@/lib/event-content";
 import { getDatabase } from "@/lib/db";
 
@@ -8,7 +8,7 @@ export const runtime = "nodejs";
 
 async function authorized() {
   const store = await cookies();
-  return validAdminSession(store.get(ADMIN_SESSION_COOKIE)?.value);
+  return readAdminSession(store.get(ADMIN_SESSION_COOKIE)?.value)?.role === "admin";
 }
 
 function values(data: ReturnType<typeof eventContentSchema.parse>) {

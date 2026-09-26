@@ -5,7 +5,6 @@ import type { EventContent } from "@/lib/event-content";
 import { eventPublicPath } from "@/lib/event-public-link";
 import { EventPublicLinkCard } from "@/components/event-public-link-card";
 import {
-  formatMoney,
   mealChoiceLabel,
   type MealChoice,
   type ParticipationPrices,
@@ -39,10 +38,7 @@ export function EventContentEditor({
   const [participation, setParticipation] = useState(rupees(initialPrices.participation));
   const [standee, setStandee] = useState(rupees(initialPrices.standee));
   const [presentation, setPresentation] = useState(rupees(initialPrices.presentation));
-  const [mealOption, setMealOption] = useState<MealChoice>(initialPrices.mealOption);
-  const [snacks, setSnacks] = useState(rupees(initialPrices.snacks));
-  const [lunch, setLunch] = useState(rupees(initialPrices.lunch));
-  const [dinner, setDinner] = useState(rupees(initialPrices.dinner));
+  const [includedMeals, setIncludedMeals] = useState<MealChoice[]>(initialPrices.includedMeals);
 
   function set<K extends keyof EventContent>(key: K, value: EventContent[K]) {
     setForm((current) => ({ ...current, [key]: value }));
@@ -53,17 +49,11 @@ export function EventContentEditor({
     const participationPaise = toPaise(participation);
     const standeePaise = toPaise(standee);
     const presentationPaise = toPaise(presentation);
-    const snacksPaise = toPaise(snacks);
-    const lunchPaise = toPaise(lunch);
-    const dinnerPaise = toPaise(dinner);
-
     if (
       participationPaise === null ||
       standeePaise === null ||
       presentationPaise === null ||
-      snacksPaise === null ||
-      lunchPaise === null ||
-      dinnerPaise === null
+      includedMeals.length === 0
     ) {
       return null;
     }
@@ -72,10 +62,11 @@ export function EventContentEditor({
       participation: participationPaise,
       standee: standeePaise,
       presentation: presentationPaise,
-      mealOption,
-      snacks: snacksPaise,
-      lunch: lunchPaise,
-      dinner: dinnerPaise,
+      includedMeals,
+      mealOption: includedMeals[0],
+      snacks: 0,
+      lunch: 0,
+      dinner: 0,
     };
   }
 
@@ -111,10 +102,7 @@ export function EventContentEditor({
         participationPaise: pricing.participation,
         standeePaise: pricing.standee,
         presentationPaise: pricing.presentation,
-        mealOption: pricing.mealOption,
-        snacksPaise: pricing.snacks,
-        lunchPaise: pricing.lunch,
-        dinnerPaise: pricing.dinner,
+        includedMeals: pricing.includedMeals,
       };
 
       const response = await fetch("/api/event-content", {
@@ -184,27 +172,33 @@ export function EventContentEditor({
         <div className="pricing-meal-section">
           <div className="pricing-meal-heading">
             <div>
-              <span>MEAL PREFERENCE</span>
-              <h3>Choose one meal option for this event</h3>
-              <p>Only the selected meal option will appear on the registration form.</p>
+              <span>MEALS INCLUDED</span>
+              <h3>Select all meals included in the participation fee</h3>
+              <p>These meals are included automatically. Participants will not choose meals on the registration form.</p>
             </div>
           </div>
 
           <div className="pricing-meal-grid">
-            {([
-              { key: "snacks" as const, label: "Snacks", value: snacks, setValue: setSnacks },
-              { key: "lunch" as const, label: "Lunch", value: lunch, setValue: setLunch },
-              { key: "dinner" as const, label: "Dinner", value: dinner, setValue: setDinner },
-            ]).map((item) => <label className={`pricing-meal-card${mealOption === item.key ? " selected" : ""}`} key={item.key}>
-              <div className="pricing-meal-card-title">
-                <input type="checkbox" checked={mealOption === item.key} onChange={() => setMealOption(item.key)} />
-                <strong>{item.label}</strong>
-              </div>
-              <div className="pricing-money-input"><span>₹</span><input type="number" min="0" step="0.01" value={item.value} onChange={(e) => item.setValue(e.target.value)} /></div>
-            </label>)}
+            {(["snacks", "lunch", "dinner"] as MealChoice[]).map((meal) => {
+              const selected = includedMeals.includes(meal);
+              return <label className={`pricing-meal-card${selected ? " selected" : ""}`} key={meal}>
+                <div className="pricing-meal-card-title">
+                  <input
+                    type="checkbox"
+                    checked={selected}
+                    onChange={(event) => setIncludedMeals((current) =>
+                      event.target.checked
+                        ? Array.from(new Set([...current, meal]))
+                        : current.filter((item) => item !== meal)
+                    )}
+                  />
+                  <strong>{mealChoiceLabel(meal)}</strong>
+                </div>
+              </label>;
+            })}
           </div>
 
-          <div className="pricing-active-meal">Selected meal: <strong>{mealChoiceLabel(mealOption)}</strong></div>
+          <div className="pricing-active-meal">Included: <strong>{includedMeals.map(mealChoiceLabel).join(", ") || "Select at least one meal"}</strong></div>
         </div>
       </section>
 

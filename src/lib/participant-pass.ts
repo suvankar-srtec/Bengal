@@ -63,6 +63,7 @@ const GLYPHS: Record<string, string[]> = {
   "9":["01110","10001","10001","01111","00001","00001","01110"],
   "@":["01110","10001","10111","10101","10111","10000","01110"],
   ".":["00000","00000","00000","00000","00000","00110","00110"],
+  ",":["00000","00000","00000","00000","00000","00110","00010"],
   "-":["00000","00000","00000","11111","00000","00000","00000"],
   "_":["00000","00000","00000","00000","00000","00000","11111"],
   "/":["00001","00010","00010","00100","01000","01000","10000"],
@@ -75,7 +76,7 @@ const GLYPHS: Record<string, string[]> = {
 };
 
 function pixelText(text: string, x: number, y: number, scale: number, color = "#182f46", maxChars?: number) {
-  const clean = text.toUpperCase().replace(/[^A-Z0-9@._\-\/:+()? ]/g, "?");
+  const clean = text.toUpperCase().replace(/[^A-Z0-9@.,_\-\/:+()? ]/g, "?");
   const clipped = maxChars && clean.length > maxChars
     ? clean.slice(0, Math.max(1, maxChars - 3)) + "..."
     : clean;

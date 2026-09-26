@@ -8,7 +8,27 @@ export const dynamic = "force-dynamic";
 
 export const metadata = {
   title: "Your Event Passes | Bengal Business Council",
+  description: "Register for Aalap Alochona on 29 September 2026. Meet, exchange ideas, and build meaningful connections with Bengal Business Council.",
   robots: { index: false, follow: false },
+  openGraph: {
+    title: "Your Event Passes | Bengal Business Council",
+    description: "Register for Aalap Alochona on 29 September 2026. Meet, exchange ideas, and build meaningful connections with Bengal Business Council.",
+    type: "website",
+    images: [
+      {
+        url: "/api/share-preview?v=2",
+        width: 1200,
+        height: 630,
+        alt: "Bengal Business Council",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Your Event Passes | Bengal Business Council",
+    description: "Register for Aalap Alochona on 29 September 2026. Meet, exchange ideas, and build meaningful connections with Bengal Business Council.",
+    images: ["/api/share-preview?v=2"],
+  },
 };
 
 export default async function PassBundlePage({

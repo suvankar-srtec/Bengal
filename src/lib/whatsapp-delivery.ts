@@ -30,7 +30,7 @@ export async function loadPassRegistration(registrationId: string) {
   return (await getDatabase().query<PassRegistration & { phone: string }>(`
     SELECT id, reference, event_id, event_name, event_date::text,
       participant_names, email, billing_details,
-      participation_quantity, standee_quantity, meal_choice, presentation_selected,
+      participation_quantity, standee_quantity, meal_choice, included_meals, presentation_selected,
       participation_unit_paise, standee_unit_paise, presentation_unit_paise, meal_unit_paise,
       phone
     FROM public.bbc_event_registrations WHERE id = $1 AND payment_status = 'paid'`, [registrationId])).rows[0];

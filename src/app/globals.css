@@ -1003,3 +1003,131 @@ body{font-size:14px;line-height:1.5}
   .scanner-desktop-note{display:none}
   .scanner-main .members-heading{margin-bottom:16px}
 }
+
+
+/* Meal availability popup after QR scan */
+.manager-meal-popup-backdrop{
+  position:fixed;
+  inset:0;
+  z-index:1200;
+  background:rgba(18,29,39,.56);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:18px;
+}
+.manager-meal-popup{
+  width:min(470px,100%);
+  background:white;
+  border-radius:18px;
+  padding:24px;
+  box-shadow:0 28px 80px rgba(14,29,43,.28);
+}
+.manager-meal-popup-badge{
+  display:inline-flex;
+  padding:5px 9px;
+  border-radius:999px;
+  background:#e6f5ec;
+  color:#28634e;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.08em;
+}
+.manager-meal-popup h3{
+  margin:12px 0 4px;
+  font-size:25px;
+}
+.manager-meal-popup>p{
+  margin:0;
+  color:var(--muted);
+  font-size:13px;
+}
+.manager-meal-list{
+  display:grid;
+  gap:10px;
+  margin-top:20px;
+}
+.manager-meal-row{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  border:1px solid var(--line);
+  border-radius:10px;
+  padding:13px;
+}
+.manager-meal-row.available{background:#fffaf8}
+.manager-meal-row.provided{background:#f1f8f4;border-color:#d6e9dd}
+.manager-meal-row>div{min-width:0}
+.manager-meal-row strong{
+  display:block;
+  font-size:15px;
+}
+.manager-meal-row span{
+  display:block;
+  margin-top:3px;
+  color:var(--muted);
+  font-size:11px;
+}
+.manager-meal-row.provided span{color:#2f6a54}
+.manager-meal-row button{
+  flex-shrink:0;
+  min-width:112px;
+  height:38px;
+  border:0;
+  border-radius:7px;
+  background:var(--coral);
+  color:white;
+  padding:0 12px;
+  font-size:12px;
+  font-weight:700;
+}
+.manager-meal-row button:disabled{
+  background:#dfe8e2;
+  color:#3e6b58;
+}
+.manager-no-meal{
+  border:1px solid var(--line);
+  border-radius:9px;
+  padding:14px;
+  color:var(--muted);
+  font-size:13px;
+}
+.manager-meal-message{
+  margin-top:12px;
+  border-radius:8px;
+  background:#f7f9fa;
+  padding:10px 12px;
+  color:var(--ink);
+  font-size:12px;
+}
+.manager-meal-popup-actions{
+  display:flex;
+  justify-content:flex-end;
+  margin-top:18px;
+}
+.manager-meal-popup-actions button{
+  height:42px;
+  border:0;
+  border-radius:8px;
+  background:var(--ink);
+  color:white;
+  padding:0 16px;
+  font-weight:700;
+}
+@media(max-width:560px){
+  .manager-meal-popup{
+    padding:20px 16px;
+    border-radius:16px;
+  }
+  .manager-meal-row{
+    align-items:flex-start;
+    flex-direction:column;
+  }
+  .manager-meal-row button{
+    width:100%;
+  }
+  .manager-meal-popup-actions button{
+    width:100%;
+  }
+}

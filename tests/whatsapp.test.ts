@@ -11,6 +11,7 @@ import {
   whatsappConfiguration,
   WhatsAppError,
 } from "../src/lib/wapmonkey";
+import { sendWhatsAppText } from "../src/lib/wapmonkey-text";
 
 const config = {
   apiKey: "unit-test-key",
@@ -76,6 +77,23 @@ test("WapMonkey gets its documented authentication, recipient and media fields",
     "test-accepted-id",
   );
   assert.equal(requests, 1);
+});
+
+
+test("text-only WhatsApp messages omit media", async () => {
+  let body: Record<string, unknown> | undefined;
+  const messageId = await sendWhatsAppText(
+    { phone: "+919000000000", message: "Your passes: https://example.com/passes/token" },
+    config,
+    async (_url, options) => {
+      body = JSON.parse(String(options?.body));
+      return Response.json({ status: 1, data: { messageId: "text-message-id" } });
+    },
+  );
+  assert.equal(messageId, "text-message-id");
+  assert.equal(body?.numbers, "919000000000");
+  assert.equal(body?.message, "Your passes: https://example.com/passes/token");
+  assert.equal("media" in (body ?? {}), false);
 });
 
 test("HTTP 200 with provider rejection is not reported as sent", async () => {

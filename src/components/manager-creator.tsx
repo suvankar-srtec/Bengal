@@ -61,7 +61,7 @@ export function ManagerCreator({
       </label>
       <label>
         <span>Password</span>
-        <PasswordInput autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Minimum 6 characters" required minLength={6} maxLength={128} />
+        <PasswordInput autoComplete="new-password" value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Enter password" required />
       </label>
       <label>
         <span>Event</span>

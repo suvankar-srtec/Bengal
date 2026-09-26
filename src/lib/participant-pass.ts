@@ -181,10 +181,8 @@ export async function renderParticipantPass(registration: PassRegistration, inde
 
     <image href="data:image/png;base64,${qr.split(",")[1]}" x="160" y="505" width="430" height="430"/>
 
-    ${pixelText("SCAN QR FOR PARTICIPATION DETAILS", 157, 952, 2, "#626f7b", 38)}
-    ${pixelText(pass.passId, 102, 980, 1.55, "#182f46", 58)}
-    ${pixelText(registration.event_name, 175, 1004, 1.65, "#182f46", 40)}
-    ${pixelText(date, 252, 1028, 1.55, "#626f7b", 28)}
+    ${pixelText("SCAN QR FOR PARTICIPATION DETAILS", 157, 968, 2, "#626f7b", 38)}
+    ${pixelText(date, 252, 1008, 1.7, "#626f7b", 28)}
   </svg>`;
 
   return sharp(Buffer.from(svg)).png().toBuffer();

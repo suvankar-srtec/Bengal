@@ -85,7 +85,6 @@ export default async function DashboardPage() {
     <main className="admin-dashboard-main">
       <section className="admin-stat-grid" aria-label="Event summary">
         <article><span>Total registrations</span><strong>{totals.registrations}</strong><small>Saved registrations</small></article>
-        <article><span>Paid registrations</span><strong>{totals.paid}</strong><small>Completed payments</small></article>
         <article><span>Total participants</span><strong>{totals.participants}</strong><small>Individual attendee passes</small></article>
         <article><span>Paid value</span><strong>{revenue}</strong><small>Successful payment value</small></article>
       </section>

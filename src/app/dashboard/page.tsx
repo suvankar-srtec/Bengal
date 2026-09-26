@@ -100,11 +100,6 @@ export default async function DashboardPage() {
       </div>}
 
       <section className="dashboard-events-grid" aria-label="Events">
-        {session.role === "admin" && <a className="dashboard-create-event-card" href="/create-event" aria-label="Create event">
-          <span className="dashboard-create-event-plus" aria-hidden="true">+</span>
-          <strong>Create Event</strong>
-        </a>}
-
         {events.map((event) => <DashboardEventCard
           key={event.id}
           id={event.id}
@@ -115,6 +110,11 @@ export default async function DashboardPage() {
           revenue={event.revenue}
           canManage={session.role === "admin"}
         />)}
+
+        {session.role === "admin" && <a className="dashboard-create-event-card" href="/create-event" aria-label="Create event">
+          <span className="dashboard-create-event-plus" aria-hidden="true">+</span>
+          <strong>Create Event</strong>
+        </a>}
       </section>
     </main>
   </div>;

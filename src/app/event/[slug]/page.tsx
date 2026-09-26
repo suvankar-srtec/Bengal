@@ -76,7 +76,7 @@ export default async function PublicEventPage({
             <span className="date-icon"><Icon name="calendar" size={23} /></span>
             <div>
               <strong>{eventDateLabel}</strong>
-              <span>{eventDayLabel} <i /> {eventTimeLabel(event.eventTime)} <i /> {event.organizer}</span>
+              <span>{eventDayLabel} <i /> {eventTimeLabel(event.eventTime)} – {eventTimeLabel(event.eventEndTime)} <i /> {event.organizer}</span>
             </div>
           </div>
 

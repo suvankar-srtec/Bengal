@@ -11,6 +11,16 @@ import { PRICES, participationPricesFromRow, type ParticipationPrices } from "@/
 
 export const dynamic = "force-dynamic";
 
+function eventTimeLabel(value: string) {
+  const [hourText, minuteText] = value.split(":");
+  const hour = Number(hourText);
+  const minute = Number(minuteText);
+  if (!Number.isInteger(hour) || !Number.isInteger(minute)) return value;
+  const suffix = hour >= 12 ? "PM" : "AM";
+  const displayHour = hour % 12 || 12;
+  return `${displayHour}:${String(minute).padStart(2, "0")} ${suffix}`;
+}
+
 export default async function RegisterPage({
   searchParams,
 }: {
@@ -65,21 +75,16 @@ export default async function RegisterPage({
 
         <div className="event-layout">
           <section className="event-info" aria-labelledby="event-title">
-            <div className="eyebrow"><span /> {event.sectionLabel}</div>
-            <h1 id="event-title" lang="bn">{event.titleBn}<span lang="en">{event.titleEn}</span></h1>
-            <p className="event-tagline">{event.taglineLine1}<br />{event.taglineLine2}</p>
-
-            <div className="event-date"><span className="date-icon"><Icon name="calendar" size={23} /></span><div><strong>{eventDateLabel}</strong><span>{eventDayLabel} <i /> {event.organizer}</span></div></div>
+              <h1 id="event-title" lang="bn">{event.titleBn}<span lang="en">{event.titleEn}</span></h1>
+              <div className="event-date"><span className="date-icon"><Icon name="calendar" size={23} /></span><div><strong>{eventDateLabel}</strong><span>{eventDayLabel} <i /> {eventTimeLabel(event.eventTime)} <i /> {event.organizer}</span></div></div>
 
             <div className="section-rule" />
-            <h2 className="about-title">{event.aboutTitle}</h2>
+            <h2 className="about-title">{event.aboutTagline1}</h2>
             <p className="about-copy">{event.aboutParagraph1}</p>
-            <p className="about-copy">{event.aboutParagraph2}</p>
-
-            {(event.bengaliParagraph1 || event.bengaliParagraph2) && <details className="bengali-details">
-              <summary><span lang="bn">বাংলায় পড়ুন</span><Icon name="chevron" size={14} /></summary>
-              <div lang="bn">{event.bengaliParagraph1 && <p>{event.bengaliParagraph1}</p>}{event.bengaliParagraph2 && <p>{event.bengaliParagraph2}</p>}</div>
-            </details>}
+            {(event.aboutTagline2 || event.aboutParagraph2) && <>
+              {event.aboutTagline2 && <h2 className="about-title about-title-secondary">{event.aboutTagline2}</h2>}
+              {event.aboutParagraph2 && <p className="about-copy">{event.aboutParagraph2}</p>}
+            </>}
 
             <div className="impact-card">
               <div className="impact-icon"><Icon name="users" size={26} /></div>

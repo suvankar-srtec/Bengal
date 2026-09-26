@@ -76,7 +76,7 @@ export default async function RegisterPage({
         <div className="event-layout">
           <section className="event-info" aria-labelledby="event-title">
               <h1 id="event-title" lang="bn">{event.titleBn}<span lang="en">{event.titleEn}</span></h1>
-              <div className="event-date"><span className="date-icon"><Icon name="calendar" size={23} /></span><div><strong>{eventDateLabel}</strong><span>{eventDayLabel} <i /> {eventTimeLabel(event.eventTime)} <i /> {event.organizer}</span></div></div>
+              <div className="event-date"><span className="date-icon"><Icon name="calendar" size={23} /></span><div><strong>{eventDateLabel}</strong><span>{eventDayLabel} <i /> {eventTimeLabel(event.eventTime)} – {eventTimeLabel(event.eventEndTime)} <i /> {event.organizer}</span></div></div>
 
             <div className="section-rule" />
             <h2 className="about-title">{event.aboutTagline1}</h2>

@@ -3,7 +3,8 @@ import { randomBytes } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
 import { getDatabase } from "./db";
 import { participantPass, type PassRegistration } from "./participant-pass";
-import { sendWhatsAppPasses, whatsappConfiguration, WhatsAppError } from "./wapmonkey";
+import { whatsappConfiguration, WhatsAppError } from "./wapmonkey";
+import { sendWhatsAppText } from "./wapmonkey-text";
 
 export type DeliveryStatus = "pending" | "sending" | "accepted" | "failed" | "unknown";
 type DeliveryRow = {
@@ -19,6 +20,10 @@ export async function queueWhatsAppPasses(database: Pool | PoolClient, registrat
 
 export function passImagePath(token: string, participantNumber: number) {
   return `/api/passes/${token}/${participantNumber}.png`;
+}
+
+export function passBundlePath(token: string) {
+  return `/passes/${token}`;
 }
 
 export async function loadPassRegistration(registrationId: string) {
@@ -54,27 +59,27 @@ export async function deliverWhatsAppPasses(registrationId: string) {
     const config = whatsappConfiguration();
     const registration = await loadPassRegistration(registrationId);
     if (!registration) throw new WhatsAppError("registration_not_paid");
-    const media = registration.participant_names.map((_, index) => {
-      const pass = participantPass(registration, index);
-      return {
-        url: `${config.origin}${passImagePath(row.media_token, index + 1)}`,
-        name: `${pass.passId}.png`,
-        caption: `${pass.participantName} | ${registration.event_name} | ${pass.mealLabel}`,
-      };
-    });
-    if (!media.length) throw new WhatsAppError("passes_missing");
-    // Avoid accepting a message whose image route has not been deployed yet.
-    let preview: Response;
-    try { preview = await fetch(media[0].url, { method: "HEAD", redirect: "error", signal: AbortSignal.timeout(15000), cache: "no-store" }); }
-    catch { throw new WhatsAppError("pass_url_unreachable"); }
-    if (!preview.ok || !preview.headers.get("content-type")?.startsWith("image/png")) {
-      throw new WhatsAppError("pass_url_unreachable");
-    }
+    if (!registration.participant_names.length) throw new WhatsAppError("passes_missing");
+
+    const passUrl = `${config.origin}${passBundlePath(row.media_token)}`;
+    const primaryMember = registration.participant_names[0] ?? "Member";
+    const participantCount = registration.participant_names.length;
+
     submitted = true;
-    const messageId = await sendWhatsAppPasses({
+    const messageId = await sendWhatsAppText({
       phone: registration.phone,
-      message: `Bengal Business Council\nYour registration for ${registration.event_name} is confirmed.\nReference: ${registration.reference}\nPlease show the attached individual QR passes at entry.`,
-      media,
+      message: [
+        `Hello ${primaryMember},`,
+        "",
+        `Your payment for ${registration.event_name} has been received successfully.`,
+        `Your ${participantCount} QR ${participantCount === 1 ? "pass is" : "passes are"} ready.`,
+        "",
+        "View or download your passes here:",
+        passUrl,
+        "",
+        "Please keep the QR pass ready at the venue entrance.",
+        "Bengal Business Council",
+      ].join("\n"),
     }, config);
     await database.query(`UPDATE public.bbc_whatsapp_pass_deliveries
       SET status = 'accepted', provider_message_id = $2, error_code = NULL, accepted_at = NOW(), updated_at = NOW()

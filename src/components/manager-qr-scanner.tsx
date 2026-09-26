@@ -28,7 +28,6 @@ export function ManagerQrScanner() {
   const [active, setActive] = useState(false);
   const [message, setMessage] = useState("Start the camera and point it at an event QR pass.");
   const [result, setResult] = useState<ScanResult | null>(null);
-  const [manual, setManual] = useState("");
 
   async function verify(value: string) {
     if (!value.trim() || scanningRef.current) return;
@@ -62,7 +61,7 @@ export function ManagerQrScanner() {
 
     if (!navigator.mediaDevices?.getUserMedia || !window.BarcodeDetector) {
       setSupported(false);
-      setMessage("Camera QR scanning is not supported in this browser. Use the manual scan field below.");
+      setMessage("Camera QR scanning is not supported in this browser.");
       return;
     }
 
@@ -159,15 +158,6 @@ export function ManagerQrScanner() {
             <div><dt>Meals</dt><dd>{result.meals.length ? result.meals.map((meal) => meal[0].toUpperCase() + meal.slice(1)).join(", ") : "None"}</dd></div>
           </dl>
         </div>}
-
-        <form className="manager-manual-scan" onSubmit={(event) => { event.preventDefault(); void verify(manual); }}>
-          <label htmlFor="manual-qr">Manual scanner input</label>
-          <p>USB/handheld scanners can paste the QR value here automatically.</p>
-          <div>
-            <input id="manual-qr" value={manual} onChange={(event) => setManual(event.target.value)} placeholder="Scan or paste QR value" />
-            <button type="submit">Verify</button>
-          </div>
-        </form>
       </div>
     </div>
   </div>;

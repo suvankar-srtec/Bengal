@@ -1131,3 +1131,18 @@ body{font-size:14px;line-height:1.5}
     width:100%;
   }
 }
+
+
+/* Manager report: participant meal status */
+.manager-report-table{min-width:760px}
+.manager-report-table th:nth-child(1){width:190px}
+.manager-report-table th:nth-child(2){width:220px}
+.manager-report-table th:nth-child(3){width:180px}
+.manager-report-table th:nth-child(4){min-width:260px}
+.report-provided-meals{display:flex;flex-direction:column;gap:8px}
+.report-provided-meals>span{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:8px 10px;border:1px solid #e3e9e6;border-radius:8px;background:#f8fbf9}
+.report-provided-meals strong{font-size:12px;line-height:1.35}
+.report-provided-meals small{font-size:11px;color:#2f6a54;line-height:1.35;text-align:right}
+@media(max-width:700px){
+  .manager-report-table{min-width:700px}
+}

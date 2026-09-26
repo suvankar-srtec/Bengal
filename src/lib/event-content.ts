@@ -19,10 +19,11 @@ export const createEventSchema = eventContentSchema.extend({
   participationPaise: z.number().int().min(0),
   standeePaise: z.number().int().min(0),
   presentationPaise: z.number().int().min(0),
-  mealOption: z.enum(["snacks", "lunch", "dinner"]),
-  snacksPaise: z.number().int().min(0),
-  lunchPaise: z.number().int().min(0),
-  dinnerPaise: z.number().int().min(0),
+  includedMeals: z.array(z.enum(["snacks", "lunch", "dinner"])).min(1).max(3),
+  mealOption: z.enum(["snacks", "lunch", "dinner"]).optional(),
+  snacksPaise: z.number().int().min(0).optional(),
+  lunchPaise: z.number().int().min(0).optional(),
+  dinnerPaise: z.number().int().min(0).optional(),
 });
 
 export type EventContent = z.infer<typeof eventContentSchema>;

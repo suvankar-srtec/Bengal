@@ -1,6 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
 import { getDatabase } from "@/lib/db";
-import { calculateTotal, EVENT, PRICES, mealPriceForChoice, participationPricesFromRow, registrationSchema, registrationFieldKey } from "@/lib/registration";
+import { calculateTotal, EVENT, PRICES, participationPricesFromRow, registrationSchema, registrationFieldKey } from "@/lib/registration";
 
 export const runtime = "nodejs";
 
@@ -88,6 +88,7 @@ export async function POST(request: Request) {
         snacks_unit_paise: number;
         lunch_unit_paise: number;
         dinner_unit_paise: number;
+        included_meals: ("snacks" | "lunch" | "dinner")[];
       }>(
         `SELECT
           id, title_en, event_date,
@@ -97,7 +98,8 @@ export async function POST(request: Request) {
           meal_option,
           snacks_unit_paise,
           lunch_unit_paise,
-          dinner_unit_paise
+          dinner_unit_paise,
+          included_meals
         FROM public.bbc_event_content
         WHERE id = $1`,
         [data.eventContentId],
@@ -115,12 +117,7 @@ export async function POST(request: Request) {
       prices = participationPricesFromRow(eventRecord as unknown as Record<string, unknown>);
     }
 
-    if (data.mealChoice && data.mealChoice !== prices.mealOption) {
-      return json({ error: "The selected meal option is no longer available. Refresh the registration form and try again." }, 409);
-    }
-
     const totalPaise = calculateTotal(data, prices);
-    const mealUnitPaise = data.mealChoice ? mealPriceForChoice(prices, data.mealChoice) : 0;
 
     // The unique submission key makes retries safe if a response is lost.
     const inserted = await database.query<{
@@ -129,14 +126,14 @@ export async function POST(request: Request) {
       INSERT INTO public.bbc_event_registrations (
         id, submission_id, request_hash, reference, event_id, event_name, event_date,
         member_name, email, phone, billing_details,
-        participation_quantity, standee_quantity, meal_choice, presentation_selected,
+        participation_quantity, standee_quantity, meal_choice, included_meals, presentation_selected,
         participation_unit_paise, standee_unit_paise, presentation_unit_paise, meal_unit_paise, total_paise, participant_names
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21)
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NULL, $14, $15, $16, $17, $18, 0, $19, $20)
       ON CONFLICT (submission_id) DO NOTHING
       RETURNING id, reference, total_paise, payment_status, request_hash
     `, [id, data.submissionId, fingerprint, reference, eventId, eventName, eventDate,
       data.memberName, data.email, `+91${data.phone}`, data.billingDetails,
-      data.participationQuantity, data.standeeQuantity, data.mealChoice, data.presentationSelected, prices.participation, prices.standee, prices.presentation, mealUnitPaise, totalPaise, participantNames]);
+      data.participationQuantity, data.standeeQuantity, prices.includedMeals, data.presentationSelected, prices.participation, prices.standee, prices.presentation, totalPaise, participantNames]);
 
     const record = inserted.rows[0] ?? (await database.query<{
       id: string; reference: string; total_paise: number; payment_status: "unpaid"; request_hash: string;

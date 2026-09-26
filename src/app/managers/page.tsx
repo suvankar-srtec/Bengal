@@ -73,7 +73,13 @@ export default async function ManagersPage() {
         <a href="/members">Members</a>
         <a className="active" href="/managers">Manager</a>
         <a className="mobile-scanner-nav" href="/scanner">Scanner</a>
-        <a href="/report">Report</a>
+        <div className="admin-nav-group">
+          <span className="admin-nav-parent">Report</span>
+          <div className="admin-nav-submenu">
+            <a href="/report?report=registration">Registration Report</a>
+            <a href="/report?report=event">Event Report</a>
+          </div>
+        </div>
       </nav>
       <div className="admin-sidebar-footer"><AdminLogoutButton /></div>
     </aside>

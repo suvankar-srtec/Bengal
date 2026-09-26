@@ -48,6 +48,7 @@ export default async function CreateEventPage({
         <a href="/dashboard">Dashboard</a>
         <a href="/members">Members</a>
         <a href="/managers">Manager</a>
+        <a href="/scanner">Scanner</a>
         <a href="/report">Report</a>
       </nav>
       <div className="admin-sidebar-footer"><AdminLogoutButton /></div>

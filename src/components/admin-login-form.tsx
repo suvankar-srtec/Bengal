@@ -35,8 +35,8 @@ export function AdminLoginForm() {
 
   return <form className="admin-login-form" onSubmit={submit}>
     <div className="admin-login-field">
-      <label htmlFor="admin-username">Username</label>
-      <input id="admin-username" autoComplete="username" value={username} onChange={(event) => setUsername(event.target.value)} placeholder="Enter username" required autoFocus />
+      <label htmlFor="admin-username">User ID</label>
+      <input id="admin-username" autoComplete="username" value={username} onChange={(event) => setUsername(event.target.value)} placeholder="Enter User ID" required autoFocus />
     </div>
     <div className="admin-login-field">
       <label htmlFor="admin-password">Password</label>

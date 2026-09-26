@@ -58,7 +58,7 @@ function money(paise: number) {
 export default async function ReportPage({
   searchParams,
 }: {
-  searchParams: Promise<{ eventId?: string }>;
+  searchParams: Promise<{ eventId?: string; report?: string }>;
 }) {
   const store = await cookies();
   const session = readAdminSession(store.get(ADMIN_SESSION_COOKIE)?.value);
@@ -66,6 +66,11 @@ export default async function ReportPage({
 
   const params = await searchParams;
   const requestedEventId = session.role === "manager" ? session.eventId : Number(params.eventId);
+  const reportType: "registration" | "event" = session.role === "manager"
+    ? "event"
+    : params.report === "event"
+      ? "event"
+      : "registration";
 
   let events: EventOption[] = [];
   let selectedEvent: EventOption | null = null;
@@ -186,36 +191,64 @@ export default async function ReportPage({
           <h1>Report</h1>
           <p>{session.role === "manager" ? "View participant and meal distribution details for your assigned event." : "Select a created event to view its complete registration report."}</p>
         </div>
-        <ReportEventSelector events={selectorEvents} selectedEventId={selectedEvent ? Number(selectedEvent.id) : null} />
+        <ReportEventSelector
+          events={selectorEvents}
+          selectedEventId={selectedEvent ? Number(selectedEvent.id) : null}
+          reportType={reportType}
+        />
       </div>
 
       {selectedEvent ? <>
+        {session.role === "admin" && <div className="report-type-tabs" role="tablist" aria-label="Report type">
+          <a
+            className={reportType === "registration" ? "active" : ""}
+            href={`/report?eventId=${selectedEvent.id}&report=registration`}
+            role="tab"
+            aria-selected={reportType === "registration"}
+          >
+            Registration Report
+          </a>
+          <a
+            className={reportType === "event" ? "active" : ""}
+            href={`/report?eventId=${selectedEvent.id}&report=event`}
+            role="tab"
+            aria-selected={reportType === "event"}
+          >
+            Event Report
+          </a>
+        </div>}
+
         <section className="report-table-card">
           <div className="report-table-heading">
-            <div><h2>Registrations</h2><p>{registrations.length} record{registrations.length === 1 ? "" : "s"} for {selectedEvent.title_en}</p></div>
+            <div>
+              <h2>{reportType === "event" ? "Event Report" : "Registration Report"}</h2>
+              <p>{registrations.length} record{registrations.length === 1 ? "" : "s"} for {selectedEvent.title_en}</p>
+            </div>
             <details className="report-download-menu">
               <summary aria-label="Download registration report" title="Download report">
                 <Icon name="download" size={17} />
               </summary>
               <div className="report-download-popover">
-                <a href={`/api/report/export?eventId=${selectedEvent.id}&format=pdf`}>Download PDF</a>
-                <a href={`/api/report/export?eventId=${selectedEvent.id}&format=excel`}>Download Excel</a>
+                <a href={`/api/report/export?eventId=${selectedEvent.id}&format=pdf&report=${reportType}`}>Download PDF</a>
+                <a href={`/api/report/export?eventId=${selectedEvent.id}&format=excel&report=${reportType}`}>Download Excel</a>
               </div>
             </details>
           </div>
 
           {registrations.length ? <div className="report-table-scroll">
-            {session.role === "manager" ? <table className="report-table manager-report-table">
+            {reportType === "event" ? <table className="report-table manager-report-table event-report-table">
               <thead>
                 <tr>
+                  <th className="report-serial-column">#</th>
                   <th>Primary member</th>
                   <th>Participants</th>
+                  <th>WhatsApp</th>
                   <th>Meals included</th>
                   <th>Provided meal</th>
                 </tr>
               </thead>
               <tbody>
-                {registrations.map((registration) => {
+                {registrations.map((registration, rowIndex) => {
                   const participants = registration.participant_names ?? [registration.member_name];
                   const includedMeals = registration.included_meals?.length
                     ? registration.included_meals
@@ -224,12 +257,14 @@ export default async function ReportPage({
                       : [];
 
                   return <tr key={registration.id}>
+                    <td className="report-serial-column">{rowIndex + 1}</td>
                     <td><strong>{registration.member_name}</strong></td>
                     <td>
                       <div className="report-participant-names">
                         {participants.map((name, index) => <span key={`${registration.id}-${index}`}>{name}</span>)}
                       </div>
                     </td>
+                    <td>{registration.phone}</td>
                     <td>{includedMeals.length ? includedMeals.map((meal) => meal[0].toUpperCase() + meal.slice(1)).join(", ") : "None"}</td>
                     <td>
                       <div className="report-provided-meals">
@@ -248,9 +283,10 @@ export default async function ReportPage({
                   </tr>;
                 })}
               </tbody>
-            </table> : <table className="report-table">
+            </table> : <table className="report-table registration-report-table">
               <thead>
                 <tr>
+                  <th className="report-serial-column">#</th>
                   <th>Primary member</th>
                   <th>Participants</th>
                   <th>Email</th>
@@ -265,7 +301,8 @@ export default async function ReportPage({
                 </tr>
               </thead>
               <tbody>
-                {registrations.map((registration) => <tr key={registration.id}>
+                {registrations.map((registration, rowIndex) => <tr key={registration.id}>
+                  <td className="report-serial-column">{rowIndex + 1}</td>
                   <td><strong>{registration.member_name}</strong></td>
                   <td>
                     <div className="report-participant-names">

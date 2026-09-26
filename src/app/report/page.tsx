@@ -148,6 +148,7 @@ export default async function ReportPage({
         <a href="/dashboard">Dashboard</a>
         {session.role === "admin" && <a href="/members">Members</a>}
         {session.role === "admin" && <a href="/managers">Manager</a>}
+        <a href="/scanner">Scanner</a>
         <a className="active" href={session.role === "manager" ? `/report?eventId=${session.eventId}` : "/report"}>Report</a>
       </nav>
 

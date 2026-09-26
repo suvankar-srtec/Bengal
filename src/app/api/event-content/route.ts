@@ -81,10 +81,10 @@ export async function POST(request: Request) {
         event_date, organizer, about_title, about_paragraph_1, about_paragraph_2,
         bengali_paragraph_1, bengali_paragraph_2,
         participation_unit_paise, standee_unit_paise, presentation_unit_paise,
-        meal_option, snacks_unit_paise, lunch_unit_paise, dinner_unit_paise
+        meal_option, snacks_unit_paise, lunch_unit_paise, dinner_unit_paise, included_meals
       ) VALUES (
         $1, $2, $3, $4, $5, $6::date, $7, $8, $9, $10, $11, $12,
-        $13, $14, $15, $16, $17, $18, $19
+        $13, $14, $15, $16, 0, 0, 0, $17
       )
       RETURNING id`,
       [
@@ -92,10 +92,8 @@ export async function POST(request: Request) {
         parsed.data.participationPaise,
         parsed.data.standeePaise,
         parsed.data.presentationPaise,
-        parsed.data.mealOption,
-        parsed.data.snacksPaise,
-        parsed.data.lunchPaise,
-        parsed.data.dinnerPaise,
+        parsed.data.includedMeals[0],
+        parsed.data.includedMeals,
       ],
     );
     return NextResponse.json({ ok: true, eventId: result.rows[0]?.id }, { status: 201 });
@@ -144,20 +142,19 @@ export async function PUT(request: Request) {
         standee_unit_paise = $14,
         presentation_unit_paise = $15,
         meal_option = $16,
-        snacks_unit_paise = $17,
-        lunch_unit_paise = $18,
-        dinner_unit_paise = $19,
+        snacks_unit_paise = 0,
+        lunch_unit_paise = 0,
+        dinner_unit_paise = 0,
+        included_meals = $17,
         updated_at = NOW()
-      WHERE id = $20`,
+      WHERE id = $18`,
       [
         ...values(parsed.data),
         parsed.data.participationPaise,
         parsed.data.standeePaise,
         parsed.data.presentationPaise,
-        parsed.data.mealOption,
-        parsed.data.snacksPaise,
-        parsed.data.lunchPaise,
-        parsed.data.dinnerPaise,
+        parsed.data.includedMeals[0],
+        parsed.data.includedMeals,
         eventId,
       ],
     );

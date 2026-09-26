@@ -223,7 +223,8 @@ export function EventContentEditor({
         <label><span>English title</span><input value={form.titleEn} onChange={(e) => set("titleEn", e.target.value)} required /></label>
         <label><span>Bengali title</span><input value={form.titleBn} onChange={(e) => set("titleBn", e.target.value)} required /></label>
         <label><span>Event date</span><input type="date" value={form.eventDate} onChange={(e) => set("eventDate", e.target.value)} required /></label>
-        <label><span>Event time</span><input type="time" value={form.eventTime} onChange={(e) => set("eventTime", e.target.value)} required /></label>
+        <label><span>Event time from</span><input type="time" value={form.eventTime} onChange={(e) => set("eventTime", e.target.value)} required /></label>
+        <label><span>Event time to</span><input type="time" value={form.eventEndTime} onChange={(e) => set("eventEndTime", e.target.value)} required /></label>
         <label className="full"><span>Organizer</span><input value={form.organizer} onChange={(e) => set("organizer", e.target.value)} required /></label>
       </div>
     </section>

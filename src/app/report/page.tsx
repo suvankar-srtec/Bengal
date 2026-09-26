@@ -32,6 +32,7 @@ type RegistrationRow = {
   total_paise: number;
   payment_status: string;
   participant_names: string[];
+  provided_meals: Array<{ participantNumber: number; meal: "snacks" | "lunch" | "dinner" }>;
   created_at: Date | string;
 };
 
@@ -88,7 +89,19 @@ export default async function ReportPage({
             id, member_name, email, phone, billing_details,
             participation_quantity, standee_quantity, meal_choice, included_meals,
             presentation_selected, total_paise, payment_status,
-            participant_names, created_at
+            participant_names,
+            COALESCE((
+              SELECT jsonb_agg(
+                jsonb_build_object(
+                  'participantNumber', redemption.participant_number,
+                  'meal', redemption.meal_choice
+                )
+                ORDER BY redemption.participant_number, redemption.redeemed_at
+              )
+              FROM public.bbc_meal_redemptions redemption
+              WHERE redemption.registration_id = bbc_event_registrations.id
+            ), '[]'::jsonb) AS provided_meals,
+            created_at
           FROM public.bbc_event_registrations
           WHERE event_id = $1
           ORDER BY created_at DESC
@@ -118,7 +131,19 @@ export default async function ReportPage({
             id, member_name, email, phone, billing_details,
             participation_quantity, standee_quantity, meal_choice, included_meals,
             presentation_selected, total_paise, payment_status,
-            participant_names, created_at
+            participant_names,
+            COALESCE((
+              SELECT jsonb_agg(
+                jsonb_build_object(
+                  'participantNumber', redemption.participant_number,
+                  'meal', redemption.meal_choice
+                )
+                ORDER BY redemption.participant_number, redemption.redeemed_at
+              )
+              FROM public.bbc_meal_redemptions redemption
+              WHERE redemption.registration_id = bbc_event_registrations.id
+            ), '[]'::jsonb) AS provided_meals,
+            created_at
           FROM public.bbc_event_registrations
           WHERE event_id = $1
           ORDER BY created_at DESC
@@ -159,7 +184,7 @@ export default async function ReportPage({
       <div className="report-page-heading">
         <div>
           <h1>Report</h1>
-          <p>Select a created event to view its complete registration report.</p>
+          <p>{session.role === "manager" ? "View participant and meal distribution details for your assigned event." : "Select a created event to view its complete registration report."}</p>
         </div>
         <ReportEventSelector events={selectorEvents} selectedEventId={selectedEvent ? Number(selectedEvent.id) : null} />
       </div>
@@ -180,7 +205,50 @@ export default async function ReportPage({
           </div>
 
           {registrations.length ? <div className="report-table-scroll">
-            <table className="report-table">
+            {session.role === "manager" ? <table className="report-table manager-report-table">
+              <thead>
+                <tr>
+                  <th>Primary member</th>
+                  <th>Participants</th>
+                  <th>Meals included</th>
+                  <th>Provided meal</th>
+                </tr>
+              </thead>
+              <tbody>
+                {registrations.map((registration) => {
+                  const participants = registration.participant_names ?? [registration.member_name];
+                  const includedMeals = registration.included_meals?.length
+                    ? registration.included_meals
+                    : registration.meal_choice
+                      ? [registration.meal_choice]
+                      : [];
+
+                  return <tr key={registration.id}>
+                    <td><strong>{registration.member_name}</strong></td>
+                    <td>
+                      <div className="report-participant-names">
+                        {participants.map((name, index) => <span key={`${registration.id}-${index}`}>{name}</span>)}
+                      </div>
+                    </td>
+                    <td>{includedMeals.length ? includedMeals.map((meal) => meal[0].toUpperCase() + meal.slice(1)).join(", ") : "None"}</td>
+                    <td>
+                      <div className="report-provided-meals">
+                        {participants.map((name, index) => {
+                          const participantMeals = (registration.provided_meals ?? [])
+                            .filter((item) => Number(item.participantNumber) === index + 1)
+                            .map((item) => item.meal[0].toUpperCase() + item.meal.slice(1));
+
+                          return <span key={`${registration.id}-provided-${index}`}>
+                            <strong>{name}</strong>
+                            <small>{participantMeals.length ? participantMeals.join(", ") : "Not provided"}</small>
+                          </span>;
+                        })}
+                      </div>
+                    </td>
+                  </tr>;
+                })}
+              </tbody>
+            </table> : <table className="report-table">
               <thead>
                 <tr>
                   <th>Primary member</th>
@@ -215,7 +283,7 @@ export default async function ReportPage({
                   <td>{dateLabel(registration.created_at)}</td>
                 </tr>)}
               </tbody>
-            </table>
+            </table>}
           </div> : <div className="report-empty-state">No registrations have been recorded for this event yet.</div>}
         </section>
       </> : <div className="report-empty-state">Create an event first to view event reports.</div>}

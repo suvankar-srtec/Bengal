@@ -11,7 +11,7 @@ export const dynamic = "force-dynamic";
 type EventSummary = {
   id: number;
   title: string;
-  createdAt: string;
+  eventDate: string;
   registrations: number;
   participants: number;
   revenue: number;
@@ -37,6 +37,7 @@ export default async function DashboardPage() {
     const result = await database.query<{
       id: number;
       title_en: string;
+      event_date: string;
       created_at: Date | string;
       registrations: string;
       participants: string;
@@ -45,6 +46,7 @@ export default async function DashboardPage() {
       SELECT
         e.id,
         e.title_en,
+        e.event_date::text AS event_date,
         e.created_at,
         COUNT(r.id)::text AS registrations,
         COALESCE(SUM(r.participation_quantity), 0)::text AS participants,
@@ -52,23 +54,23 @@ export default async function DashboardPage() {
       FROM public.bbc_event_content e
       LEFT JOIN public.bbc_event_registrations r ON r.event_id = e.id::text
       ${scope}
-      GROUP BY e.id, e.title_en, e.created_at
+      GROUP BY e.id, e.title_en, e.event_date, e.created_at
       ORDER BY e.created_at DESC, e.id DESC
     `, params);
 
     events = result.rows.map((event) => {
-      const created = event.created_at instanceof Date ? event.created_at : new Date(event.created_at);
+      const eventDate = new Date(`${event.event_date}T12:00:00Z`);
       return {
         id: Number(event.id),
         title: event.title_en,
-        createdAt: Number.isNaN(created.getTime())
-          ? ""
+        eventDate: Number.isNaN(eventDate.getTime())
+          ? event.event_date
           : new Intl.DateTimeFormat("en-GB", {
               day: "2-digit",
               month: "short",
               year: "numeric",
               timeZone: "UTC",
-            }).format(created),
+            }).format(eventDate),
         registrations: Number(event.registrations ?? 0),
         participants: Number(event.participants ?? 0),
         revenue: Number(event.revenue ?? 0),
@@ -106,7 +108,7 @@ export default async function DashboardPage() {
           key={event.id}
           id={event.id}
           title={event.title}
-          createdAt={event.createdAt}
+          eventDate={event.eventDate}
           registrations={event.registrations}
           participants={event.participants}
           revenue={event.revenue}

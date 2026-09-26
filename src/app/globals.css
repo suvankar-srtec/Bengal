@@ -1146,3 +1146,65 @@ body{font-size:14px;line-height:1.5}
 @media(max-width:700px){
   .manager-report-table{min-width:700px}
 }
+
+
+/* Meal popup close control */
+.manager-meal-popup{position:relative}
+.manager-meal-popup-close{
+  position:absolute;
+  top:12px;
+  right:12px;
+  width:34px;
+  height:34px;
+  border:0;
+  border-radius:50%;
+  background:#f3f5f6;
+  color:var(--ink);
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:0;
+  font-size:24px;
+  line-height:1;
+}
+.manager-meal-popup-close:hover{background:#e9edef}
+.manager-meal-popup-close span{transform:translateY(-1px)}
+
+/* Manager report layout */
+.manager-report-table{
+  min-width:0!important;
+  width:100%;
+  table-layout:fixed;
+}
+.manager-report-table th,
+.manager-report-table td{
+  overflow-wrap:normal;
+  word-break:normal;
+}
+.manager-report-table th:nth-child(1),
+.manager-report-table td:nth-child(1){width:20%}
+.manager-report-table th:nth-child(2),
+.manager-report-table td:nth-child(2){width:24%}
+.manager-report-table th:nth-child(3),
+.manager-report-table td:nth-child(3){width:20%}
+.manager-report-table th:nth-child(4),
+.manager-report-table td:nth-child(4){width:36%}
+.report-provided-meals{gap:6px}
+.report-provided-meals>span{
+  display:grid;
+  grid-template-columns:minmax(110px,1fr) minmax(120px,1fr);
+  align-items:center;
+  gap:10px;
+  padding:8px 10px;
+}
+.report-provided-meals strong,
+.report-provided-meals small{
+  min-width:0;
+  overflow-wrap:anywhere;
+  word-break:normal;
+}
+.report-provided-meals small{text-align:left}
+@media(max-width:900px){
+  .report-table-scroll{overflow-x:auto}
+  .manager-report-table{min-width:720px!important}
+}

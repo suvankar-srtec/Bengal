@@ -3,6 +3,7 @@ import sharp from "sharp";
 import { BBC_LOGO_DATA_URL } from "./bbc-logo";
 import { memberPhotoDataUri } from "./member-photo";
 import { mealChoicesLabel, type MealChoice } from "./registration";
+import { passVerificationUrl } from "./pass-token";
 
 export type PassRegistration = {
   id: string;
@@ -118,19 +119,19 @@ export function participantPass(registration: PassRegistration, index: number) {
     ? `Yes (${paiseText(registration.presentation_unit_paise)})`
     : "No";
 
+  const verificationUrl = passVerificationUrl({
+    registrationId: registration.id,
+    eventId: Number(registration.event_id),
+    participantNumber,
+    reference: registration.reference,
+  });
+
   return {
     participantName,
     participantNumber,
     passId,
     mealLabel,
-    payload: [
-      "Bengal Business Council",
-      `Participant: ${participantName}`,
-      `Participation fees: ${participationLine}`,
-      `Standee placement: ${standeeLine}`,
-      `Meals included: ${mealLine}`,
-      `Company presentation: ${presentationLine}`,
-    ].join("\n"),
+    payload: verificationUrl,
   };
 }
 

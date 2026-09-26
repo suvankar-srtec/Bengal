@@ -6,23 +6,25 @@ import { useEffect, useState } from "react";
 export function ReportEventSelector({
   events,
   selectedEventId,
+  reportType = "registration",
 }: {
   events: Array<{ id: number; title: string; eventDate: string }>;
   selectedEventId: number | null;
+  reportType?: "registration" | "event";
 }) {
   const router = useRouter();
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     for (const event of events) {
-      router.prefetch(`/report?eventId=${event.id}`);
+      router.prefetch(`/report?eventId=${event.id}&report=${reportType}`);
     }
-  }, [events, router]);
+  }, [events, reportType, router]);
 
   function change(value: string) {
     if (!value) return;
     setBusy(true);
-    router.push(`/report?eventId=${encodeURIComponent(value)}`);
+    router.push(`/report?eventId=${encodeURIComponent(value)}&report=${reportType}`);
   }
 
   return <div className="report-event-selector">

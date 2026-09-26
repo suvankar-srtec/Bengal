@@ -87,6 +87,7 @@ export default async function DashboardPage() {
         <a className="active" href="/dashboard">Dashboard</a>
         {session.role === "admin" && <a href="/members">Members</a>}
         {session.role === "admin" && <a href="/managers">Manager</a>}
+        <a href="/scanner">Scanner</a>
         <a href={session.role === "manager" ? `/report?eventId=${session.eventId}` : "/report"}>Report</a>
       </nav>
       <div className="admin-sidebar-footer"><AdminLogoutButton /></div>

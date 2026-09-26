@@ -27,6 +27,7 @@ type RegistrationRow = {
   participation_quantity: number;
   standee_quantity: number;
   meal_choice: "snacks" | "lunch" | "dinner" | null;
+  included_meals: ("snacks" | "lunch" | "dinner")[];
   presentation_selected: boolean;
   total_paise: number;
   payment_status: string;
@@ -81,7 +82,7 @@ export default async function ReportPage({
         database.query<RegistrationRow>(`
           SELECT
             id, member_name, email, phone, billing_details,
-            participation_quantity, standee_quantity, meal_choice,
+            participation_quantity, standee_quantity, meal_choice, included_meals,
             presentation_selected, total_paise, payment_status,
             participant_names, created_at
           FROM public.bbc_event_registrations
@@ -110,7 +111,7 @@ export default async function ReportPage({
         const registrationResult = await database.query<RegistrationRow>(`
           SELECT
             id, member_name, email, phone, billing_details,
-            participation_quantity, standee_quantity, meal_choice,
+            participation_quantity, standee_quantity, meal_choice, included_meals,
             presentation_selected, total_paise, payment_status,
             participant_names, created_at
           FROM public.bbc_event_registrations
@@ -179,7 +180,7 @@ export default async function ReportPage({
                   <th>Email</th>
                   <th>WhatsApp</th>
                   <th>Billing</th>
-                  <th>Meal</th>
+                  <th>Meals included</th>
                   <th>Standee</th>
                   <th>Presentation</th>
                   <th>Amount</th>
@@ -198,7 +199,7 @@ export default async function ReportPage({
                   <td>{registration.email}</td>
                   <td>{registration.phone}</td>
                   <td>{registration.billing_details}</td>
-                  <td>{registration.meal_choice ? registration.meal_choice[0].toUpperCase() + registration.meal_choice.slice(1) : "None"}</td>
+                  <td>{registration.included_meals?.length ? registration.included_meals.map((meal) => meal[0].toUpperCase() + meal.slice(1)).join(", ") : registration.meal_choice ? registration.meal_choice[0].toUpperCase() + registration.meal_choice.slice(1) : "None"}</td>
                   <td>{registration.standee_quantity}</td>
                   <td>{registration.presentation_selected ? "Yes" : "No"}</td>
                   <td>{money(registration.total_paise)}</td>

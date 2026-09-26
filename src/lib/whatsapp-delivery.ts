@@ -61,7 +61,7 @@ export async function deliverWhatsAppPasses(registrationId: string) {
     if (!registration) throw new WhatsAppError("registration_not_paid");
     if (!registration.participant_names.length) throw new WhatsAppError("passes_missing");
 
-    const passUrl = `${config.origin}${passBundlePath(row.media_token)}`;
+    const passUrl = `${config.origin}${passBundlePath(row.media_token)}?v=2`;
     const primaryMember = registration.participant_names[0] ?? "Member";
     const participantCount = registration.participant_names.length;
 

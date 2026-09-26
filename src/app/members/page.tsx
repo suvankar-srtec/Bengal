@@ -1,6 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-import { ADMIN_SESSION_COOKIE, validAdminSession } from "@/lib/admin-auth";
+import { ADMIN_SESSION_COOKIE, readAdminSession } from "@/lib/admin-auth";
 import { AdminLogoutButton } from "@/components/admin-logout-button";
 import { BBC_LOGO_DATA_URL } from "@/lib/bbc-logo";
 import { getDatabase } from "@/lib/db";
@@ -20,7 +20,9 @@ type MemberRow = {
 
 export default async function MembersPage() {
   const store = await cookies();
-  if (!validAdminSession(store.get(ADMIN_SESSION_COOKIE)?.value)) redirect("/");
+  const session = readAdminSession(store.get(ADMIN_SESSION_COOKIE)?.value);
+  if (!session) redirect("/");
+  if (session.role !== "admin") redirect("/dashboard");
 
   let members: MemberRow[] = [];
   try {
@@ -43,6 +45,7 @@ export default async function MembersPage() {
       <nav className="admin-nav">
         <a href="/dashboard">Dashboard</a>
         <a className="active" href="/members">Members</a>
+        <a href="/managers">Manager</a>
         <a href="/report">Report</a>
       </nav>
 

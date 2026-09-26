@@ -49,14 +49,20 @@ export async function POST(request: Request) {
     const duplicate = await database.query<{ id: number }>(
       `SELECT id
        FROM public.bbc_event_content
-       WHERE title_bn = $2
-         AND title_en = $3
-         AND event_date = $6::date
-         AND event_time = $7::time
-         AND organizer = $8
+       WHERE title_bn = $1
+         AND title_en = $2
+         AND event_date = $3::date
+         AND event_time = $4::time
+         AND organizer = $5
        ORDER BY id
        LIMIT 1`,
-      eventValues,
+      [
+        parsed.data.titleBn,
+        parsed.data.titleEn,
+        parsed.data.eventDate,
+        parsed.data.eventTime,
+        parsed.data.organizer,
+      ],
     );
 
     if (duplicate.rows[0]) {

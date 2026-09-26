@@ -1208,3 +1208,85 @@ body{font-size:14px;line-height:1.5}
   .report-table-scroll{overflow-x:auto}
   .manager-report-table{min-width:720px!important}
 }
+
+
+/* Registration/Event report switcher */
+.report-type-tabs{
+  display:inline-flex;
+  gap:4px;
+  margin:0 0 14px;
+  padding:4px;
+  border:1px solid var(--line);
+  border-radius:9px;
+  background:#f7f9fa;
+}
+.report-type-tabs a{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:36px;
+  padding:0 14px;
+  border-radius:6px;
+  color:var(--muted);
+  text-decoration:none;
+  font-size:12px;
+  font-weight:700;
+}
+.report-type-tabs a.active{
+  background:white;
+  color:var(--ink);
+  box-shadow:0 1px 4px rgba(24,47,70,.08);
+}
+
+/* Keep report header row and first column visible */
+.report-table-scroll{
+  overflow:auto;
+  max-width:100%;
+}
+.report-table thead th{
+  position:sticky;
+  top:0;
+  z-index:4;
+}
+.report-serial-column{
+  width:46px!important;
+  min-width:46px!important;
+  max-width:46px!important;
+  text-align:center!important;
+  position:sticky!important;
+  left:0;
+  z-index:3;
+  background:white;
+}
+.report-table thead .report-serial-column{
+  z-index:6;
+  background:#fafbfc;
+}
+.report-table tbody tr:hover .report-serial-column{
+  background:#fcfdfd;
+}
+
+/* Event report layout */
+.event-report-table{
+  min-width:900px!important;
+  table-layout:fixed;
+}
+.event-report-table th:nth-child(2),
+.event-report-table td:nth-child(2){width:18%}
+.event-report-table th:nth-child(3),
+.event-report-table td:nth-child(3){width:20%}
+.event-report-table th:nth-child(4),
+.event-report-table td:nth-child(4){width:15%}
+.event-report-table th:nth-child(5),
+.event-report-table td:nth-child(5){width:17%}
+.event-report-table th:nth-child(6),
+.event-report-table td:nth-child(6){width:30%}
+
+.registration-report-table{
+  min-width:1120px;
+}
+
+@media(max-width:700px){
+  .report-type-tabs{display:flex;width:100%}
+  .report-type-tabs a{flex:1}
+}

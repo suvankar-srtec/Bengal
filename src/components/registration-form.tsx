@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type FormEvent } from "react";
-import { calculateTotal, formatMoney, LIMITS, mealChoiceLabel, mealPriceForChoice, registrationSchema, registrationFieldKey, type FieldErrors, type MealChoice, type ParticipationPrices, type RegistrationReceipt } from "@/lib/registration";
+import { calculateTotal, formatMoney, LIMITS, mealChoicesLabel, registrationSchema, registrationFieldKey, type FieldErrors, type ParticipationPrices, type RegistrationReceipt } from "@/lib/registration";
 import { Icon } from "./icon";
 import { PaymentCheckout } from "./payment-checkout";
 import { WhatsAppDeliveryStatus } from "./whatsapp-delivery-status";
@@ -19,7 +19,6 @@ function Quantity({ label, value, minimum, maximum, onChange }: {
 export function RegistrationForm({ eventContentId, prices }: { eventContentId: number | null; prices: ParticipationPrices }) {
   const [additionalParticipantNames, setAdditionalParticipantNames] = useState<string[]>([]);
   const [standeeQuantity, setStandeeQuantity] = useState(0);
-  const [mealChoice, setMealChoice] = useState<MealChoice | null>(null);
   const [presentationSelected, setPresentationSelected] = useState(false);
   const [fields, setFields] = useState({ memberName: "", email: "", phone: "", billingDetails: "" });
   const [errors, setErrors] = useState<FieldErrors>({});
@@ -35,7 +34,7 @@ export function RegistrationForm({ eventContentId, prices }: { eventContentId: n
   const confirmationHeading = useRef<HTMLHeadingElement>(null);
   const participationQuantity = 1 + additionalParticipantNames.length;
   const participantNames = [fields.memberName, ...additionalParticipantNames];
-  const total = calculateTotal({ participationQuantity, standeeQuantity, mealChoice, presentationSelected }, prices);
+  const total = calculateTotal({ participationQuantity, standeeQuantity, presentationSelected }, prices);
   const participantKey = participantNames.map((name) => name.trim()).join("\u001f");
 
   useEffect(() => {
@@ -72,7 +71,7 @@ export function RegistrationForm({ eventContentId, prices }: { eventContentId: n
     });
 
     return () => { cancelled = true; };
-  }, [receipt?.id, receipt?.reference, receipt?.paymentStatus, participantKey, mealChoice, qrRetryKey]);
+  }, [receipt?.id, receipt?.reference, receipt?.paymentStatus, participantKey, qrRetryKey]);
 
   function updateField(field: keyof typeof fields, value: string) {
     setFields((current) => ({ ...current, [field]: value }));
@@ -107,7 +106,7 @@ export function RegistrationForm({ eventContentId, prices }: { eventContentId: n
     event.preventDefault();
     if (inFlight.current) return;
     setErrorMessage("");
-    const values = { eventContentId, ...fields, email: fields.email.trim(), participationQuantity, standeeQuantity, mealChoice, presentationSelected, additionalParticipantNames: participantNames.slice(1) };
+    const values = { eventContentId, ...fields, email: fields.email.trim(), participationQuantity, standeeQuantity, mealChoice: null, presentationSelected, additionalParticipantNames: participantNames.slice(1) };
     const key = JSON.stringify(values);
     if (!submission.current || submission.current.key !== key) submission.current = { key, id: crypto.randomUUID() };
     const parsed = registrationSchema.safeParse({ ...values, submissionId: submission.current.id });
@@ -164,7 +163,7 @@ export function RegistrationForm({ eventContentId, prices }: { eventContentId: n
     <span className="qr-loader" aria-hidden="true" />
     <span className="eyebrow">PAYMENT SUCCESSFUL</span>
     <h2>Generating participant passes…</h2>
-    <p>Please wait while we create one individual pass with name, meal preference and QR code for each participant.</p>
+    <p>Please wait while we create one individual pass with name, included meals and QR code for each participant.</p>
     <div className="qr-generation-count">{participantNames.length} {participantNames.length === 1 ? "pass" : "passes"} being generated</div>
   </div>;
 
@@ -179,7 +178,7 @@ export function RegistrationForm({ eventContentId, prices }: { eventContentId: n
     <span className="success-icon"><Icon name="check" size={32} /></span>
     <span className="eyebrow">PARTICIPANT PASSES READY</span>
     <h2 ref={confirmationHeading} tabIndex={-1}>Your passes are ready.</h2>
-    <p>Each participant has an individual pass showing their name, meal preference and QR code.</p>
+    <p>Each participant has an individual pass showing their name, included meals and QR code.</p>
     <WhatsAppDeliveryStatus registrationId={receipt.id} submissionId={submission.current?.id ?? ""} />
     <div className="qr-pass-grid">
       {qrPasses.map((pass) => <article className="qr-pass-card" key={pass.passId}>
@@ -195,7 +194,7 @@ export function RegistrationForm({ eventContentId, prices }: { eventContentId: n
     </div>
     <button className="new-registration" type="button" onClick={() => {
       setReceipt(null); setFields({ memberName: "", email: "", phone: "", billingDetails: "" });
-      setAdditionalParticipantNames([]); setStandeeQuantity(0); setMealChoice(null); setPresentationSelected(false);
+      setAdditionalParticipantNames([]); setStandeeQuantity(0); setPresentationSelected(false);
       setQrPasses([]); setQrError(""); submission.current = null;
     }}>Register another member <Icon name="arrow" size={16} /></button>
   </div>;
@@ -246,32 +245,14 @@ export function RegistrationForm({ eventContentId, prices }: { eventContentId: n
 
         <div className="form-section-heading participation-heading"><span className="step-number">02</span><h3>Your participation</h3><span className="currency-label">INR</span></div>
         <div className="fee-options">
-          <div className="fee-row"><div><span className="fee-label">Participation fees <span className="required">*</span></span><span className="fee-price">{formatMoney(prices.participation)} <small>/ person</small></span></div><div className="participant-fee-count" aria-label="Participant count"><span>{participationQuantity}</span> {participationQuantity === 1 ? "person" : "people"}</div></div>
+          <div className="fee-row"><div><span className="fee-label">Participation fees <span className="required">*</span></span><span className="fee-description">Includes: {mealChoicesLabel(prices.includedMeals)}</span><span className="fee-price">{formatMoney(prices.participation)} <small>/ person</small></span></div><div className="participant-fee-count" aria-label="Participant count"><span>{participationQuantity}</span> {participationQuantity === 1 ? "person" : "people"}</div></div>
           <div className="fee-row"><div><span className="fee-label">Standee placement <span className="optional">Optional</span></span><span className="fee-price">{formatMoney(prices.standee)} <small>/ standee</small></span></div><Quantity label="Standee" value={standeeQuantity} minimum={0} maximum={LIMITS.standee} onChange={setStandeeQuantity} /></div>
-          <div className={`fee-row meal-option${mealChoice ? " selected" : ""}`}>
-            <div>
-              <span className="fee-label">Meal preference <span className="optional">Optional</span></span>
-              <span className="fee-price">{formatMoney(mealPriceForChoice(prices, prices.mealOption))} <small>/ person</small></span>
-            </div>
-            <div className="meal-radio-group" role="radiogroup" aria-label="Meal preference">
-              <label onDoubleClick={() => mealChoice === prices.mealOption && setMealChoice(null)} title="Double-click the selected option to clear">
-                <input
-                  type="radio"
-                  name="mealChoice"
-                  value={prices.mealOption}
-                  checked={mealChoice === prices.mealOption}
-                  onChange={() => setMealChoice(prices.mealOption)}
-                />
-                <span>{mealChoiceLabel(prices.mealOption)}</span>
-              </label>
-            </div>
-          </div>
           <label className={`fee-row presentation-option${presentationSelected ? " selected" : ""}`} htmlFor="presentationSelected"><div><span className="fee-label">Company presentation</span><span className="fee-description">20-minute presentation slot</span><span className="fee-price">{formatMoney(prices.presentation)}</span></div><input id="presentationSelected" name="presentationSelected" type="checkbox" checked={presentationSelected} onChange={(event) => setPresentationSelected(event.target.checked)} /></label>
         </div>
 
         <p className="participant-count-hint" role="status">Participant fee is calculated automatically from the {participationQuantity} member {participationQuantity === 1 ? "name" : "names"} above.</p>
 
-        <div className="total-row"><div><span>Total amount</span><small>{participationQuantity} {participationQuantity === 1 ? "participant" : "participants"}{standeeQuantity > 0 ? ` · ${standeeQuantity} ${standeeQuantity === 1 ? "standee" : "standees"}` : ""}{mealChoice ? ` · ${mealChoiceLabel(mealChoice)}` : ""}{presentationSelected ? " · Presentation" : ""}</small></div><output aria-label="Total amount" aria-live="polite">{formatMoney(total)}</output></div>
+        <div className="total-row"><div><span>Total amount</span><small>{participationQuantity} {participationQuantity === 1 ? "participant" : "participants"}{standeeQuantity > 0 ? ` · ${standeeQuantity} ${standeeQuantity === 1 ? "standee" : "standees"}` : ""}{presentationSelected ? " · Presentation" : ""}</small></div><output aria-label="Total amount" aria-live="polite">{formatMoney(total)}</output></div>
         {errorMessage && <div className="error-banner" role="alert">{errorMessage}</div>}
         <button className="submit-button" type="submit" disabled={isSubmitting}>{isSubmitting ? <><span className="spinner" /> Preparing payment QR…</> : <>Proceed to payment <Icon name="arrow" size={19} /></>}</button>
         <p className="submit-note">Your payment QR is generated after the registration details are saved.</p>

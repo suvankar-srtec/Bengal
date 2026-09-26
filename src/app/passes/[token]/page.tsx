@@ -101,7 +101,7 @@ export default async function PassBundlePage({
             <div className="public-pass-card-heading">
               <span>Participant {pass.participantNumber}</span>
               <h2>{pass.participantName}</h2>
-              <p>Meal: {pass.mealLabel}</p>
+              <p>Meals included: {pass.mealLabel}</p>
             </div>
 
             <img src={pass.imageUrl} alt={`QR event pass for ${pass.participantName}`} />

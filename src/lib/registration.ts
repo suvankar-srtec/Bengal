@@ -56,8 +56,9 @@ export function participationPricesFromRow(row: Record<string, unknown> | undefi
     ? row.meal_option
     : "lunch";
 
-  const includedMeals = Array.isArray(row?.included_meals)
-    ? Array.from(new Set(row.included_meals.filter(
+  const rawIncludedMeals = row?.included_meals;
+  const includedMeals: MealChoice[] = Array.isArray(rawIncludedMeals)
+    ? Array.from(new Set(rawIncludedMeals.filter(
         (value): value is MealChoice => value === "snacks" || value === "lunch" || value === "dinner",
       )))
     : [mealOption];

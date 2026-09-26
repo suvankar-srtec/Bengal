@@ -35,7 +35,16 @@ const registration: PassRegistration = {
   event_name: "September Networking",
   event_date: "2026-09-28",
   participant_names: ["Aditi & Sen", "Rohan | NAME:someone"],
+  email: "aditi.sen@example.com",
+  billing_details: "ABCDE1234F",
+  participation_quantity: 2,
+  standee_quantity: 1,
   meal_choice: "lunch",
+  presentation_selected: true,
+  participation_unit_paise: 118000,
+  standee_unit_paise: 295000,
+  presentation_unit_paise: 3540000,
+  meal_unit_paise: 50000,
 };
 
 test("WapMonkey gets its documented authentication, recipient and media fields", async () => {
@@ -144,12 +153,14 @@ test("configuration requires server credentials and a public HTTPS origin", () =
   );
 });
 
-test("QR data binds the stored event, registration, participant and meal", () => {
+test("QR data includes participant participation details", () => {
   const pass = participantPass(registration, 1);
   assert.equal(pass.passId, "BBC-TEST-P2");
-  assert.match(pass.payload, /\|EVENT:42\|/);
-  assert.match(pass.payload, /\|PARTICIPANT:2\|PASS:BBC-TEST-P2\|/);
-  assert.match(pass.payload, /NAME:Rohan%20%7C%20NAME%3Asomeone\|MEAL:lunch$/);
+  assert.match(pass.payload, /Participant: Rohan \| NAME:someone/);
+  assert.match(pass.payload, /Participation fees: INR 1180\.00\/person x 2/);
+  assert.match(pass.payload, /Standee placement: 1 x INR 2950\.00/);
+  assert.match(pass.payload, /Meal preference: Lunch \(INR 500\.00\/person\)/);
+  assert.match(pass.payload, /Company presentation: Yes \(INR 35400\.00\)/);
   assert.throws(() => participantPass(registration, 2));
 });
 
@@ -163,7 +174,7 @@ test("pass renderer produces a full size PNG with a nonempty QR area and escaped
   assert.equal(metadata.width, 750);
   assert.equal(metadata.height, 1050);
   const qr = await sharp(image)
-    .extract({ left: 135, top: 374, width: 480, height: 480 })
+    .extract({ left: 160, top: 505, width: 430, height: 430 })
     .stats();
   assert.ok(qr.channels[0].min < 20);
   assert.ok(qr.channels[0].max > 240);

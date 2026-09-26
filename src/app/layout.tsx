@@ -3,6 +3,7 @@ import "./globals.css";
 import "./payment.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL(process.env.APP_PUBLIC_URL || "https://bengal-bbc.vercel.app"),
   title: "Aalap Alochona · Bengal Business Council",
   description: "Register for Aalap Alochona on 29 September 2026. Meet, exchange ideas, and build meaningful connections with Bengal Business Council.",
   robots: { index: false, follow: false },

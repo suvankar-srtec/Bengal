@@ -21,7 +21,7 @@ export default async function ScannerPage() {
         <a href="/dashboard">Dashboard</a>
         {session.role === "admin" && <a href="/members">Members</a>}
         {session.role === "admin" && <a href="/managers">Manager</a>}
-        <a className="active" href="/scanner">Scanner</a>
+        <a className="active mobile-scanner-nav" href="/scanner">Scanner</a>
         <a href={session.role === "manager" ? `/report?eventId=${session.eventId}` : "/report"}>Report</a>
       </nav>
       <div className="admin-sidebar-footer"><AdminLogoutButton /></div>
@@ -34,7 +34,8 @@ export default async function ScannerPage() {
           <p>Scan QR passes and verify participant access.</p>
         </div>
       </div>
-      <ManagerQrScanner />
+      <div className="scanner-desktop-note">QR camera scanning is available on mobile view.</div>
+      <div className="scanner-mobile-only"><ManagerQrScanner /></div>
     </main>
   </div>;
 }

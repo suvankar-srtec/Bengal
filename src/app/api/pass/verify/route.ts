@@ -72,6 +72,16 @@ export async function POST(request: Request) {
         ? [registration.meal_choice]
         : [];
 
+    const redemptionResult = await getDatabase().query<{ meal_choice: string }>(`
+      SELECT meal_choice
+      FROM public.bbc_meal_redemptions
+      WHERE registration_id = $1
+        AND participant_number = $2
+      ORDER BY redeemed_at ASC
+    `, [registration.id, pass.participantNumber]);
+
+    const providedMeals = redemptionResult.rows.map((row) => row.meal_choice);
+
     return NextResponse.json({
       ok: true,
       participantName,
@@ -82,6 +92,7 @@ export async function POST(request: Request) {
       eventDate: registration.event_date,
       paymentStatus: registration.payment_status,
       meals,
+      providedMeals,
     });
   } catch {
     return NextResponse.json({ error: "Unable to verify pass." }, { status: 500 });

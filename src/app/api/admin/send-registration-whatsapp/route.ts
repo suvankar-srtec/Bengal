@@ -41,6 +41,9 @@ export async function POST(request: Request) {
     "WHERE r.id = $1 AND r.payment_status = 'paid' LIMIT 1";
   const registration = (await database.query<RegistrationRow>(sql, [registrationId])).rows[0];
   if (!registration) return Response.json({ error: "Paid registration or QR passes were not found." }, { status: 404 });
+  if (registration.participant_names.some((name) => !String(name || "").trim())) {
+    return Response.json({ error: "Enter and save a name for every QR pass before sending WhatsApp." }, { status: 400 });
+  }
   if (registration.status === "accepted") return Response.json({ ok: true, status: "accepted", alreadySent: true });
 
   const claimed = await database.query(

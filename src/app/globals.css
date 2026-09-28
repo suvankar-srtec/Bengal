@@ -2101,3 +2101,133 @@ body{font-size:14px;line-height:1.5}
     font-size:11px!important;
   }
 }
+
+
+/* Mobile admin / manager hamburger navigation */
+.mobile-admin-bar{
+  display:none;
+}
+@media(max-width:900px){
+  .mobile-admin-bar{
+    display:block;
+    position:sticky;
+    top:0;
+    z-index:1200;
+    grid-column:1/-1;
+    background:#fff;
+    border-bottom:1px solid var(--line);
+  }
+  .mobile-admin-bar-inner{
+    height:64px;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    padding:0 16px;
+  }
+  .mobile-admin-brand{
+    display:inline-flex;
+    align-items:center;
+    text-decoration:none;
+  }
+  .mobile-admin-brand img{
+    width:82px;
+    height:48px;
+    object-fit:contain;
+  }
+  .mobile-admin-menu-button{
+    width:42px;
+    height:42px;
+    border:1px solid #dce2e6;
+    border-radius:8px;
+    background:#fff;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:4px;
+    padding:0;
+  }
+  .mobile-admin-menu-button span{
+    width:19px;
+    height:2px;
+    border-radius:999px;
+    background:var(--ink);
+  }
+  .mobile-admin-menu{
+    position:absolute;
+    top:64px;
+    left:0;
+    right:0;
+    background:#fff;
+    border-bottom:1px solid var(--line);
+    box-shadow:0 14px 30px rgba(24,47,70,.14);
+    padding:12px 16px 16px;
+  }
+  .mobile-admin-menu nav{
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+  }
+  .mobile-admin-menu nav a,
+  .mobile-admin-menu-label{
+    min-height:42px;
+    display:flex;
+    align-items:center;
+    padding:0 12px;
+    border-radius:8px;
+    text-decoration:none;
+    font-size:13px;
+  }
+  .mobile-admin-menu nav a{
+    color:var(--ink);
+  }
+  .mobile-admin-menu nav a:hover,
+  .mobile-admin-menu nav a.active{
+    background:var(--soft-coral);
+    color:var(--coral);
+    font-weight:700;
+  }
+  .mobile-admin-menu-label{
+    min-height:30px;
+    margin-top:4px;
+    color:var(--muted);
+    font-size:10px;
+    font-weight:800;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+  .mobile-admin-menu-footer{
+    margin-top:10px;
+    padding-top:12px;
+    border-top:1px solid var(--line);
+  }
+  .mobile-admin-menu-footer .dashboard-signout{
+    width:100%;
+  }
+  .admin-dashboard-main{
+    padding-top:24px;
+  }
+}
+
+/* Public event header: centered heading */
+.public-event-header .header-inner{
+  position:relative;
+}
+.public-event-brand{
+  width:100%;
+}
+.public-event-header-title{
+  position:absolute;
+  left:50%;
+  transform:translateX(-50%);
+  text-align:center;
+  font-size:22px;
+  font-weight:800;
+  letter-spacing:2px;
+}
+@media(max-width:600px){
+  .public-event-header-title{
+    font-size:17px;
+    letter-spacing:1.4px;
+  }
+}

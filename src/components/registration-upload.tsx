@@ -5,11 +5,13 @@ import { useState, type FormEvent } from "react";
 type EventOption = { id: number; title: string; eventDate: string };
 type ImportResult = {
   row: number;
+  registrationId: string;
   primaryMember: string;
   participants: number;
   additionalParticipants: number;
   whatsapp: string;
   passUrl: string;
+  deliveryStatus: string;
   existing: boolean;
 };
 
@@ -20,6 +22,7 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
   const [message, setMessage] = useState("");
   const [rowErrors, setRowErrors] = useState<Array<{ row: number; error: string }>>([]);
   const [results, setResults] = useState<ImportResult[]>([]);
+  const [sendingId, setSendingId] = useState<string | null>(null);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -59,14 +62,36 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
     }
   }
 
-  function whatsappUrl(result: ImportResult) {
-    const number = result.whatsapp.replace(/\D/g, "");
-    const message = "Hello " + result.primaryMember + ",\n\nYour QR pass" +
-      (result.participants === 1 ? " is" : "es are") +
-      " ready.\n\nView or download " +
-      (result.participants === 1 ? "your pass" : "your passes") +
-      " here:\n" + result.passUrl + "\n\nBengal Business Council";
-    return "https://wa.me/" + number + "?text=" + encodeURIComponent(message);
+  async function sendWhatsApp(result: ImportResult) {
+    if (sendingId || result.deliveryStatus === "accepted") return;
+    setSendingId(result.registrationId);
+    setMessage("");
+
+    try {
+      const response = await fetch("/api/admin/send-registration-whatsapp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ registrationId: result.registrationId }),
+        signal: AbortSignal.timeout(30000),
+      });
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        setMessage(data.error || "WhatsApp could not send the passes.");
+        return;
+      }
+
+      setResults((items) => items.map((item) =>
+        item.registrationId === result.registrationId
+          ? { ...item, deliveryStatus: "accepted" }
+          : item
+      ));
+      setMessage(data.alreadySent ? "WhatsApp passes were already sent." : "WhatsApp passes sent successfully.");
+    } catch {
+      setMessage("WhatsApp could not send the passes. Please retry.");
+    } finally {
+      setSendingId(null);
+    }
   }
 
   async function copyLink(url: string) {
@@ -165,7 +190,20 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
               <td>{result.additionalParticipants}</td>
               <td>{result.whatsapp}</td>
               <td><button type="button" className="admin-upload-copy" onClick={() => void copyLink(result.passUrl)}>Copy pass link</button></td>
-              <td><a className="admin-upload-whatsapp" href={whatsappUrl(result)} target="_blank" rel="noreferrer">Send WhatsApp</a></td>
+              <td>
+                <button
+                  type="button"
+                  className="admin-upload-whatsapp"
+                  disabled={sendingId === result.registrationId || result.deliveryStatus === "accepted"}
+                  onClick={() => void sendWhatsApp(result)}
+                >
+                  {result.deliveryStatus === "accepted"
+                    ? "Sent"
+                    : sendingId === result.registrationId
+                      ? "Sending…"
+                      : "Send WhatsApp"}
+                </button>
+              </td>
             </tr>)}
           </tbody>
         </table>

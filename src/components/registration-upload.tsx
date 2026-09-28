@@ -85,8 +85,16 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
 
       <div className="admin-upload-example-row">
         <span>Example File Format</span>
-        <a href="/templates/bbc-registration-upload-template.xlsx" download>Excel Format</a>
-        <small>Download the Excel template, fill the rows under the existing headings, save it, then upload the same file below.</small>
+        <a
+          href={eventId ? `/api/admin/registration-template?eventId=${encodeURIComponent(eventId)}` : "#"}
+          download
+          aria-disabled={!eventId}
+          onClick={(event) => { if (!eventId) event.preventDefault(); }}
+        >Excel Format</a>
+        <small>
+          Download the template after selecting the event. The headings and price formulas are fixed.
+          Fill the editable fields only; Participation Fees and Amount Paid calculate automatically from the selected event pricing.
+        </small>
       </div>
 
       <form className="admin-upload-form" onSubmit={submit}>
@@ -115,8 +123,12 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
 
       <div className="admin-upload-columns">
         <strong>File columns</strong>
-        <p>Primary Member, Additional Participants, Email, WhatsApp Number, Billing Details, Participation Quantity, Standee Quantity, Company Presentation, Amount Paid.</p>
-        <small>Separate additional participant names with <b>|</b>. Use Yes/No for Company Presentation. Participation Quantity must match the total number of names. Enter Amount Paid in rupees, for example <b>40710</b>.</small>
+        <p>Primary Member, Additional Participants, Email, WhatsApp Number, Billing Details, Participation Fees, Standee Quantity, Company Presentation, Amount Paid.</p>
+        <small>
+          Separate additional participant names with <b>|</b>. Use Yes/No for Company Presentation.
+          <b>Participation Fees</b> is calculated automatically from the number of names and the event fee.
+          <b> Amount Paid</b> is also calculated automatically from participation, standee quantity and company presentation.
+        </small>
       </div>
 
       {message && <div className={"admin-upload-message" + (rowErrors.length ? " error" : "")} role="status">{message}</div>}

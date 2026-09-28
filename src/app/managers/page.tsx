@@ -71,7 +71,6 @@ export default async function ManagersPage() {
       </a>
       <nav className="admin-nav">
         <a href="/dashboard">Dashboard</a>
-        <a href="/members">Members</a>
         <a className="active" href="/managers">Manager</a>
         <a href="/upload">Upload</a>
         <a className="mobile-scanner-nav" href="/scanner">Scanner</a>

@@ -9,6 +9,8 @@ type ImportResult = {
   primaryMember: string;
   participants: number;
   additionalParticipants: number;
+  participantNames: string[];
+  needsNames: boolean;
   whatsapp: string;
   passUrl: string;
   deliveryStatus: string;
@@ -23,6 +25,8 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
   const [rowErrors, setRowErrors] = useState<Array<{ row: number; error: string }>>([]);
   const [results, setResults] = useState<ImportResult[]>([]);
   const [sendingId, setSendingId] = useState<string | null>(null);
+  const [savingNamesId, setSavingNamesId] = useState<string | null>(null);
+  const [nameDrafts, setNameDrafts] = useState<Record<string, string[]>>({});
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -51,7 +55,12 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
         return;
       }
 
-      setResults(Array.isArray(data.results) ? data.results : []);
+      const importedResults: ImportResult[] = Array.isArray(data.results) ? data.results : [];
+      setResults(importedResults);
+      setNameDrafts(Object.fromEntries(importedResults.map((item) => [
+        item.registrationId,
+        item.participantNames?.length ? item.participantNames : [item.primaryMember],
+      ])));
       setMessage(String(data.count ?? 0) + " registration" + (data.count === 1 ? "" : "s") + " processed successfully.");
     } catch (error) {
       setMessage(error instanceof Error && error.name === "TimeoutError"
@@ -62,8 +71,48 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
     }
   }
 
+  async function savePassNames(result: ImportResult) {
+    if (savingNamesId) return;
+    const names = nameDrafts[result.registrationId] ?? result.participantNames;
+    if (!names || names.length !== result.participants || names.some((name) => !name.trim())) {
+      setMessage("Enter a name for every QR pass before saving.");
+      return;
+    }
+
+    setSavingNamesId(result.registrationId);
+    setMessage("");
+    try {
+      const response = await fetch("/api/admin/imported-pass-names", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ registrationId: result.registrationId, participantNames: names }),
+        signal: AbortSignal.timeout(20000),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setMessage(data.error || "The QR pass names could not be saved.");
+        return;
+      }
+
+      setResults((items) => items.map((item) =>
+        item.registrationId === result.registrationId
+          ? { ...item, participantNames: names, needsNames: false }
+          : item
+      ));
+      setMessage("QR pass names saved. The passes are ready to send.");
+    } catch {
+      setMessage("The QR pass names could not be saved. Please retry.");
+    } finally {
+      setSavingNamesId(null);
+    }
+  }
+
   async function sendWhatsApp(result: ImportResult) {
     if (sendingId || result.deliveryStatus === "accepted") return;
+    if (result.needsNames) {
+      setMessage("Enter and save all QR pass names before sending WhatsApp.");
+      return;
+    }
     setSendingId(result.registrationId);
     setMessage("");
 
@@ -179,6 +228,7 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
             <tr>
               <th>Primary member</th>
               <th>Additional Participants</th>
+              <th>Pass Names</th>
               <th>WhatsApp</th>
               <th>QR pass link</th>
               <th>Action</th>
@@ -188,6 +238,41 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
             {results.map((result) => <tr key={String(result.row) + "-" + result.passUrl}>
               <td><strong>{result.primaryMember}</strong>{result.existing && <small>Already imported</small>}</td>
               <td>{result.additionalParticipants}</td>
+              <td>
+                {result.participants > 1 ? <div className="admin-upload-pass-names">
+                  <div className="admin-upload-pass-name-primary">
+                    <span>Pass 1</span>
+                    <strong>{result.primaryMember}</strong>
+                  </div>
+                  {Array.from({ length: result.participants - 1 }, (_, index) => {
+                    const names = nameDrafts[result.registrationId] ?? result.participantNames;
+                    return <label key={index}>
+                      <span>Pass {index + 2} Name</span>
+                      <input
+                        value={names?.[index + 1] ?? ""}
+                        disabled={!result.needsNames}
+                        onChange={(event) => {
+                          const value = event.target.value;
+                          setNameDrafts((current) => {
+                            const next = [...(current[result.registrationId] ?? result.participantNames)];
+                            next[index + 1] = value;
+                            return { ...current, [result.registrationId]: next };
+                          });
+                        }}
+                        placeholder={"Participant " + (index + 2) + " name"}
+                      />
+                    </label>;
+                  })}
+                  {result.needsNames && <button
+                    type="button"
+                    className="admin-upload-save-names"
+                    disabled={savingNamesId === result.registrationId}
+                    onClick={() => void savePassNames(result)}
+                  >
+                    {savingNamesId === result.registrationId ? "Saving…" : "Save Names"}
+                  </button>}
+                </div> : <span>{result.primaryMember}</span>}
+              </td>
               <td>{result.whatsapp}</td>
               <td><button type="button" className="admin-upload-copy" onClick={() => void copyLink(result.passUrl)}>Copy pass link</button></td>
               <td>

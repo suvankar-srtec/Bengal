@@ -1548,3 +1548,43 @@ body{font-size:14px;line-height:1.5}
   .admin-upload-form>button,.admin-upload-template{width:100%}
   .admin-upload-card-head,.admin-upload-results-head{flex-direction:column}
 }
+
+
+/* Upload page example-file row */
+.admin-upload-example-row{
+  display:grid;
+  grid-template-columns:auto auto 1fr;
+  align-items:center;
+  gap:10px 14px;
+  margin-top:18px;
+  padding:12px 14px;
+  border:1px solid #e1e7ea;
+  border-radius:8px;
+  background:#f8fafb;
+}
+.admin-upload-example-row>span{
+  font-size:12px;
+  font-weight:700;
+  color:var(--ink);
+}
+.admin-upload-example-row>a{
+  font-size:12px;
+  font-weight:800;
+  color:var(--coral);
+  text-decoration:underline;
+  text-underline-offset:2px;
+  white-space:nowrap;
+}
+.admin-upload-example-row>small{
+  color:var(--muted);
+  font-size:10.5px;
+  line-height:1.5;
+}
+@media(max-width:760px){
+  .admin-upload-example-row{
+    grid-template-columns:1fr auto;
+  }
+  .admin-upload-example-row>small{
+    grid-column:1/-1;
+  }
+}

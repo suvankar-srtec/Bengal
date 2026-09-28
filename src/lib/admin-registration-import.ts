@@ -107,23 +107,36 @@ function spreadsheetColumnIndex(reference: string) {
   ) - 1;
 }
 
+function tagPattern(name: string) {
+  return "(?:[A-Za-z_][\\w.-]*:)?" + name;
+}
+
 function parseXlsx(buffer: Buffer) {
   const zip = findZipEntries(buffer);
+  const si = tagPattern("si");
+  const t = tagPattern("t");
+  const rowTag = tagPattern("row");
+  const cellTag = tagPattern("c");
+  const valueTag = tagPattern("v");
+  const inlineTag = tagPattern("is");
+  const sheetTag = tagPattern("sheet");
+  const relationshipTag = tagPattern("Relationship");
 
   const sharedXml = zip.readEntry("xl/sharedStrings.xml")?.toString("utf8") ?? "";
-  const sharedStrings = [...sharedXml.matchAll(/<si\b[^>]*>([\s\S]*?)<\/si>/g)].map((match) =>
-    [...match[1].matchAll(/<t\b[^>]*>([\s\S]*?)<\/t>/g)]
+  const sharedStrings = [...sharedXml.matchAll(new RegExp("<" + si + "\\b[^>]*>([\\s\\S]*?)<\\/" + si + ">", "g"))].map((match) =>
+    [...match[1].matchAll(new RegExp("<" + t + "\\b[^>]*>([\\s\\S]*?)<\\/" + t + ">", "g"))]
       .map((part) => decodeXml(part[1]))
       .join(""),
   );
 
   let worksheetPath = "xl/worksheets/sheet1.xml";
   const workbookXml = zip.readEntry("xl/workbook.xml")?.toString("utf8") ?? "";
-  const relationshipId = workbookXml.match(/<sheet\b[^>]*\br:id="([^"]+)"/)?.[1];
+  const sheetMatch = workbookXml.match(new RegExp("<" + sheetTag + "\\b([^>]*)>", "i"));
+  const relationshipId = sheetMatch?.[1].match(/(?:^|\s)(?:[A-Za-z_][\w.-]*:)?id="([^"]+)"/)?.[1];
 
   if (relationshipId) {
     const relationships = zip.readEntry("xl/_rels/workbook.xml.rels")?.toString("utf8") ?? "";
-    for (const match of relationships.matchAll(/<Relationship\b([^>]*)\/?>/g)) {
+    for (const match of relationships.matchAll(new RegExp("<" + relationshipTag + "\\b([^>]*)\\/?\\s*>", "g"))) {
       const attributes = match[1];
       const id = attributes.match(/\bId="([^"]+)"/)?.[1];
       const target = attributes.match(/\bTarget="([^"]+)"/)?.[1];
@@ -140,27 +153,35 @@ function parseXlsx(buffer: Buffer) {
   if (!sheetXml) throw new Error("The first Excel worksheet could not be read.");
 
   const rows: string[][] = [];
-  for (const rowMatch of sheetXml.matchAll(/<row\b[^>]*>([\s\S]*?)<\/row>/g)) {
+  const rowRegex = new RegExp("<" + rowTag + "\\b([^>]*)>([\\s\\S]*?)<\\/" + rowTag + ">", "g");
+  const cellRegex = new RegExp("<" + cellTag + "\\b([^>]*?)(?:\\/\\s*>|>([\\s\\S]*?)<\\/" + cellTag + ">)", "g");
+
+  for (const rowMatch of sheetXml.matchAll(rowRegex)) {
     const row: string[] = [];
-    for (const cellMatch of rowMatch[1].matchAll(/<c\b([^>]*)>([\s\S]*?)<\/c>/g)) {
-      const attributes = cellMatch[1];
-      const body = cellMatch[2];
+    const rowBody = rowMatch[2];
+
+    for (const cellMatch of rowBody.matchAll(cellRegex)) {
+      const attributes = cellMatch[1] ?? "";
+      const body = cellMatch[2] ?? "";
       const reference = attributes.match(/\br="([^"]+)"/)?.[1] ?? "";
       const index = spreadsheetColumnIndex(reference);
       if (index < 0) continue;
 
       const type = attributes.match(/\bt="([^"]+)"/)?.[1] ?? "";
-      const raw = body.match(/<v>([\s\S]*?)<\/v>/)?.[1] ?? "";
-      const inline = body.match(/<is>[\s\S]*?<t\b[^>]*>([\s\S]*?)<\/t>[\s\S]*?<\/is>/)?.[1];
+      const raw = body.match(new RegExp("<" + valueTag + ">([\\s\\S]*?)<\\/" + valueTag + ">", "i"))?.[1] ?? "";
+      const inlineBlock = body.match(new RegExp("<" + inlineTag + "\\b[^>]*>([\\s\\S]*?)<\\/" + inlineTag + ">", "i"))?.[1] ?? "";
+      const inline = [...inlineBlock.matchAll(new RegExp("<" + t + "\\b[^>]*>([\\s\\S]*?)<\\/" + t + ">", "g"))]
+        .map((part) => decodeXml(part[1]))
+        .join("");
 
-      row[index] = type === "s"
-        ? sharedStrings[Number(raw)] ?? ""
-        : inline !== undefined
-          ? decodeXml(inline)
-          : decodeXml(raw);
+      if (type === "s") row[index] = sharedStrings[Number(raw)] ?? "";
+      else if (type === "inlineStr") row[index] = inline;
+      else row[index] = decodeXml(raw);
     }
+
     rows.push(row);
   }
+
   return rows;
 }
 
@@ -169,17 +190,29 @@ function normalizeHeader(value: string) {
 }
 
 function rowsToObjects(rows: string[][]): ImportRow[] {
-  const nonEmpty = rows.filter((row) => row.some((cell) => String(cell ?? "").trim()));
-  if (!nonEmpty.length) return [];
+  const firstNonEmpty = rows.findIndex((row) => row.some((cell) => String(cell ?? "").trim()));
+  if (firstNonEmpty < 0) return [];
 
-  const headers = nonEmpty[0].map((cell) => normalizeHeader(String(cell ?? "")));
+  const headers = rows[firstNonEmpty].map((cell) => normalizeHeader(String(cell ?? "")));
   if (!headers.some(Boolean)) throw new Error("The file does not contain a header row.");
 
-  return nonEmpty.slice(1).map((row) => Object.fromEntries(
-    headers
-      .map((header, index) => [header, String(row[index] ?? "").trim()] as const)
-      .filter(([header]) => Boolean(header)),
-  ));
+  const result: ImportRow[] = [];
+  for (let index = firstNonEmpty + 1; index < rows.length; index += 1) {
+    const row = rows[index];
+    const hasData = row.some((cell) => String(cell ?? "").trim());
+
+    // The import table is expected to be contiguous. Stop at the first blank row
+    // so notes or instructions below the table are not treated as registrations.
+    if (!hasData) break;
+
+    result.push(Object.fromEntries(
+      headers
+        .map((header, columnIndex) => [header, String(row[columnIndex] ?? "").trim()] as const)
+        .filter(([header]) => Boolean(header)),
+    ));
+  }
+
+  return result;
 }
 
 export function parseRegistrationImport(filename: string, buffer: Buffer) {

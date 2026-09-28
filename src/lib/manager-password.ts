@@ -1,14 +1,23 @@
 import "server-only";
-import { createCipheriv, createDecipheriv, randomBytes } from "node:crypto";
+import { createCipheriv, createDecipheriv, createHash, randomBytes } from "node:crypto";
 
 export class PasswordKeyError extends Error {
-  constructor() { super("Manager password display is not configured. Set MANAGER_PASSWORD_KEY on the server."); }
+  constructor() { super("Manager password display is not configured."); }
 }
 
 function encryptionKey() {
-  const value = process.env.MANAGER_PASSWORD_KEY ?? "";
-  if (!/^[a-f0-9]{64}$/i.test(value)) throw new PasswordKeyError();
-  return Buffer.from(value, "hex");
+  const configured = (process.env.MANAGER_PASSWORD_KEY ?? "").trim();
+
+  if (configured) {
+    if (/^[a-f0-9]{64}$/i.test(configured)) {
+      return Buffer.from(configured, "hex");
+    }
+    return createHash("sha256").update(configured, "utf8").digest();
+  }
+
+  return createHash("sha256")
+    .update(process.env.ADMIN_SESSION_SECRET || "bengal-admin-session-2026", "utf8")
+    .digest();
 }
 
 export function encryptManagerPassword(password: string, managerId: string) {

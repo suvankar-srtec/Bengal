@@ -1928,14 +1928,14 @@ body{font-size:14px;line-height:1.5}
 
 /* Public event refinements */
 .public-event-page .event-info h1{
-  font-size:40px;
-  line-height:1.28;
-  letter-spacing:-1.2px;
+  font-size:32px;
+  line-height:1.25;
+  letter-spacing:-.8px;
 }
 .public-event-page .event-info h1>span{
-  font-size:40px;
-  line-height:1.28;
-  letter-spacing:-1.2px;
+  font-size:32px;
+  line-height:1.25;
+  letter-spacing:-.8px;
   margin-top:6px;
 }
 .form-heading-logo{
@@ -1947,7 +1947,7 @@ body{font-size:14px;line-height:1.5}
 @media(max-width:760px){
   .public-event-page .event-info h1,
   .public-event-page .event-info h1>span{
-    font-size:34px;
+    font-size:28px;
   }
   .form-heading-logo{
     width:88px;

@@ -46,7 +46,6 @@ export default async function CreateEventPage({
       </a>
       <nav className="admin-nav">
         <a href="/dashboard">Dashboard</a>
-        <a href="/members">Members</a>
         <a href="/managers">Manager</a>
         <a href="/upload">Upload</a>
         <a className="mobile-scanner-nav" href="/scanner">Scanner</a>

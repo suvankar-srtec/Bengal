@@ -20,6 +20,7 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
   const [file, setFile] = useState<File | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
+  const [successPopup, setSuccessPopup] = useState("");
   const [rowErrors, setRowErrors] = useState<Array<{ row: number; error: string }>>([]);
   const [results, setResults] = useState<ImportResult[]>([]);
   const [sendingId, setSendingId] = useState<string | null>(null);
@@ -30,6 +31,7 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
 
     setBusy(true);
     setMessage("");
+    setSuccessPopup("");
     setRowErrors([]);
     setResults([]);
 
@@ -53,7 +55,8 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
 
       const importedResults: ImportResult[] = Array.isArray(data.results) ? data.results : [];
       setResults(importedResults);
-      setMessage(String(data.count ?? 0) + " registration" + (data.count === 1 ? "" : "s") + " processed successfully.");
+      setMessage("");
+      setSuccessPopup(String(data.count ?? 0) + " registration" + (data.count === 1 ? "" : "s") + " processed successfully.");
     } catch (error) {
       setMessage(error instanceof Error && error.name === "TimeoutError"
         ? "The upload took too long. Please retry."
@@ -101,6 +104,14 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
   }
 
   return <div className="admin-upload-stack">
+    {successPopup && <div className="admin-upload-success-popup" role="status" aria-live="polite">
+      <div className="admin-upload-success-popup-icon" aria-hidden="true">✓</div>
+      <div>
+        <strong>Success</strong>
+        <p>{successPopup}</p>
+      </div>
+      <button type="button" onClick={() => setSuccessPopup("")} aria-label="Close success message">×</button>
+    </div>}
     <section className="admin-upload-card">
       <div className="admin-upload-card-head">
         <div>
@@ -108,20 +119,6 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
           <h2>Upload Excel or CSV</h2>
           <p>Upload the Razorpay payment export. QR passes are generated only for captured Participation Fees rows.</p>
         </div>
-      </div>
-
-      <div className="admin-upload-example-row">
-        <span>Example File Format</span>
-        <a
-          href={eventId ? `/api/admin/registration-template?eventId=${encodeURIComponent(eventId)}` : "#"}
-          download
-          aria-disabled={!eventId}
-          onClick={(event) => { if (!eventId) event.preventDefault(); }}
-        >Excel Format</a>
-        <small>
-          Download the template after selecting the event. The headings and price formulas are fixed.
-          Fill the editable fields only; Participation Fees and Amount Paid calculate automatically from the selected event pricing.
-        </small>
       </div>
 
       <form className="admin-upload-form" onSubmit={submit}>
@@ -147,16 +144,6 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
           {busy ? "Uploading and generating passes…" : "Upload registrations"}
         </button>
       </form>
-
-      <div className="admin-upload-columns">
-        <strong>Required Razorpay columns</strong>
-        <p>payment date, item name, item quantity, total payment amount, payment status, member_name, email, phone, billing_details.</p>
-        <small>
-          The importer ignores non-participation rows and non-captured payments.
-          A QR pass registration is created only when <b>item name = Participation Fees</b> and <b>payment status = captured</b>.
-          When item quantity is greater than 1, additional QR passes are named automatically from the primary member, for example <b>Primary Name +1</b>, <b>Primary Name +2</b>.
-        </small>
-      </div>
 
       {message && <div className={"admin-upload-message" + (rowErrors.length ? " error" : "")} role="status">{message}</div>}
 

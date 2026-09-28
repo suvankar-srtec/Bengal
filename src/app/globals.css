@@ -1614,10 +1614,14 @@ body{font-size:14px;line-height:1.5}
   border:1px solid #dce2e6;
   border-radius:8px;
   background:#fff;
-  padding:8px 10px 7px;
+  padding:8px 10px;
+  display:flex;
+  align-items:center;
+  gap:10px;
 }
 .admin-upload-file-box input[type=file]{
-  width:100%;
+  flex:1;
+  min-width:0;
   min-height:28px;
   border:0;
   border-radius:0;
@@ -1625,8 +1629,42 @@ body{font-size:14px;line-height:1.5}
   background:transparent;
 }
 .admin-upload-file-box small{
-  display:block;
-  margin-top:5px;
+  flex-shrink:0;
+  margin:0;
   color:var(--muted);
   font-size:10.5px;
+  white-space:nowrap;
+}
+.admin-upload-pass-actions{
+  display:flex;
+  align-items:center;
+  gap:7px;
+}
+.admin-upload-preview-link{
+  width:34px;
+  height:34px;
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  border:1px solid #d9e1e5;
+  border-radius:7px;
+  background:#fff;
+  color:var(--ink);
+  text-decoration:none;
+}
+.admin-upload-preview-link:hover{
+  border-color:var(--coral);
+  color:var(--coral);
+}
+.admin-upload-preview-link svg{
+  width:18px;
+  height:18px;
+}
+@media(max-width:700px){
+  .admin-upload-file-box{
+    flex-wrap:wrap;
+  }
+  .admin-upload-file-box small{
+    white-space:normal;
+  }
 }

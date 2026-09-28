@@ -7,6 +7,7 @@ type ImportResult = {
   row: number;
   primaryMember: string;
   participants: number;
+  additionalParticipants: number;
   whatsapp: string;
   passUrl: string;
   existing: boolean;
@@ -152,7 +153,7 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
           <thead>
             <tr>
               <th>Primary member</th>
-              <th>Participants</th>
+              <th>Additional Participants</th>
               <th>WhatsApp</th>
               <th>QR pass link</th>
               <th>Action</th>
@@ -161,7 +162,7 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
           <tbody>
             {results.map((result) => <tr key={String(result.row) + "-" + result.passUrl}>
               <td><strong>{result.primaryMember}</strong>{result.existing && <small>Already imported</small>}</td>
-              <td>{result.participants}</td>
+              <td>{result.additionalParticipants}</td>
               <td>{result.whatsapp}</td>
               <td><button type="button" className="admin-upload-copy" onClick={() => void copyLink(result.passUrl)}>Copy pass link</button></td>
               <td><a className="admin-upload-whatsapp" href={whatsappUrl(result)} target="_blank" rel="noreferrer">Open WhatsApp</a></td>

@@ -178,8 +178,7 @@ export default async function ReportPage({
       <nav className="admin-nav">
         <a href="/dashboard">Dashboard</a>
         {session.role === "admin" && <a href="/members">Members</a>}
-        {session.role === "admin" && <a href="/managers">Manager</a>
-        <a href="/upload">Upload</a>}
+        {session.role === "admin" && <a href="/managers">Manager</a>}
         {session.role === "admin" && <a href="/upload">Upload</a>}
         <a className="mobile-scanner-nav" href="/scanner">Scanner</a>
         {session.role === "admin" ? <div className="admin-nav-group">

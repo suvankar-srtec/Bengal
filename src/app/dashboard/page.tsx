@@ -50,7 +50,7 @@ export default async function DashboardPage() {
         e.created_at,
         COUNT(r.id)::text AS registrations,
         COALESCE(SUM(r.participation_quantity), 0)::text AS participants,
-        COALESCE(SUM(r.total_paise) FILTER (WHERE r.payment_status = 'paid'), 0)::text AS revenue
+        COALESCE(SUM(COALESCE(r.amount_paid_paise, r.total_paise)) FILTER (WHERE r.payment_status = 'paid'), 0)::text AS revenue
       FROM public.bbc_event_content e
       LEFT JOIN public.bbc_event_registrations r ON r.event_id = e.id::text
       ${scope}
@@ -87,8 +87,7 @@ export default async function DashboardPage() {
       </a>
       <nav className="admin-nav">
         <a className="active" href="/dashboard">Dashboard</a>
-        {session.role === "admin" && <a href="/members">Members</a>}
-        {session.role === "admin" && <a href="/managers">Manager</a>}
+                {session.role === "admin" && <a href="/managers">Manager</a>}
         {session.role === "admin" && <a href="/upload">Upload</a>}
         <a className="mobile-scanner-nav" href="/scanner">Scanner</a>
         {session.role === "admin" ? <div className="admin-nav-group">

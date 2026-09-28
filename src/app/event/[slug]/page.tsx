@@ -62,8 +62,9 @@ export default async function PublicEventPage({
 
     <header className="site-header public-event-header">
       <div className="header-inner">
-        <div className="brand" aria-label="Bengal Business Council">
+        <div className="brand public-event-brand" aria-label="Bengal Business Council">
           <img className="bbc-logo bbc-logo-header" src={BBC_LOGO_DATA_URL} alt="Bengal Business Council" />
+          <span className="public-event-header-title">SPOT REGISTRATION</span>
         </div>
       </div>
     </header>

@@ -51,7 +51,7 @@ export async function PATCH(request: Request, context: Context) {
       if (size > 4096) { await reader.cancel(); return json({ error: "Request too large." }, 413); }
       chunks.push(part.value);
     }
-    const body = z.object({ password: z.string().min(1).max(128) }).parse(JSON.parse(Buffer.concat(chunks).toString("utf8")));
+    const body = z.object({ password: z.string().min(1) }).parse(JSON.parse(Buffer.concat(chunks).toString("utf8")));
     const encrypted = encryptManagerPassword(body.password, id);
     const result = await getDatabase().query(`UPDATE public.bbc_managers
       SET password_hash = $2, password_encrypted = $3, updated_at = NOW() WHERE id = $1`,
@@ -59,7 +59,7 @@ export async function PATCH(request: Request, context: Context) {
     if (!result.rowCount) return json({ error: "Manager not found." }, 404);
     return json({ ok: true });
   } catch (error) {
-    if (error instanceof z.ZodError || error instanceof SyntaxError) return json({ error: "Enter a password of 1–128 characters." }, 400);
+    if (error instanceof z.ZodError || error instanceof SyntaxError) return json({ error: "Enter a password." }, 400);
     return json({ error: error instanceof PasswordKeyError ? error.message : "Could not update password. Please retry." }, 503);
   }
 }

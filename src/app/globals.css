@@ -1608,3 +1608,25 @@ body{font-size:14px;line-height:1.5}
     width:auto;
   }
 }
+
+
+.admin-upload-file-box{
+  border:1px solid #dce2e6;
+  border-radius:8px;
+  background:#fff;
+  padding:8px 10px 7px;
+}
+.admin-upload-file-box input[type=file]{
+  width:100%;
+  min-height:28px;
+  border:0;
+  border-radius:0;
+  padding:0;
+  background:transparent;
+}
+.admin-upload-file-box small{
+  display:block;
+  margin-top:5px;
+  color:var(--muted);
+  font-size:10.5px;
+}

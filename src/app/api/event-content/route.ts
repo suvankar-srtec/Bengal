@@ -22,6 +22,7 @@ function values(data: ReturnType<typeof eventContentSchema.parse>) {
     data.eventTime,
     data.eventEndTime,
     data.organizer,
+    data.venue,
     data.aboutTagline1,
     data.aboutParagraph1,
     data.aboutParagraph2,
@@ -56,6 +57,7 @@ export async function POST(request: Request) {
          AND event_time = $4::time
          AND event_end_time = $5::time
          AND organizer = $6
+         AND venue = $7
        ORDER BY id
        LIMIT 1`,
       [
@@ -65,6 +67,7 @@ export async function POST(request: Request) {
         parsed.data.eventTime,
         parsed.data.eventEndTime,
         parsed.data.organizer,
+        parsed.data.venue,
       ],
     );
 
@@ -81,13 +84,13 @@ export async function POST(request: Request) {
     const result = await database.query<{ id: number }>(
       `INSERT INTO public.bbc_event_content (
         section_label, title_bn, title_en, tagline_line_1, tagline_line_2,
-        event_date, event_time, event_end_time, organizer, about_title, about_paragraph_1, about_paragraph_2,
+        event_date, event_time, event_end_time, organizer, venue, about_title, about_paragraph_1, about_paragraph_2,
         bengali_paragraph_1, bengali_paragraph_2,
         participation_unit_paise, standee_unit_paise, presentation_unit_paise,
         meal_option, snacks_unit_paise, lunch_unit_paise, dinner_unit_paise, included_meals
       ) VALUES (
-        $1, $2, $3, $4, $5, $6::date, $7::time, $8::time, $9, $10, $11, $12, $13, $14,
-        $15, $16, $17, $18, 0, 0, 0, $19
+        $1, $2, $3, $4, $5, $6::date, $7::time, $8::time, $9, $10, $11, $12, $13, $14, $15,
+        $16, $17, $18, $19, 0, 0, 0, $20
       )
       RETURNING id`,
       [
@@ -138,21 +141,22 @@ export async function PUT(request: Request) {
         event_time = $7::time,
         event_end_time = $8::time,
         organizer = $9,
-        about_title = $10,
-        about_paragraph_1 = $11,
-        about_paragraph_2 = $12,
-        bengali_paragraph_1 = $13,
-        bengali_paragraph_2 = $14,
-        participation_unit_paise = $15,
-        standee_unit_paise = $16,
-        presentation_unit_paise = $17,
-        meal_option = $18,
+        venue = $10,
+        about_title = $11,
+        about_paragraph_1 = $12,
+        about_paragraph_2 = $13,
+        bengali_paragraph_1 = $14,
+        bengali_paragraph_2 = $15,
+        participation_unit_paise = $16,
+        standee_unit_paise = $17,
+        presentation_unit_paise = $18,
+        meal_option = $19,
         snacks_unit_paise = 0,
         lunch_unit_paise = 0,
         dinner_unit_paise = 0,
-        included_meals = $19,
+        included_meals = $20,
         updated_at = NOW()
-      WHERE id = $20`,
+      WHERE id = $21`,
       [
         ...values(parsed.data),
         parsed.data.participationPaise,

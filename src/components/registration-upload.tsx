@@ -21,9 +21,9 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
   const [results, setResults] = useState<ImportResult[]>([]);
 
   const template = useMemo(() => [
-    "Primary Member,Additional Participants,Email,WhatsApp Number,Billing Details,Participation Quantity,Standee Quantity,Company Presentation",
-    "Suvankar Das,Amit Dey|Rehan,suvankar@example.com,7980729034,ABCDE1234F,3,1,Yes",
-    "Raja,,raja@example.com,9831134311,ABCDE1234G,1,0,No",
+    "Primary Member,Additional Participants,Email,WhatsApp Number,Billing Details,Participation Quantity,Standee Quantity,Company Presentation,Amount Paid",
+    "Suvankar Das,Amit Dey|Rehan,suvankar@example.com,7980729034,ABCDE1234F,3,1,Yes,40710",
+    "Raja,,raja@example.com,9831134311,ABCDE1234G,1,0,No,2560",
   ].join("\r\n"), []);
 
   function downloadTemplate() {
@@ -126,8 +126,8 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
 
       <div className="admin-upload-columns">
         <strong>File columns</strong>
-        <p>Primary Member, Additional Participants, Email, WhatsApp Number, Billing Details, Participation Quantity, Standee Quantity, Company Presentation.</p>
-        <small>Separate additional participant names with <b>|</b>. Use Yes/No for Company Presentation. Participation Quantity must match the total number of names.</small>
+        <p>Primary Member, Additional Participants, Email, WhatsApp Number, Billing Details, Participation Quantity, Standee Quantity, Company Presentation, Amount Paid.</p>
+        <small>Separate additional participant names with <b>|</b>. Use Yes/No for Company Presentation. Participation Quantity must match the total number of names. Enter Amount Paid in rupees, for example <b>40710</b>.</small>
       </div>
 
       {message && <div className={"admin-upload-message" + (rowErrors.length ? " error" : "")} role="status">{message}</div>}

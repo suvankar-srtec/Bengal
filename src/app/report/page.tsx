@@ -219,21 +219,21 @@ export default async function ReportPage({
                   ].join(" ");
 
                   return <tr key={registration.id} data-report-row data-report-search={searchText}>
-                    <td className="report-date-column">{dateLabel(registration.created_at)}</td>
-                    <td><strong>{registration.member_name}</strong></td>
-                    <td>
+                    <td className="report-date-column" data-label="Date">{dateLabel(registration.created_at)}</td>
+                    <td data-label="Primary member"><strong>{registration.member_name}</strong></td>
+                    <td data-label="Participants">
                       <div className="report-participant-names">
                         {participants.map((name, index) => <span key={`${registration.id}-${index}`}>{name}</span>)}
                       </div>
                     </td>
-                    <td>
+                    <td data-label="WhatsApp">
                       {session.role === "manager"
                         ? <ManagerPhoneEditor registrationId={registration.id} phone={registration.phone} />
                         : registration.phone}
                     </td>
-                    {session.role === "manager" && <td><ManagerWhatsAppSend registrationId={registration.id} /></td>}
-                    <td>{includedMeals.length ? includedMeals.map((meal) => meal[0].toUpperCase() + meal.slice(1)).join(", ") : "None"}</td>
-                    <td>
+                    {session.role === "manager" && <td data-label="Action"><ManagerWhatsAppSend registrationId={registration.id} /></td>}
+                    <td data-label="Meals included">{includedMeals.length ? includedMeals.map((meal) => meal[0].toUpperCase() + meal.slice(1)).join(", ") : "None"}</td>
+                    <td data-label="Provided meal">
                       <div className="report-provided-meals">
                         {participants.map((name, index) => {
                           const participantMeals = (registration.provided_meals ?? [])

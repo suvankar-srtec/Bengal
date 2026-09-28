@@ -1588,3 +1588,13 @@ body{font-size:14px;line-height:1.5}
     grid-column:1/-1;
   }
 }
+
+
+.admin-upload-pass-names{display:grid;gap:8px;min-width:210px}
+.admin-upload-pass-name-primary{display:flex;align-items:center;gap:8px;font-size:11px}
+.admin-upload-pass-name-primary span,.admin-upload-pass-names label>span{color:var(--muted);font-size:10px}
+.admin-upload-pass-names label{display:grid;gap:4px}
+.admin-upload-pass-names input{height:34px;border:1px solid #d9e1e5;border-radius:7px;padding:0 9px;font-size:11px;min-width:190px}
+.admin-upload-pass-names input:disabled{background:#f7f9fa;color:var(--ink)}
+.admin-upload-save-names{justify-self:start;min-height:32px;border:0;border-radius:7px;background:var(--coral);color:#fff;padding:0 10px;font-size:10.5px;font-weight:800}
+.admin-upload-whatsapp:disabled{opacity:.55;cursor:not-allowed}

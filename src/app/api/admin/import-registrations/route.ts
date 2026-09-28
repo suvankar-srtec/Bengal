@@ -171,7 +171,7 @@ export async function POST(request: Request) {
   }
 
   const client = await database.connect();
-  const resultRows: Array<{ row: number; primaryMember: string; participants: number; additionalParticipants: number; whatsapp: string; passUrl: string; existing: boolean }> = [];
+  const resultRows: Array<{ row: number; registrationId: string; primaryMember: string; participants: number; additionalParticipants: number; whatsapp: string; passUrl: string; deliveryStatus: string; existing: boolean }> = [];
   const origin = (process.env.APP_PUBLIC_URL || new URL(request.url).origin).replace(/\/+$/, "");
   const eventDate = event.event_date instanceof Date ? event.event_date.toISOString().slice(0, 10) : String(event.event_date).slice(0, 10);
 
@@ -223,19 +223,21 @@ export async function POST(request: Request) {
         [registration.id, randomBytes(32).toString("hex")],
       );
 
-      const delivery = (await client.query<{ media_token: string }>(
-        "SELECT media_token FROM public.bbc_whatsapp_pass_deliveries WHERE registration_id = $1",
+      const delivery = (await client.query<{ media_token: string; status: string }>(
+        "SELECT media_token, status FROM public.bbc_whatsapp_pass_deliveries WHERE registration_id = $1",
         [registration.id],
       )).rows[0];
       if (!delivery) throw new Error("Pass link could not be generated.");
 
       resultRows.push({
         row: row.rowNumber,
+        registrationId: registration.id,
         primaryMember: row.memberName,
         participants: row.participantNames.length,
         additionalParticipants: Math.max(0, row.participantNames.length - 1),
         whatsapp: "+91" + row.phone,
         passUrl: origin + "/passes/" + delivery.media_token,
+        deliveryStatus: delivery.status,
         existing,
       });
     }

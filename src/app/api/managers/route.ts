@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { ADMIN_SESSION_COOKIE, hashManagerPassword, readAdminSession } from "@/lib/admin-auth";
 import { getDatabase } from "@/lib/db";
+import { encryptManagerPassword } from "@/lib/manager-password";
 
 export const runtime = "nodejs";
 
@@ -37,10 +38,11 @@ export async function POST(request: Request) {
     const event = await database.query("SELECT id FROM public.bbc_event_content WHERE id = $1", [eventId]);
     if (!event.rowCount) return NextResponse.json({ error: "Selected event no longer exists." }, { status: 404 });
 
+    const managerId = randomUUID();
     await database.query(
-      `INSERT INTO public.bbc_managers (id, user_id, password_hash, event_id)
-       VALUES ($1, $2, $3, $4)`,
-      [randomUUID(), userId, hashManagerPassword(password), eventId],
+      `INSERT INTO public.bbc_managers (id, user_id, password_hash, password_encrypted, event_id)
+       VALUES ($1, $2, $3, $4, $5)`,
+      [managerId, userId, hashManagerPassword(password), encryptManagerPassword(password, managerId), eventId],
     );
     return NextResponse.json({ ok: true }, { status: 201 });
   } catch (error) {

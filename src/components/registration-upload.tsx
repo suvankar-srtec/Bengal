@@ -9,8 +9,6 @@ type ImportResult = {
   primaryMember: string;
   participants: number;
   additionalParticipants: number;
-  participantNames: string[];
-  needsNames: boolean;
   whatsapp: string;
   passUrl: string;
   deliveryStatus: string;
@@ -25,9 +23,6 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
   const [rowErrors, setRowErrors] = useState<Array<{ row: number; error: string }>>([]);
   const [results, setResults] = useState<ImportResult[]>([]);
   const [sendingId, setSendingId] = useState<string | null>(null);
-  const [generatingPassKey, setGeneratingPassKey] = useState<string | null>(null);
-  const [nameDrafts, setNameDrafts] = useState<Record<string, string[]>>({});
-  const [generatedPasses, setGeneratedPasses] = useState<Record<string, boolean>>({});
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -58,16 +53,6 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
 
       const importedResults: ImportResult[] = Array.isArray(data.results) ? data.results : [];
       setResults(importedResults);
-      setNameDrafts(Object.fromEntries(importedResults.map((item) => [
-        item.registrationId,
-        item.participantNames?.length ? item.participantNames : [item.primaryMember],
-      ])));
-      setGeneratedPasses(Object.fromEntries(importedResults.flatMap((item) =>
-        (item.participantNames ?? []).map((name, index) => [
-          item.registrationId + ":" + String(index + 1),
-          Boolean(String(name || "").trim()),
-        ])
-      )));
       setMessage(String(data.count ?? 0) + " registration" + (data.count === 1 ? "" : "s") + " processed successfully.");
     } catch (error) {
       setMessage(error instanceof Error && error.name === "TimeoutError"
@@ -78,65 +63,8 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
     }
   }
 
-  function passImageUrl(result: ImportResult, participantNumber: number) {
-    const token = result.passUrl.split("/passes/")[1]?.split(/[?#]/)[0] ?? "";
-    return token ? "/api/passes/" + token + "/" + participantNumber + ".png" : "";
-  }
-
-  async function generatePass(result: ImportResult, participantNumber: number) {
-    const key = result.registrationId + ":" + participantNumber;
-    if (generatingPassKey) return;
-
-    const names = nameDrafts[result.registrationId] ?? result.participantNames;
-    const participantName = String(names?.[participantNumber - 1] ?? "").trim();
-    if (!participantName) {
-      setMessage("Enter the participant name before generating the QR pass.");
-      return;
-    }
-
-    setGeneratingPassKey(key);
-    setMessage("");
-    try {
-      const response = await fetch("/api/admin/imported-pass-names", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          registrationId: result.registrationId,
-          participantNumber,
-          participantName,
-        }),
-        signal: AbortSignal.timeout(20000),
-      });
-      const data = await response.json().catch(() => ({}));
-      if (!response.ok) {
-        setMessage(data.error || "The QR pass could not be generated.");
-        return;
-      }
-
-      const participantNames: string[] = Array.isArray(data.participantNames)
-        ? data.participantNames
-        : names;
-      setNameDrafts((current) => ({ ...current, [result.registrationId]: participantNames }));
-      setGeneratedPasses((current) => ({ ...current, [key]: true }));
-      setResults((items) => items.map((item) =>
-        item.registrationId === result.registrationId
-          ? { ...item, participantNames, needsNames: !Boolean(data.complete) }
-          : item
-      ));
-      setMessage("QR pass generated successfully.");
-    } catch {
-      setMessage("The QR pass could not be generated. Please retry.");
-    } finally {
-      setGeneratingPassKey(null);
-    }
-  }
-
   async function sendWhatsApp(result: ImportResult) {
     if (sendingId || result.deliveryStatus === "accepted") return;
-    if (result.needsNames) {
-      setMessage("Enter and save all QR pass names before sending WhatsApp.");
-      return;
-    }
     setSendingId(result.registrationId);
     setMessage("");
 
@@ -226,7 +154,7 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
         <small>
           The importer ignores non-participation rows and non-captured payments.
           A QR pass registration is created only when <b>item name = Participation Fees</b> and <b>payment status = captured</b>.
-          When item quantity is greater than 1, enter the additional QR pass names in the <b>Pass Names</b> fields below before sending WhatsApp.
+          When item quantity is greater than 1, additional QR passes are named automatically from the primary member, for example <b>Primary Name +1</b>, <b>Primary Name +2</b>.
         </small>
       </div>
 
@@ -241,7 +169,7 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
       <div className="admin-upload-results-head">
         <div>
           <h2>QR passes ready</h2>
-          <p>Review the generated passes, add participant names when required, then send the pass link through WhatsApp.</p>
+          <p>Review the generated pass bundle, then send the pass link through WhatsApp.</p>
         </div>
         <span>{results.length} ready</span>
       </div>
@@ -252,7 +180,6 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
             <tr>
               <th>Primary member</th>
               <th>Additional Participants</th>
-              <th>Pass Names</th>
               <th>WhatsApp</th>
               <th>QR pass link</th>
               <th>Action</th>
@@ -262,64 +189,6 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
             {results.map((result) => <tr key={String(result.row) + "-" + result.passUrl}>
               <td><strong>{result.primaryMember}</strong>{result.existing && <small>Already imported</small>}</td>
               <td>{result.additionalParticipants}</td>
-              <td>
-                {result.participants > 1 ? <div className="admin-upload-pass-names">
-                  <div className="admin-upload-pass-name-primary">
-                    <span>Pass 1</span>
-                    <strong>{result.primaryMember}</strong>
-                  </div>
-                  {Array.from({ length: result.participants - 1 }, (_, index) => {
-                    const participantNumber = index + 2;
-                    const key = result.registrationId + ":" + participantNumber;
-                    const names = nameDrafts[result.registrationId] ?? result.participantNames;
-                    const generated = Boolean(generatedPasses[key]);
-                    const previewUrl = passImageUrl(result, participantNumber);
-                    return <div className="admin-upload-pass-name-row" key={participantNumber}>
-                      <input
-                        value={names?.[index + 1] ?? ""}
-                        onChange={(event) => {
-                          const value = event.target.value;
-                          setNameDrafts((current) => {
-                            const next = [...(current[result.registrationId] ?? result.participantNames)];
-                            next[index + 1] = value;
-                            return { ...current, [result.registrationId]: next };
-                          });
-                          setGeneratedPasses((current) => ({ ...current, [key]: false }));
-                          setResults((items) => items.map((item) =>
-                            item.registrationId === result.registrationId
-                              ? { ...item, needsNames: true }
-                              : item
-                          ));
-                        }}
-                        placeholder="Name"
-                      />
-                      <button
-                        type="button"
-                        className="admin-upload-generate-qr"
-                        disabled={generatingPassKey === key}
-                        onClick={() => void generatePass(result, participantNumber)}
-                      >
-                        {generatingPassKey === key ? "Generating…" : "Generate QR"}
-                      </button>
-                      <a
-                        className={"admin-upload-preview" + (!generated || !previewUrl ? " disabled" : "")}
-                        href={generated && previewUrl ? previewUrl : undefined}
-                        target="_blank"
-                        rel="noreferrer"
-                        aria-label={"Preview QR pass " + participantNumber}
-                        aria-disabled={!generated || !previewUrl}
-                        onClick={(event) => { if (!generated || !previewUrl) event.preventDefault(); }}
-                        title="Preview QR pass"
-                      >
-                        <svg viewBox="0 0 24 24" aria-hidden="true">
-                          <path d="M2.5 12s3.4-5.5 9.5-5.5S21.5 12 21.5 12 18.1 17.5 12 17.5 2.5 12 2.5 12Z" fill="none" stroke="currentColor" strokeWidth="1.7"/>
-                          <circle cx="12" cy="12" r="2.6" fill="none" stroke="currentColor" strokeWidth="1.7"/>
-                        </svg>
-                      </a>
-                    </div>;
-                  })}
-                </div> : <span>{result.primaryMember}</span>}
-              </td>
               <td>{result.whatsapp}</td>
               <td><button type="button" className="admin-upload-copy" onClick={() => void copyLink(result.passUrl)}>Copy pass link</button></td>
               <td>

@@ -165,7 +165,7 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
               <td>{result.additionalParticipants}</td>
               <td>{result.whatsapp}</td>
               <td><button type="button" className="admin-upload-copy" onClick={() => void copyLink(result.passUrl)}>Copy pass link</button></td>
-              <td><a className="admin-upload-whatsapp" href={whatsappUrl(result)} target="_blank" rel="noreferrer">Open WhatsApp</a></td>
+              <td><a className="admin-upload-whatsapp" href={whatsappUrl(result)} target="_blank" rel="noreferrer">Send WhatsApp</a></td>
             </tr>)}
           </tbody>
         </table>

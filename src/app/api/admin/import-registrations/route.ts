@@ -171,7 +171,7 @@ export async function POST(request: Request) {
   }
 
   const client = await database.connect();
-  const resultRows: Array<{ row: number; primaryMember: string; participants: number; whatsapp: string; passUrl: string; existing: boolean }> = [];
+  const resultRows: Array<{ row: number; primaryMember: string; participants: number; additionalParticipants: number; whatsapp: string; passUrl: string; existing: boolean }> = [];
   const origin = (process.env.APP_PUBLIC_URL || new URL(request.url).origin).replace(/\/+$/, "");
   const eventDate = event.event_date instanceof Date ? event.event_date.toISOString().slice(0, 10) : String(event.event_date).slice(0, 10);
 
@@ -233,6 +233,7 @@ export async function POST(request: Request) {
         row: row.rowNumber,
         primaryMember: row.memberName,
         participants: row.participantNames.length,
+        additionalParticipants: Math.max(0, row.participantNames.length - 1),
         whatsapp: "+91" + row.phone,
         passUrl: origin + "/passes/" + delivery.media_token,
         existing,

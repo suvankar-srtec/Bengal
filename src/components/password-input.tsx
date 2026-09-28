@@ -12,6 +12,8 @@ export function PasswordInput({
   minLength,
   maxLength,
   autoFocus = false,
+  disabled = false,
+  onReveal,
 }: {
   id?: string;
   value: string;
@@ -22,8 +24,27 @@ export function PasswordInput({
   minLength?: number;
   maxLength?: number;
   autoFocus?: boolean;
+  disabled?: boolean;
+  onReveal?: () => boolean | Promise<boolean>;
 }) {
   const [visible, setVisible] = useState(false);
+  const [revealing, setRevealing] = useState(false);
+
+  async function toggleVisibility() {
+    if (disabled || revealing) return;
+
+    if (!visible && onReveal) {
+      setRevealing(true);
+      try {
+        const allowed = await onReveal();
+        if (!allowed) return;
+      } finally {
+        setRevealing(false);
+      }
+    }
+
+    setVisible((current) => !current);
+  }
 
   return <div className="password-input-wrap">
     <input
@@ -37,6 +58,7 @@ export function PasswordInput({
       minLength={minLength}
       maxLength={maxLength}
       autoFocus={autoFocus}
+      disabled={disabled}
     />
     <button
       className="password-visibility-toggle"
@@ -44,7 +66,8 @@ export function PasswordInput({
       aria-label={visible ? "Hide password" : "Show password"}
       aria-pressed={visible}
       title={visible ? "Hide password" : "Show password"}
-      onClick={() => setVisible((current) => !current)}
+      disabled={disabled || revealing}
+      onClick={() => void toggleVisibility()}
     >
       {visible ? (
         <svg viewBox="0 0 24 24" width="19" height="19" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

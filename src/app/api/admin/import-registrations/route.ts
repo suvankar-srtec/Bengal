@@ -42,6 +42,16 @@ function yes(raw: string) {
   return /^(?:1|true|yes|y)$/i.test(raw.trim());
 }
 
+function moneyRupees(raw: string) {
+  const value = Number(raw.replace(/[₹,\s]/g, ""));
+  return Number.isFinite(value) && value >= 0 ? value : NaN;
+}
+
+function isCapturedParticipationRow(row: Record<string, string>) {
+  return field(row, ["item_name"]).trim().toLowerCase() === "participation fees"
+    && field(row, ["payment_status"]).trim().toLowerCase() === "captured";
+}
+
 export async function POST(request: Request) {
   const session = readAdminSession((await cookies()).get(ADMIN_SESSION_COOKIE)?.value);
   if (!session) return Response.json({ error: "Sign in as an administrator." }, { status: 401 });
@@ -87,12 +97,94 @@ export async function POST(request: Request) {
     amountPaidPaise: number;
     totalPaise: number;
     key: string;
+    source: "registration" | "payment_export";
+    namesComplete: boolean;
   }> = [];
   const rowErrors: Array<{ row: number; error: string }> = [];
   const keys = new Set<string>();
 
+  const paymentExport = rows.some((row) =>
+    "item_name" in row || "payment_status" in row || "item_quantity" in row || "total_payment_amount" in row,
+  );
+  let matchingPaymentRows = 0;
+
   rows.forEach((row, index) => {
     const rowNumber = index + 2;
+
+    if (paymentExport) {
+      if (!isCapturedParticipationRow(row)) return;
+      matchingPaymentRows += 1;
+
+      const memberName = field(row, ["member_name", "primary_member", "name"]);
+      const email = field(row, ["email", "email_address"]);
+      const whatsapp = phone(field(row, ["phone", "whatsapp_number", "whatsapp", "mobile", "mobile_number"]));
+      const billingDetails = field(row, ["billing_details", "billing", "gst_pan", "gstin_pan", "gst_pan_number"]).toUpperCase();
+      const quantity = Number(field(row, ["item_quantity", "participation_quantity", "participant_count"]));
+      const amountPaidRupees = moneyRupees(field(row, ["total_payment_amount", "amount_paid", "paid_amount", "amount"]));
+      const paymentDate = field(row, ["payment_date"]);
+
+      if (!Number.isInteger(quantity) || quantity < 1 || quantity > 20) {
+        rowErrors.push({ row: rowNumber, error: "Participation Fees item quantity must be between 1 and 20." });
+        return;
+      }
+      if (!Number.isFinite(amountPaidRupees)) {
+        rowErrors.push({ row: rowNumber, error: "Enter a valid total payment amount." });
+        return;
+      }
+
+      const temporaryNames = Array.from({ length: quantity - 1 }, (_, nameIndex) => `Participant ${nameIndex + 2}`);
+      const parsed = registrationSchema.safeParse({
+        submissionId: randomUUID(),
+        eventContentId: eventId,
+        memberName,
+        email,
+        phone: whatsapp,
+        billingDetails,
+        photoDataUrl: null,
+        participationQuantity: quantity,
+        standeeQuantity: 0,
+        mealChoice: null,
+        presentationSelected: false,
+        additionalParticipantNames: temporaryNames,
+      });
+
+      if (!parsed.success) {
+        rowErrors.push({ row: rowNumber, error: parsed.error.issues[0]?.message || "Invalid payment registration data." });
+        return;
+      }
+
+      const participantNames = [parsed.data.memberName, ...Array.from({ length: quantity - 1 }, () => "")];
+      const calculatedTotalPaise = quantity * prices.participation;
+      const key = createHash("sha256").update(JSON.stringify({
+        source: "payment_export", eventId, paymentDate, memberName: parsed.data.memberName, email: parsed.data.email,
+        phone: parsed.data.phone, billingDetails: parsed.data.billingDetails, quantity, amountPaidRupees,
+      })).digest("hex");
+
+      if (keys.has(key)) {
+        rowErrors.push({ row: rowNumber, error: "This captured Participation Fees payment is duplicated within the uploaded file." });
+        return;
+      }
+      keys.add(key);
+
+      parsedRows.push({
+        rowNumber,
+        memberName: parsed.data.memberName,
+        email: parsed.data.email,
+        phone: parsed.data.phone,
+        billingDetails: parsed.data.billingDetails,
+        participantNames,
+        participationQuantity: quantity,
+        standeeQuantity: 0,
+        presentationSelected: false,
+        amountPaidPaise: Math.round(amountPaidRupees * 100),
+        totalPaise: calculatedTotalPaise,
+        key,
+        source: "payment_export",
+        namesComplete: quantity === 1,
+      });
+      return;
+    }
+
     const memberName = field(row, ["primary_member", "member_name", "primary_member_name", "name"]);
     const email = field(row, ["email", "email_address"]);
     const whatsapp = phone(field(row, ["whatsapp_number", "whatsapp", "phone", "mobile", "mobile_number"]));
@@ -126,21 +218,15 @@ export async function POST(request: Request) {
     }
 
     const calculatedTotalPaise = calculateTotal(parsed.data, prices);
-    const amountPaidRupees = amountPaidRaw ? Number(amountPaidRaw.replace(/[₹,\s]/g, "")) : calculatedTotalPaise / 100;
-
-    if (!Number.isFinite(amountPaidRupees) || amountPaidRupees < 0) {
+    const amountPaidRupees = amountPaidRaw ? moneyRupees(amountPaidRaw) : calculatedTotalPaise / 100;
+    if (!Number.isFinite(amountPaidRupees)) {
       rowErrors.push({ row: rowNumber, error: "Amount Paid could not be calculated. Check the row values." });
       return;
     }
 
     const key = createHash("sha256").update(JSON.stringify({
-      eventId,
-      memberName: parsed.data.memberName,
-      email: parsed.data.email,
-      phone: parsed.data.phone,
-      billingDetails: parsed.data.billingDetails,
-      participantNames,
-      standeeQuantity: parsed.data.standeeQuantity,
+      source: "registration", eventId, memberName: parsed.data.memberName, email: parsed.data.email, phone: parsed.data.phone,
+      billingDetails: parsed.data.billingDetails, participantNames, standeeQuantity: parsed.data.standeeQuantity,
       presentationSelected: parsed.data.presentationSelected,
     })).digest("hex");
 
@@ -151,21 +237,19 @@ export async function POST(request: Request) {
     keys.add(key);
 
     parsedRows.push({
-      rowNumber,
-      memberName: parsed.data.memberName,
-      email: parsed.data.email,
-      phone: parsed.data.phone,
-      billingDetails: parsed.data.billingDetails,
-      participantNames,
-      participationQuantity: parsed.data.participationQuantity,
-      standeeQuantity: parsed.data.standeeQuantity,
-      presentationSelected: parsed.data.presentationSelected,
-      amountPaidPaise: Math.round(amountPaidRupees * 100),
-      totalPaise: calculatedTotalPaise,
-      key,
+      rowNumber, memberName: parsed.data.memberName, email: parsed.data.email, phone: parsed.data.phone,
+      billingDetails: parsed.data.billingDetails, participantNames, participationQuantity: parsed.data.participationQuantity,
+      standeeQuantity: parsed.data.standeeQuantity, presentationSelected: parsed.data.presentationSelected,
+      amountPaidPaise: Math.round(amountPaidRupees * 100), totalPaise: calculatedTotalPaise, key,
+      source: "registration", namesComplete: true,
     });
   });
 
+  if (paymentExport && matchingPaymentRows === 0) {
+    return Response.json({
+      error: "No captured Participation Fees rows were found. QR passes are created only when item name is Participation Fees and payment status is captured.",
+    }, { status: 400 });
+  }
   if (rowErrors.length) {
     return Response.json({ error: "Some rows need correction. Nothing was imported.", rowErrors: rowErrors.slice(0, 50) }, { status: 400 });
   }

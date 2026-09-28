@@ -19,42 +19,78 @@ const singleSchema = z.object({
 export async function POST(request: Request) {
   const session = readAdminSession((await cookies()).get(ADMIN_SESSION_COOKIE)?.value);
   if (!session) return Response.json({ error: "Sign in as an administrator." }, { status: 401 });
-  if (session.role !== "admin") return Response.json({ error: "Only administrators can update pass names." }, { status: 403 });
+  if (session.role !== "admin") {
+    return Response.json({ error: "Only administrators can update pass names." }, { status: 403 });
+  }
 
   const body = await request.json().catch(() => null);
-  const batch = batchSchema.safeParse(body);
-  const single = singleSchema.safeParse(body);
-  if (!batch.success && !single.success) {
+  const singleResult = singleSchema.safeParse(body);
+  const batchResult = batchSchema.safeParse(body);
+
+  let registrationId: string;
+  let singleInput: z.infer<typeof singleSchema> | null = null;
+  let batchInput: z.infer<typeof batchSchema> | null = null;
+
+  if (singleResult.success) {
+    singleInput = singleResult.data;
+    registrationId = singleInput.registrationId;
+  } else if (batchResult.success) {
+    batchInput = batchResult.data;
+    registrationId = batchInput.registrationId;
+  } else {
     return Response.json({ error: "Enter a valid participant name." }, { status: 400 });
   }
 
-  const registrationId = batch.success ? batch.data.registrationId : single.data.registrationId;
   const database = getDatabase();
-  const current = (await database.query<{ member_name: string; participation_quantity: number; participant_names: string[] }>(
-    "SELECT member_name, participation_quantity, participant_names FROM public.bbc_event_registrations WHERE id = $1 AND payment_status = 'paid' LIMIT 1",
-    [registrationId],
-  )).rows[0];
+  const current = (
+    await database.query<{
+      member_name: string;
+      participation_quantity: number;
+      participant_names: string[];
+    }>(
+      "SELECT member_name, participation_quantity, participant_names FROM public.bbc_event_registrations WHERE id = $1 AND payment_status = 'paid' LIMIT 1",
+      [registrationId],
+    )
+  ).rows[0];
 
-  if (!current) return Response.json({ error: "Registration not found." }, { status: 404 });
+  if (!current) {
+    return Response.json({ error: "Registration not found." }, { status: 404 });
+  }
 
-  let participantNames = Array.from({ length: current.participation_quantity }, (_, index) =>
-    current.participant_names?.[index] ?? "",
+  let participantNames = Array.from(
+    { length: current.participation_quantity },
+    (_, index) => current.participant_names?.[index] ?? "",
   );
   participantNames[0] = current.member_name;
 
-  if (single.success) {
-    if (single.data.participantNumber > current.participation_quantity) {
-      return Response.json({ error: "This QR pass does not exist for the registration." }, { status: 400 });
+  if (singleInput) {
+    if (singleInput.participantNumber > current.participation_quantity) {
+      return Response.json(
+        { error: "This QR pass does not exist for the registration." },
+        { status: 400 },
+      );
     }
-    participantNames[single.data.participantNumber - 1] = single.data.participantName;
-  } else {
-    if (batch.data.participantNames.length !== current.participation_quantity) {
-      return Response.json({ error: "Enter one name for every QR pass." }, { status: 400 });
+
+    participantNames[singleInput.participantNumber - 1] = singleInput.participantName;
+  } else if (batchInput) {
+    if (batchInput.participantNames.length !== current.participation_quantity) {
+      return Response.json(
+        { error: "Enter one name for every QR pass." },
+        { status: 400 },
+      );
     }
-    if (batch.data.participantNames[0].trim().toLowerCase() !== current.member_name.trim().toLowerCase()) {
-      return Response.json({ error: "The first pass name must match the primary member." }, { status: 400 });
+
+    if (
+      batchInput.participantNames[0].trim().toLowerCase() !==
+      current.member_name.trim().toLowerCase()
+    ) {
+      return Response.json(
+        { error: "The first pass name must match the primary member." },
+        { status: 400 },
+      );
     }
-    participantNames = batch.data.participantNames;
+
+    participantNames = batchInput.participantNames;
   }
 
   await database.query(
@@ -65,6 +101,8 @@ export async function POST(request: Request) {
   return Response.json({
     ok: true,
     participantNames,
-    complete: participantNames.every((name) => String(name || "").trim().length >= 2),
+    complete: participantNames.every(
+      (name) => String(name || "").trim().length >= 2,
+    ),
   });
 }

@@ -131,13 +131,15 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
 
         <label className="admin-upload-file">
           <span>Registration file</span>
-          <input
-            type="file"
-            accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-            required
-          />
-          <small>{file ? file.name : "Accepted: .csv or .xlsx · Maximum 5 MB · Up to 500 rows"}</small>
+          <div className="admin-upload-file-box">
+            <input
+              type="file"
+              accept=".csv,.xlsx,text/csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+              onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+              required
+            />
+            <small>Accepted: .csv or .xlsx · Maximum 5 MB · Up to 500 rows</small>
+          </div>
         </label>
 
         <button type="submit" disabled={busy || !file || !events.length}>

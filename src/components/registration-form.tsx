@@ -5,6 +5,7 @@ import { calculateTotal, formatMoney, LIMITS, mealChoicesLabel, registrationSche
 import { Icon } from "./icon";
 import { PaymentCheckout } from "./payment-checkout";
 import { WhatsAppDeliveryStatus } from "./whatsapp-delivery-status";
+import { BBC_LOGO_DATA_URL } from "@/lib/bbc-logo";
 
 function Quantity({ label, value, minimum, maximum, onChange }: {
   label: string; value: number; minimum: number; maximum: number; onChange: (value: number) => void;
@@ -200,7 +201,7 @@ export function RegistrationForm({ eventContentId, prices }: { eventContentId: n
   </div>;
 
   return <div className="registration-card">
-    <div className="form-heading"><div><span className="eyebrow">JOIN THE CONVERSATION</span><h2>Reserve your place</h2></div><span className="form-heading-icon"><Icon name="spark" size={23} /></span></div>
+    <div className="form-heading"><div><span className="eyebrow">JOIN THE CONVERSATION</span><h2>Reserve your place</h2></div><img className="form-heading-logo" src={BBC_LOGO_DATA_URL} alt="Bengal Business Council" /></div>
     <p className="form-intro">A few details. A world of possibilities.</p>
 
     <form onSubmit={submit} noValidate>

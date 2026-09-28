@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { ADMIN_SESSION_COOKIE, readAdminSession } from "@/lib/admin-auth";
 import { parseRegistrationImport } from "@/lib/admin-registration-import";
 import { getDatabase } from "@/lib/db";
-import { calculateTotal, participationPricesFromRow, registrationSchema } from "@/lib/registration";
+import { participationPricesFromRow, registrationSchema } from "@/lib/registration";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -84,7 +84,7 @@ export async function POST(request: Request) {
     participationQuantity: number;
     standeeQuantity: number;
     presentationSelected: boolean;
-    totalPaise: number;
+    amountPaidPaise: number;
     key: string;
   }> = [];
   const rowErrors: Array<{ row: number; error: string }> = [];
@@ -102,6 +102,13 @@ export async function POST(request: Request) {
     const participationQuantity = quantityText ? Number(quantityText) : participantNames.length;
     const standeeQuantity = Number(field(row, ["standee_quantity", "standee", "standees"]) || "0");
     const presentationSelected = yes(field(row, ["company_presentation", "presentation", "presentation_selected"]));
+    const amountPaidRaw = field(row, ["amount_paid", "paid_amount", "amount"]);
+    const amountPaidRupees = Number(amountPaidRaw.replace(/[₹,\s]/g, ""));
+
+    if (!amountPaidRaw || !Number.isFinite(amountPaidRupees) || amountPaidRupees < 0) {
+      rowErrors.push({ row: rowNumber, error: "Enter a valid Amount Paid in rupees." });
+      return;
+    }
 
     const parsed = registrationSchema.safeParse({
       submissionId: randomUUID(),
@@ -150,7 +157,7 @@ export async function POST(request: Request) {
       participationQuantity: parsed.data.participationQuantity,
       standeeQuantity: parsed.data.standeeQuantity,
       presentationSelected: parsed.data.presentationSelected,
-      totalPaise: calculateTotal(parsed.data, prices),
+      amountPaidPaise: Math.round(amountPaidRupees * 100),
       key,
     });
   });
@@ -190,7 +197,7 @@ export async function POST(request: Request) {
             id, submissionId, requestHash, reference, String(eventId), event.title_en, eventDate,
             row.memberName, row.email, "+91" + row.phone, row.billingDetails,
             row.participationQuantity, row.standeeQuantity, prices.includedMeals, row.presentationSelected,
-            prices.participation, prices.standee, prices.presentation, row.totalPaise, row.participantNames, row.key,
+            prices.participation, prices.standee, prices.presentation, row.amountPaidPaise, row.participantNames, row.key,
           ],
         )).rows[0];
 
@@ -199,6 +206,11 @@ export async function POST(request: Request) {
           "VALUES ($1,$2,$3,$4,$5,$6,NOW()) ON CONFLICT (email) DO UPDATE SET primary_name=EXCLUDED.primary_name, " +
           "participant_names=EXCLUDED.participant_names, phone=EXCLUDED.phone, billing_details=EXCLUDED.billing_details, updated_at=NOW()",
           [randomUUID(), row.memberName, row.participantNames.slice(1), row.email, "+91" + row.phone, row.billingDetails],
+        );
+      } else {
+        await client.query(
+          "UPDATE public.bbc_event_registrations SET total_paise = $2, payment_status = 'paid' WHERE id = $1",
+          [registration.id, row.amountPaidPaise],
         );
       }
 

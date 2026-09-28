@@ -19,8 +19,6 @@ export default async function ScannerPage() {
       </a>
       <nav className="admin-nav">
         <a href="/dashboard">Dashboard</a>
-        {session.role === "admin" &&
-}
         {session.role === "admin" && <a href="/managers">Manager</a>}
         {session.role === "admin" && <a href="/upload">Upload</a>}
         <a className="active mobile-scanner-nav" href="/scanner">Scanner</a>

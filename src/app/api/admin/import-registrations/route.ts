@@ -3,7 +3,7 @@ import { cookies } from "next/headers";
 import { ADMIN_SESSION_COOKIE, readAdminSession } from "@/lib/admin-auth";
 import { parseRegistrationImport } from "@/lib/admin-registration-import";
 import { getDatabase } from "@/lib/db";
-import { participationPricesFromRow, registrationSchema } from "@/lib/registration";
+import { calculateTotal, participationPricesFromRow, registrationSchema } from "@/lib/registration";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -85,6 +85,7 @@ export async function POST(request: Request) {
     standeeQuantity: number;
     presentationSelected: boolean;
     amountPaidPaise: number;
+    totalPaise: number;
     key: string;
   }> = [];
   const rowErrors: Array<{ row: number; error: string }> = [];
@@ -158,6 +159,7 @@ export async function POST(request: Request) {
       standeeQuantity: parsed.data.standeeQuantity,
       presentationSelected: parsed.data.presentationSelected,
       amountPaidPaise: Math.round(amountPaidRupees * 100),
+      totalPaise: calculateTotal(parsed.data, prices),
       key,
     });
   });
@@ -191,13 +193,13 @@ export async function POST(request: Request) {
           "INSERT INTO public.bbc_event_registrations (" +
           "id, submission_id, request_hash, reference, event_id, event_name, event_date, member_name, email, phone, billing_details, " +
           "participation_quantity, standee_quantity, meal_choice, included_meals, presentation_selected, participation_unit_paise, standee_unit_paise, " +
-          "presentation_unit_paise, meal_unit_paise, total_paise, participant_names, payment_status, admin_import_key" +
-          ") VALUES ($1,$2,$3,$4,$5,$6,$7::date,$8,$9,$10,$11,$12,$13,NULL,$14,$15,$16,$17,$18,0,$19,$20,'paid',$21) RETURNING id, reference",
+          "presentation_unit_paise, meal_unit_paise, total_paise, amount_paid_paise, participant_names, payment_status, admin_import_key" +
+          ") VALUES ($1,$2,$3,$4,$5,$6,$7::date,$8,$9,$10,$11,$12,$13,NULL,$14,$15,$16,$17,$18,0,$19,$20,$21,'paid',$22) RETURNING id, reference",
           [
             id, submissionId, requestHash, reference, String(eventId), event.title_en, eventDate,
             row.memberName, row.email, "+91" + row.phone, row.billingDetails,
             row.participationQuantity, row.standeeQuantity, prices.includedMeals, row.presentationSelected,
-            prices.participation, prices.standee, prices.presentation, row.amountPaidPaise, row.participantNames, row.key,
+            prices.participation, prices.standee, prices.presentation, row.totalPaise, row.amountPaidPaise, row.participantNames, row.key,
           ],
         )).rows[0];
 
@@ -209,7 +211,7 @@ export async function POST(request: Request) {
         );
       } else {
         await client.query(
-          "UPDATE public.bbc_event_registrations SET total_paise = $2, payment_status = 'paid' WHERE id = $1",
+          "UPDATE public.bbc_event_registrations SET amount_paid_paise = $2, payment_status = 'paid' WHERE id = $1",
           [registration.id, row.amountPaidPaise],
         );
       }

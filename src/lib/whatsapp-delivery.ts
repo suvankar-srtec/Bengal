@@ -28,12 +28,16 @@ export function passBundlePath(token: string) {
 
 export async function loadPassRegistration(registrationId: string) {
   return (await getDatabase().query<PassRegistration & { phone: string }>(`
-    SELECT id, reference, event_id, event_name, event_date::text,
-      participant_names, email, billing_details,
-      participation_quantity, standee_quantity, meal_choice, included_meals, presentation_selected,
-      participation_unit_paise, standee_unit_paise, presentation_unit_paise, meal_unit_paise,
-      phone
-    FROM public.bbc_event_registrations WHERE id = $1 AND payment_status = 'paid'`, [registrationId])).rows[0];
+    SELECT r.id, r.reference, r.event_id, r.event_name, r.event_date::text,
+      e.event_time::text AS event_time, e.event_end_time::text AS event_end_time,
+      COALESCE(e.venue, 'Venue to be announced') AS venue,
+      r.participant_names, r.email, r.billing_details,
+      r.participation_quantity, r.standee_quantity, r.meal_choice, r.included_meals, r.presentation_selected,
+      r.participation_unit_paise, r.standee_unit_paise, r.presentation_unit_paise, r.meal_unit_paise,
+      r.phone
+    FROM public.bbc_event_registrations r
+    LEFT JOIN public.bbc_event_content e ON e.id::text = r.event_id
+    WHERE r.id = $1 AND r.payment_status = 'paid'`, [registrationId])).rows[0];
 }
 
 export async function deliveryDetails(registrationId: string) {

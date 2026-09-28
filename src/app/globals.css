@@ -1932,6 +1932,12 @@ body{font-size:14px;line-height:1.5}
   line-height:1.28;
   letter-spacing:-1.2px;
 }
+.public-event-page .event-info h1>span{
+  font-size:40px;
+  line-height:1.28;
+  letter-spacing:-1.2px;
+  margin-top:6px;
+}
 .form-heading-logo{
   width:105px;
   height:auto;
@@ -1939,7 +1945,8 @@ body{font-size:14px;line-height:1.5}
   flex-shrink:0;
 }
 @media(max-width:760px){
-  .public-event-page .event-info h1{
+  .public-event-page .event-info h1,
+  .public-event-page .event-info h1>span{
     font-size:34px;
   }
   .form-heading-logo{

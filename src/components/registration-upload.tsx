@@ -21,6 +21,7 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
   const [successPopup, setSuccessPopup] = useState("");
+  const [whatsAppSuccessPopup, setWhatsAppSuccessPopup] = useState("");
   const [rowErrors, setRowErrors] = useState<Array<{ row: number; error: string }>>([]);
   const [results, setResults] = useState<ImportResult[]>([]);
   const [sendingId, setSendingId] = useState<string | null>(null);
@@ -32,6 +33,7 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
     setBusy(true);
     setMessage("");
     setSuccessPopup("");
+    setWhatsAppSuccessPopup("");
     setRowErrors([]);
     setResults([]);
 
@@ -90,7 +92,12 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
           ? { ...item, deliveryStatus: "accepted" }
           : item
       ));
-      setMessage(data.alreadySent ? "WhatsApp passes were already sent." : "WhatsApp passes sent successfully.");
+      setMessage("");
+      setWhatsAppSuccessPopup(
+        data.alreadySent
+          ? "WhatsApp passes were already sent successfully."
+          : "WhatsApp passes sent successfully."
+      );
     } catch {
       setMessage("WhatsApp could not send the passes. Please retry.");
     } finally {
@@ -104,6 +111,14 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
   }
 
   return <div className="admin-upload-stack">
+    {whatsAppSuccessPopup && <div className="admin-upload-whatsapp-success-backdrop" role="dialog" aria-modal="true" aria-labelledby="whatsapp-success-title">
+      <div className="admin-upload-whatsapp-success-modal">
+        <div className="admin-upload-whatsapp-success-icon" aria-hidden="true">✓</div>
+        <h2 id="whatsapp-success-title">Success</h2>
+        <p>{whatsAppSuccessPopup}</p>
+        <button type="button" onClick={() => setWhatsAppSuccessPopup("")}>OK</button>
+      </div>
+    </div>}
     {successPopup && <div className="admin-upload-success-popup" role="status" aria-live="polite">
       <div className="admin-upload-success-popup-icon" aria-hidden="true">✓</div>
       <div>

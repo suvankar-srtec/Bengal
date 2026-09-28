@@ -1775,3 +1775,77 @@ body{font-size:14px;line-height:1.5}
   font-size:10px;
   line-height:1.35;
 }
+
+
+/* Compact manager event report: keep all columns visible without horizontal scroll */
+.manager-event-report-table{
+  min-width:0!important;
+  width:100%;
+  table-layout:fixed;
+}
+.manager-event-report-table th,
+.manager-event-report-table td{
+  padding:7px 6px;
+  font-size:10.5px;
+  line-height:1.3;
+  overflow-wrap:anywhere;
+  word-break:normal;
+}
+.manager-event-report-table th:nth-child(1),
+.manager-event-report-table td:nth-child(1){width:8%}
+.manager-event-report-table th:nth-child(2),
+.manager-event-report-table td:nth-child(2){width:15%}
+.manager-event-report-table th:nth-child(3),
+.manager-event-report-table td:nth-child(3){width:17%}
+.manager-event-report-table th:nth-child(4),
+.manager-event-report-table td:nth-child(4){width:13%}
+.manager-event-report-table th:nth-child(5),
+.manager-event-report-table td:nth-child(5){width:13%}
+.manager-event-report-table th:nth-child(6),
+.manager-event-report-table td:nth-child(6){width:13%}
+.manager-event-report-table th:nth-child(7),
+.manager-event-report-table td:nth-child(7){width:21%}
+.manager-event-report-table .report-date-column{
+  width:auto!important;
+  min-width:0!important;
+  max-width:none!important;
+  white-space:normal!important;
+}
+.manager-event-report-table .report-participant-names{
+  gap:2px;
+}
+.manager-event-report-table .report-participant-names span{
+  font-size:10.5px;
+}
+.manager-event-report-table .report-provided-meals{
+  gap:4px;
+}
+.manager-event-report-table .report-provided-meals>span{
+  grid-template-columns:minmax(0,1fr) auto;
+  gap:6px;
+  padding:6px 7px;
+}
+.manager-event-report-table .report-provided-meals strong,
+.manager-event-report-table .report-provided-meals small{
+  font-size:10px;
+}
+.manager-event-report-table .manager-report-whatsapp-button{
+  min-height:30px;
+  padding:0 8px;
+  font-size:10px;
+}
+.manager-event-report-table + .report-search-empty{}
+.manager-event-report-table{
+  min-width:0!important;
+}
+.manager-event-report-table{
+  max-width:100%;
+}
+.report-table-scroll:has(.manager-event-report-table){
+  overflow-x:hidden!important;
+}
+@media(max-width:900px){
+  .manager-event-report-table{
+    min-width:0!important;
+  }
+}

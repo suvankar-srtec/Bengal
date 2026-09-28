@@ -201,9 +201,9 @@ function rowsToObjects(rows: string[][]): ImportRow[] {
     const row = rows[index];
     const hasData = row.some((cell) => String(cell ?? "").trim());
 
-    // The import table is expected to be contiguous. Stop at the first blank row
-    // so notes or instructions below the table are not treated as registrations.
-    if (!hasData) break;
+    // Skip blank rows instead of stopping. Excel templates may contain preformatted
+    // or formula rows and users may leave gaps before/among registration rows.
+    if (!hasData) continue;
 
     result.push(Object.fromEntries(
       headers

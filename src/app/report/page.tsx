@@ -9,6 +9,7 @@ import { Icon } from "@/components/icon";
 import { getDatabase } from "@/lib/db";
 import { BBC_LOGO_DATA_URL } from "@/lib/bbc-logo";
 import { ManagerWhatsAppSend } from "@/components/manager-whatsapp-send";
+import { ManagerPhoneEditor } from "@/components/manager-phone-editor";
 
 export const dynamic = "force-dynamic";
 
@@ -225,7 +226,11 @@ export default async function ReportPage({
                         {participants.map((name, index) => <span key={`${registration.id}-${index}`}>{name}</span>)}
                       </div>
                     </td>
-                    <td>{registration.phone}</td>
+                    <td>
+                      {session.role === "manager"
+                        ? <ManagerPhoneEditor registrationId={registration.id} phone={registration.phone} />
+                        : registration.phone}
+                    </td>
                     {session.role === "manager" && <td><ManagerWhatsAppSend registrationId={registration.id} /></td>}
                     <td>{includedMeals.length ? includedMeals.map((meal) => meal[0].toUpperCase() + meal.slice(1)).join(", ") : "None"}</td>
                     <td>

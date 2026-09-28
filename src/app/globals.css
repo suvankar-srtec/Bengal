@@ -1933,7 +1933,7 @@ body{font-size:14px;line-height:1.5}
   letter-spacing:-1.2px;
 }
 .form-heading-logo{
-  width:74px;
+  width:105px;
   height:auto;
   object-fit:contain;
   flex-shrink:0;
@@ -1943,6 +1943,6 @@ body{font-size:14px;line-height:1.5}
     font-size:34px;
   }
   .form-heading-logo{
-    width:64px;
+    width:88px;
   }
 }

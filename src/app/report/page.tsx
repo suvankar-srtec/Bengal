@@ -183,8 +183,8 @@ export default async function ReportPage({
         {session.role === "admin" ? <div className="admin-nav-group">
           <span className="admin-nav-parent active">Report</span>
           <div className="admin-nav-submenu">
-            <a className={reportType === "registration" ? "active" : ""} href={selectedEvent ? `/report?eventId=${selectedEvent.id}&report=registration` : "/report?report=registration"}>Registration Report</a>
-            <a className={reportType === "event" ? "active" : ""} href={selectedEvent ? `/report?eventId=${selectedEvent.id}&report=event` : "/report?report=event"}>Event Report</a>
+            <a aria-current={reportType === "registration" ? "page" : undefined} className={reportType === "registration" ? "active" : ""} href={selectedEvent ? `/report?eventId=${selectedEvent.id}&report=registration` : "/report?report=registration"}>Registration Report</a>
+            <a aria-current={reportType === "event" ? "page" : undefined} className={reportType === "event" ? "active" : ""} href={selectedEvent ? `/report?eventId=${selectedEvent.id}&report=event` : "/report?report=event"}>Event Report</a>
           </div>
         </div> : <a className="active" href={`/report?eventId=${session.eventId}`}>Report</a>}
       </nav>
@@ -214,7 +214,7 @@ export default async function ReportPage({
               <p>{registrations.length} record{registrations.length === 1 ? "" : "s"} for {selectedEvent.title_en}</p>
             </div>
             <div className="report-heading-actions">
-              <ReportAutoSearch />
+              <ReportAutoSearch reportKey={`${selectedEvent.id}-${reportType}`} />
               <details className="report-download-menu">
               <summary aria-label="Download registration report" title="Download report">
                 <Icon name="download" size={17} />

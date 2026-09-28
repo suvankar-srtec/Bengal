@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useTransition } from "react";
 
 export function ReportEventSelector({
   events,
@@ -13,7 +13,7 @@ export function ReportEventSelector({
   reportType?: "registration" | "event";
 }) {
   const router = useRouter();
-  const [busy, setBusy] = useState(false);
+  const [busy, startTransition] = useTransition();
 
   useEffect(() => {
     for (const event of events) {
@@ -23,8 +23,9 @@ export function ReportEventSelector({
 
   function change(value: string) {
     if (!value) return;
-    setBusy(true);
-    router.push(`/report?eventId=${encodeURIComponent(value)}&report=${reportType}`);
+    startTransition(() => {
+      router.push(`/report?eventId=${encodeURIComponent(value)}&report=${reportType}`);
+    });
   }
 
   return <div className="report-event-selector">

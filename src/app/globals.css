@@ -1467,3 +1467,13 @@ body{font-size:14px;line-height:1.5}
   .report-heading-actions{width:100%}
   .report-auto-search{width:100%}
 }
+
+/* Keep report search usable on narrow screens. */
+.report-table-heading{flex-wrap:wrap;gap:12px}
+.report-auto-search{max-width:100%;min-width:0}
+.report-auto-search input:focus-visible{outline:2px solid var(--coral);outline-offset:2px}
+@media(max-width:760px){
+  .report-heading-actions{min-width:0}
+  .report-auto-search{flex:1}
+  .report-download-menu{flex-shrink:0}
+}

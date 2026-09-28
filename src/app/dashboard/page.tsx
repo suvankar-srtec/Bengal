@@ -5,6 +5,7 @@ import { ADMIN_SESSION_COOKIE, readAdminSession } from "@/lib/admin-auth";
 import { AdminLogoutButton } from "@/components/admin-logout-button";
 import { getDatabase } from "@/lib/db";
 import { BBC_LOGO_DATA_URL } from "@/lib/bbc-logo";
+import { MobileAdminNav } from "@/components/mobile-admin-nav";
 import { DashboardEventCard } from "@/components/dashboard-event-card";
 
 export const dynamic = "force-dynamic";
@@ -82,6 +83,7 @@ export default async function DashboardPage() {
   }
 
   return <div className="admin-dashboard-shell">
+    <MobileAdminNav role={session.role} eventId={session.role === "manager" ? session.eventId : undefined} />
     <aside className="admin-sidebar">
       <Link prefetch={false} className="admin-sidebar-brand" href="/dashboard" aria-label="Bengal Business Council">
         <img className="bbc-logo bbc-logo-sidebar" src={BBC_LOGO_DATA_URL} alt="Bengal Business Council" />

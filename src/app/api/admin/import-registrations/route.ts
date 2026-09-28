@@ -98,7 +98,6 @@ export async function POST(request: Request) {
     totalPaise: number;
     key: string;
     source: "registration" | "payment_export";
-    namesComplete: boolean;
   }> = [];
   const rowErrors: Array<{ row: number; error: string }> = [];
   const keys = new Set<string>();
@@ -132,7 +131,10 @@ export async function POST(request: Request) {
         return;
       }
 
-      const temporaryNames = Array.from({ length: quantity - 1 }, (_, nameIndex) => `Participant ${nameIndex + 2}`);
+      const generatedAdditionalNames = Array.from(
+        { length: quantity - 1 },
+        (_, nameIndex) => `${memberName} +${nameIndex + 1}`,
+      );
       const parsed = registrationSchema.safeParse({
         submissionId: randomUUID(),
         eventContentId: eventId,
@@ -145,7 +147,7 @@ export async function POST(request: Request) {
         standeeQuantity: 0,
         mealChoice: null,
         presentationSelected: false,
-        additionalParticipantNames: temporaryNames,
+        additionalParticipantNames: generatedAdditionalNames,
       });
 
       if (!parsed.success) {
@@ -153,7 +155,7 @@ export async function POST(request: Request) {
         return;
       }
 
-      const participantNames = [parsed.data.memberName, ...Array.from({ length: quantity - 1 }, () => "")];
+      const participantNames = [parsed.data.memberName, ...generatedAdditionalNames];
       const calculatedTotalPaise = quantity * prices.participation;
       const key = createHash("sha256").update(JSON.stringify({
         source: "payment_export", eventId, paymentDate, memberName: parsed.data.memberName, email: parsed.data.email,
@@ -180,7 +182,6 @@ export async function POST(request: Request) {
         totalPaise: calculatedTotalPaise,
         key,
         source: "payment_export",
-        namesComplete: quantity === 1,
       });
       return;
     }
@@ -241,7 +242,7 @@ export async function POST(request: Request) {
       billingDetails: parsed.data.billingDetails, participantNames, participationQuantity: parsed.data.participationQuantity,
       standeeQuantity: parsed.data.standeeQuantity, presentationSelected: parsed.data.presentationSelected,
       amountPaidPaise: Math.round(amountPaidRupees * 100), totalPaise: calculatedTotalPaise, key,
-      source: "registration", namesComplete: true,
+      source: "registration",
     });
   });
 
@@ -255,7 +256,7 @@ export async function POST(request: Request) {
   }
 
   const client = await database.connect();
-  const resultRows: Array<{ row: number; registrationId: string; primaryMember: string; participants: number; additionalParticipants: number; participantNames: string[]; needsNames: boolean; whatsapp: string; passUrl: string; deliveryStatus: string; existing: boolean }> = [];
+  const resultRows: Array<{ row: number; registrationId: string; primaryMember: string; participants: number; additionalParticipants: number; whatsapp: string; passUrl: string; deliveryStatus: string; existing: boolean }> = [];
   const origin = (process.env.APP_PUBLIC_URL || new URL(request.url).origin).replace(/\/+$/, "");
   const eventDate = event.event_date instanceof Date ? event.event_date.toISOString().slice(0, 10) : String(event.event_date).slice(0, 10);
 
@@ -297,8 +298,13 @@ export async function POST(request: Request) {
         );
       } else {
         await client.query(
-          "UPDATE public.bbc_event_registrations SET amount_paid_paise = $2, payment_status = 'paid' WHERE id = $1",
-          [registration.id, row.amountPaidPaise],
+          "UPDATE public.bbc_event_registrations SET amount_paid_paise = $2, payment_status = 'paid', participant_names = $3, participation_quantity = $4 WHERE id = $1",
+          [registration.id, row.amountPaidPaise, row.participantNames, row.participationQuantity],
+        );
+
+        await client.query(
+          "UPDATE public.bbc_members SET primary_name = $2, participant_names = $3, phone = $4, billing_details = $5, updated_at = NOW() WHERE email = $1",
+          [row.email, row.memberName, row.participantNames.slice(1), "+91" + row.phone, row.billingDetails],
         );
       }
 
@@ -319,8 +325,6 @@ export async function POST(request: Request) {
         primaryMember: row.memberName,
         participants: row.participantNames.length,
         additionalParticipants: Math.max(0, row.participantNames.length - 1),
-        participantNames: row.participantNames,
-        needsNames: !row.namesComplete,
         whatsapp: "+91" + row.phone,
         passUrl: origin + "/passes/" + delivery.media_token,
         deliveryStatus: delivery.status,

@@ -26,7 +26,6 @@ export function AdminLoginForm() {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || "Login failed.");
       router.replace("/dashboard");
-      router.refresh();
     } catch (error) {
       setError(error instanceof Error ? error.message : "Login failed.");
     } finally {

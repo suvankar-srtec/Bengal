@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useTransition } from "react";
+import { useTransition } from "react";
 
 export function ReportEventSelector({
   events,
@@ -14,12 +14,6 @@ export function ReportEventSelector({
 }) {
   const router = useRouter();
   const [busy, startTransition] = useTransition();
-
-  useEffect(() => {
-    for (const event of events) {
-      router.prefetch(`/report?eventId=${event.id}&report=${reportType}`);
-    }
-  }, [events, reportType, router]);
 
   function change(value: string) {
     if (!value) return;

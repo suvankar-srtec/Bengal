@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { ADMIN_SESSION_COOKIE, readAdminSession } from "@/lib/admin-auth";
@@ -38,20 +39,20 @@ export default async function MembersPage() {
 
   return <div className="admin-dashboard-shell">
     <aside className="admin-sidebar">
-      <a className="admin-sidebar-brand" href="/dashboard" aria-label="Bengal Business Council">
+      <Link prefetch={false} className="admin-sidebar-brand" href="/dashboard" aria-label="Bengal Business Council">
         <img className="bbc-logo bbc-logo-sidebar" src={BBC_LOGO_DATA_URL} alt="Bengal Business Council" />
-      </a>
+      </Link>
 
       <nav className="admin-nav">
-        <a href="/dashboard">Dashboard</a>
-        <a href="/managers">Manager</a>
-        <a href="/upload">Upload</a>
-        <a className="mobile-scanner-nav" href="/scanner">Scanner</a>
+        <Link prefetch={false} href="/dashboard">Dashboard</Link>
+        <Link prefetch={false} href="/managers">Manager</Link>
+        <Link prefetch={false} href="/upload">Upload</Link>
+        <Link prefetch={false} className="mobile-scanner-nav" href="/scanner">Scanner</Link>
         <div className="admin-nav-group">
           <span className="admin-nav-parent">Report</span>
           <div className="admin-nav-submenu">
-            <a href="/report?report=registration">Registration Report</a>
-            <a href="/report?report=event">Event Report</a>
+            <Link prefetch={false} href="/report?report=registration">Registration Report</Link>
+            <Link prefetch={false} href="/report?report=event">Event Report</Link>
           </div>
         </div>
       </nav>

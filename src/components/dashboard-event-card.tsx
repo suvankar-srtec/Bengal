@@ -1,5 +1,7 @@
 "use client";
 
+import Link from "next/link";
+
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { eventPublicPath } from "@/lib/event-public-link";
@@ -101,7 +103,7 @@ export function DashboardEventCard({
   const href = canManage ? `/create-event?id=${id}` : `/report?eventId=${id}`;
 
   return <div className="dashboard-event-card-shell">
-    <a className={`dashboard-event-card ${canManage ? "admin-event-card" : "manager-event-card"}`} href={href}>
+    <Link prefetch={false} className={`dashboard-event-card ${canManage ? "admin-event-card" : "manager-event-card"}`} href={href}>
       <span className="dashboard-event-card-label">EVENT</span>
       <strong>{title}</strong>
 
@@ -128,7 +130,7 @@ export function DashboardEventCard({
       </div>}
 
       <span className="dashboard-event-created">Event date {eventDate}</span>
-    </a>
+    </Link>
 
     {canManage && <div className="dashboard-event-menu" ref={menuRef}>
       <button
@@ -143,7 +145,7 @@ export function DashboardEventCard({
       </button>
 
       {open && <div className="dashboard-event-menu-popover" role="menu">
-        <a role="menuitem" href={`/create-event?id=${id}`} onClick={() => setOpen(false)}>Edit</a>
+        <Link prefetch={false} role="menuitem" href={`/create-event?id=${id}`} onClick={() => setOpen(false)}>Edit</Link>
         <button role="menuitem" type="button" onClick={() => void copyPublicLink()}>Copy public link</button>
         <button role="menuitem" type="button" className="delete" disabled={deleting} onClick={() => void deleteEvent()}>
           {deleting ? "Deleting…" : "Delete"}

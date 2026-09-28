@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { ADMIN_SESSION_COOKIE, readAdminSession } from "@/lib/admin-auth";
@@ -82,21 +83,21 @@ export default async function DashboardPage() {
 
   return <div className="admin-dashboard-shell">
     <aside className="admin-sidebar">
-      <a className="admin-sidebar-brand" href="/dashboard" aria-label="Bengal Business Council">
+      <Link prefetch={false} className="admin-sidebar-brand" href="/dashboard" aria-label="Bengal Business Council">
         <img className="bbc-logo bbc-logo-sidebar" src={BBC_LOGO_DATA_URL} alt="Bengal Business Council" />
-      </a>
+      </Link>
       <nav className="admin-nav">
-        <a className="active" href="/dashboard">Dashboard</a>
-                {session.role === "admin" && <a href="/managers">Manager</a>}
-        {session.role === "admin" && <a href="/upload">Upload</a>}
-        <a className="mobile-scanner-nav" href="/scanner">Scanner</a>
+        <Link prefetch={false} className="active" href="/dashboard">Dashboard</Link>
+                {session.role === "admin" && <Link prefetch={false} href="/managers">Manager</Link>}
+        {session.role === "admin" && <Link prefetch={false} href="/upload">Upload</Link>}
+        <Link prefetch={false} className="mobile-scanner-nav" href="/scanner">Scanner</Link>
         {session.role === "admin" ? <div className="admin-nav-group">
           <span className="admin-nav-parent">Report</span>
           <div className="admin-nav-submenu">
-            <a href="/report?report=registration">Registration Report</a>
-            <a href="/report?report=event">Event Report</a>
+            <Link prefetch={false} href="/report?report=registration">Registration Report</Link>
+            <Link prefetch={false} href="/report?report=event">Event Report</Link>
           </div>
-        </div> : <a href={`/report?eventId=${session.eventId}`}>Report</a>}
+        </div> : <Link prefetch={false} href={`/report?eventId=${session.eventId}`}>Report</Link>}
       </nav>
       <div className="admin-sidebar-footer"><AdminLogoutButton /></div>
     </aside>
@@ -106,7 +107,7 @@ export default async function DashboardPage() {
         <span className="eyebrow">MANAGER ACCESS</span>
         <h1>Assigned event</h1>
         <p>You can view only the event assigned to your manager account.</p>
-        <a className="manager-mobile-scan-button" href="/scanner">Scan QR pass</a>
+        <Link prefetch={false} className="manager-mobile-scan-button" href="/scanner">Scan QR pass</Link>
       </div>}
 
       <section className="dashboard-events-grid" aria-label="Events">
@@ -121,10 +122,10 @@ export default async function DashboardPage() {
           canManage={session.role === "admin"}
         />)}
 
-        {session.role === "admin" && <a className="dashboard-create-event-card" href="/create-event" aria-label="Create event">
+        {session.role === "admin" && <Link prefetch={false} className="dashboard-create-event-card" href="/create-event" aria-label="Create event">
           <span className="dashboard-create-event-plus" aria-hidden="true">+</span>
           <strong>Create Event</strong>
-        </a>}
+        </Link>}
       </section>
     </main>
   </div>;

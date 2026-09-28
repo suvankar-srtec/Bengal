@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { ADMIN_SESSION_COOKIE, readAdminSession } from "@/lib/admin-auth";
@@ -82,81 +83,38 @@ export default async function ReportPage({
     const eventScope = session.role === "manager" ? "WHERE id = $1" : "";
     const eventScopeParams = session.role === "manager" ? [session.eventId] : [];
 
-    if (Number.isInteger(requestedEventId) && requestedEventId > 0) {
-      const [eventResult, registrationResult] = await Promise.all([
-        database.query<EventOption>(`
-          SELECT id, title_en, title_bn, event_date, organizer, created_at
-          FROM public.bbc_event_content
-          ${eventScope}
-          ORDER BY created_at DESC, id DESC
-        `, eventScopeParams),
-        database.query<RegistrationRow>(`
-          SELECT
-            id, member_name, email, phone, billing_details,
-            participation_quantity, standee_quantity, meal_choice, included_meals,
-            presentation_selected, total_paise, payment_status,
-            participant_names,
-            COALESCE((
-              SELECT jsonb_agg(
-                jsonb_build_object(
-                  'participantNumber', redemption.participant_number,
-                  'meal', redemption.meal_choice
-                )
-                ORDER BY redemption.participant_number, redemption.redeemed_at
-              )
-              FROM public.bbc_meal_redemptions redemption
-              WHERE redemption.registration_id = bbc_event_registrations.id
-            ), '[]'::jsonb) AS provided_meals,
-            created_at
-          FROM public.bbc_event_registrations
-          WHERE event_id = $1
-          ORDER BY created_at DESC
-        `, [String(requestedEventId)]),
-      ]);
-
-      events = eventResult.rows;
-      selectedEvent = events.find((event) => Number(event.id) === requestedEventId) ?? null;
-      registrations = registrationResult.rows;
-    } else {
-      const eventResult = await database.query<EventOption>(`
+    const selectedId = Number.isInteger(requestedEventId) && requestedEventId > 0 ? requestedEventId : null;
+    // Resolve the default event inside SQL so both requests can run concurrently.
+    const [eventResult, registrationResult] = await Promise.all([
+      database.query<EventOption>(`
         SELECT id, title_en, title_bn, event_date, organizer, created_at
         FROM public.bbc_event_content
         ${eventScope}
         ORDER BY created_at DESC, id DESC
-      `, eventScopeParams);
-      events = eventResult.rows;
-
-      const selectedId = events[0]?.id ?? null;
-      selectedEvent = selectedId
-        ? events.find((event) => Number(event.id) === Number(selectedId)) ?? null
-        : null;
-
-      if (selectedId) {
-        const registrationResult = await database.query<RegistrationRow>(`
-          SELECT
-            id, member_name, email, phone, billing_details,
-            participation_quantity, standee_quantity, meal_choice, included_meals,
-            presentation_selected, total_paise, payment_status,
-            participant_names,
-            COALESCE((
-              SELECT jsonb_agg(
-                jsonb_build_object(
-                  'participantNumber', redemption.participant_number,
-                  'meal', redemption.meal_choice
-                )
-                ORDER BY redemption.participant_number, redemption.redeemed_at
-              )
-              FROM public.bbc_meal_redemptions redemption
-              WHERE redemption.registration_id = bbc_event_registrations.id
-            ), '[]'::jsonb) AS provided_meals,
-            created_at
-          FROM public.bbc_event_registrations
-          WHERE event_id = $1
-          ORDER BY created_at DESC
-        `, [String(selectedId)]);
-        registrations = registrationResult.rows;
-      }
-    }
+      `, eventScopeParams),
+      database.query<RegistrationRow>(`
+        SELECT id, member_name, email, phone, billing_details,
+          participation_quantity, standee_quantity, meal_choice, included_meals,
+          presentation_selected, total_paise, payment_status, participant_names,
+          ${reportType === "event" ? `COALESCE((
+            SELECT jsonb_agg(jsonb_build_object(
+              'participantNumber', redemption.participant_number,
+              'meal', redemption.meal_choice
+            ) ORDER BY redemption.participant_number, redemption.redeemed_at)
+            FROM public.bbc_meal_redemptions redemption
+            WHERE redemption.registration_id = bbc_event_registrations.id
+          ), '[]'::jsonb)` : "'[]'::jsonb"} AS provided_meals,
+          created_at
+        FROM public.bbc_event_registrations
+        WHERE event_id = COALESCE($1::text, (
+          SELECT id::text FROM public.bbc_event_content ORDER BY created_at DESC, id DESC LIMIT 1
+        ))
+        ORDER BY created_at DESC
+      `, [selectedId === null ? null : String(selectedId)]),
+    ]);
+    events = eventResult.rows;
+    selectedEvent = selectedId === null ? events[0] ?? null : events.find((event) => Number(event.id) === selectedId) ?? null;
+    registrations = selectedEvent ? registrationResult.rows : [];
   } catch (error) {
     console.error("Event report could not be loaded.", {
       code: error && typeof error === "object" && "code" in error ? String(error.code) : undefined,
@@ -171,22 +129,22 @@ export default async function ReportPage({
 
   return <div className="admin-dashboard-shell">
     <aside className="admin-sidebar">
-      <a className="admin-sidebar-brand" href="/dashboard" aria-label="Bengal Business Council">
+      <Link prefetch={false} className="admin-sidebar-brand" href="/dashboard" aria-label="Bengal Business Council">
         <img className="bbc-logo bbc-logo-sidebar" src={BBC_LOGO_DATA_URL} alt="Bengal Business Council" />
-      </a>
+      </Link>
 
       <nav className="admin-nav">
-        <a href="/dashboard">Dashboard</a>
-        {session.role === "admin" && <a href="/managers">Manager</a>}
-        {session.role === "admin" && <a href="/upload">Upload</a>}
-        <a className="mobile-scanner-nav" href="/scanner">Scanner</a>
+        <Link prefetch={false} href="/dashboard">Dashboard</Link>
+        {session.role === "admin" && <Link prefetch={false} href="/managers">Manager</Link>}
+        {session.role === "admin" && <Link prefetch={false} href="/upload">Upload</Link>}
+        <Link prefetch={false} className="mobile-scanner-nav" href="/scanner">Scanner</Link>
         {session.role === "admin" ? <div className="admin-nav-group">
           <span className="admin-nav-parent active">Report</span>
           <div className="admin-nav-submenu">
-            <a aria-current={reportType === "registration" ? "page" : undefined} className={reportType === "registration" ? "active" : ""} href={selectedEvent ? `/report?eventId=${selectedEvent.id}&report=registration` : "/report?report=registration"}>Registration Report</a>
-            <a aria-current={reportType === "event" ? "page" : undefined} className={reportType === "event" ? "active" : ""} href={selectedEvent ? `/report?eventId=${selectedEvent.id}&report=event` : "/report?report=event"}>Event Report</a>
+            <Link prefetch={false} aria-current={reportType === "registration" ? "page" : undefined} className={reportType === "registration" ? "active" : ""} href={selectedEvent ? `/report?eventId=${selectedEvent.id}&report=registration` : "/report?report=registration"}>Registration Report</Link>
+            <Link prefetch={false} aria-current={reportType === "event" ? "page" : undefined} className={reportType === "event" ? "active" : ""} href={selectedEvent ? `/report?eventId=${selectedEvent.id}&report=event` : "/report?report=event"}>Event Report</Link>
           </div>
-        </div> : <a className="active" href={`/report?eventId=${session.eventId}`}>Report</a>}
+        </div> : <Link prefetch={false} className="active" href={`/report?eventId=${session.eventId}`}>Report</Link>}
       </nav>
 
       <div className="admin-sidebar-footer"><AdminLogoutButton /></div>

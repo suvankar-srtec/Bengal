@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { ADMIN_SESSION_COOKIE, readAdminSession } from "@/lib/admin-auth";
@@ -14,21 +15,21 @@ export default async function ScannerPage() {
 
   return <div className="admin-dashboard-shell">
     <aside className="admin-sidebar">
-      <a className="admin-sidebar-brand" href="/dashboard" aria-label="Bengal Business Council">
+      <Link prefetch={false} className="admin-sidebar-brand" href="/dashboard" aria-label="Bengal Business Council">
         <img className="bbc-logo bbc-logo-sidebar" src={BBC_LOGO_DATA_URL} alt="Bengal Business Council" />
-      </a>
+      </Link>
       <nav className="admin-nav">
-        <a href="/dashboard">Dashboard</a>
-        {session.role === "admin" && <a href="/managers">Manager</a>}
-        {session.role === "admin" && <a href="/upload">Upload</a>}
-        <a className="active mobile-scanner-nav" href="/scanner">Scanner</a>
+        <Link prefetch={false} href="/dashboard">Dashboard</Link>
+        {session.role === "admin" && <Link prefetch={false} href="/managers">Manager</Link>}
+        {session.role === "admin" && <Link prefetch={false} href="/upload">Upload</Link>}
+        <Link prefetch={false} className="active mobile-scanner-nav" href="/scanner">Scanner</Link>
         {session.role === "admin" ? <div className="admin-nav-group">
           <span className="admin-nav-parent">Report</span>
           <div className="admin-nav-submenu">
-            <a href="/report?report=registration">Registration Report</a>
-            <a href="/report?report=event">Event Report</a>
+            <Link prefetch={false} href="/report?report=registration">Registration Report</Link>
+            <Link prefetch={false} href="/report?report=event">Event Report</Link>
           </div>
-        </div> : <a href={`/report?eventId=${session.eventId}`}>Report</a>}
+        </div> : <Link prefetch={false} href={`/report?eventId=${session.eventId}`}>Report</Link>}
       </nav>
       <div className="admin-sidebar-footer"><AdminLogoutButton /></div>
     </aside>

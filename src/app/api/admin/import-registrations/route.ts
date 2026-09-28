@@ -104,12 +104,6 @@ export async function POST(request: Request) {
     const standeeQuantity = Number(field(row, ["standee_quantity", "standee", "standees"]) || "0");
     const presentationSelected = yes(field(row, ["company_presentation", "presentation", "presentation_selected"]));
     const amountPaidRaw = field(row, ["amount_paid", "paid_amount", "amount"]);
-    const amountPaidRupees = Number(amountPaidRaw.replace(/[₹,\s]/g, ""));
-
-    if (!amountPaidRaw || !Number.isFinite(amountPaidRupees) || amountPaidRupees < 0) {
-      rowErrors.push({ row: rowNumber, error: "Enter a valid Amount Paid in rupees." });
-      return;
-    }
 
     const parsed = registrationSchema.safeParse({
       submissionId: randomUUID(),
@@ -128,6 +122,14 @@ export async function POST(request: Request) {
 
     if (!parsed.success) {
       rowErrors.push({ row: rowNumber, error: parsed.error.issues[0]?.message || "Invalid registration data." });
+      return;
+    }
+
+    const calculatedTotalPaise = calculateTotal(parsed.data, prices);
+    const amountPaidRupees = amountPaidRaw ? Number(amountPaidRaw.replace(/[₹,\s]/g, "")) : calculatedTotalPaise / 100;
+
+    if (!Number.isFinite(amountPaidRupees) || amountPaidRupees < 0) {
+      rowErrors.push({ row: rowNumber, error: "Amount Paid could not be calculated. Check the row values." });
       return;
     }
 
@@ -159,7 +161,7 @@ export async function POST(request: Request) {
       standeeQuantity: parsed.data.standeeQuantity,
       presentationSelected: parsed.data.presentationSelected,
       amountPaidPaise: Math.round(amountPaidRupees * 100),
-      totalPaise: calculateTotal(parsed.data, prices),
+      totalPaise: calculatedTotalPaise,
       key,
     });
   });

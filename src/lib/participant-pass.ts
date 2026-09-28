@@ -138,7 +138,7 @@ export function participantPass(registration: PassRegistration, index: number) {
 }
 
 function eventTimeLabel(value: string | null | undefined) {
-  const match = String(value ?? "").match(/^(\\d{1,2}):(\\d{2})/);
+  const match = String(value ?? "").match(/^(\d{1,2}):(\d{2})/);
   if (!match) return "";
   const hour = Number(match[1]);
   const minute = Number(match[2]);

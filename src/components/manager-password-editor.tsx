@@ -49,7 +49,7 @@ export function ManagerPasswordEditor({ managerId, userId }: { managerId: string
     <div className="manager-password-actions">
       <PasswordInput key={inputKey} id={`manager-password-${managerId}`} value={password}
         onChange={(event) => { setPassword(event.target.value); setDirty(true); setMessage(""); }}
-        placeholder="Saved password" autoComplete="new-password" maxLength={128} disabled={busy} onReveal={reveal} />
+        placeholder="Saved password" autoComplete="new-password" disabled={busy} onReveal={reveal} />
       <button className="manager-password-save" type="submit" disabled={!dirty || !password || busy}>{busy ? "Saving…" : "Save"}</button>
     </div>
     {message && <small role="status">{message}</small>}

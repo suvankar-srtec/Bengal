@@ -6,6 +6,7 @@ import { AdminLogoutButton } from "@/components/admin-logout-button";
 import { ManagerCreator } from "@/components/manager-creator";
 import { ManagerPasswordEditor } from "@/components/manager-password-editor";
 import { BBC_LOGO_DATA_URL } from "@/lib/bbc-logo";
+import { MobileAdminNav } from "@/components/mobile-admin-nav";
 import { getDatabase } from "@/lib/db";
 
 export const dynamic = "force-dynamic";
@@ -66,6 +67,7 @@ export default async function ManagersPage() {
   }
 
   return <div className="admin-dashboard-shell">
+    <MobileAdminNav role={session.role} eventId={session.role === "manager" ? session.eventId : undefined} />
     <aside className="admin-sidebar">
       <Link prefetch={false} className="admin-sidebar-brand" href="/dashboard" aria-label="Bengal Business Council">
         <img className="bbc-logo bbc-logo-sidebar" src={BBC_LOGO_DATA_URL} alt="Bengal Business Council" />

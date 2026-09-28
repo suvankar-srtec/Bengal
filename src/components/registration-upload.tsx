@@ -154,7 +154,7 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
         <div>
           <span className="eyebrow">REGISTRATION IMPORT</span>
           <h2>Upload Excel or CSV</h2>
-          <p>Imported registrations are marked as confirmed and paid, then QR passes are generated for manual WhatsApp sharing.</p>
+          <p>Upload the Razorpay payment export. QR passes are generated only for captured Participation Fees rows.</p>
         </div>
       </div>
 
@@ -197,12 +197,12 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
       </form>
 
       <div className="admin-upload-columns">
-        <strong>File columns</strong>
-        <p>Primary Member, Additional Participants, Email, WhatsApp Number, Billing Details, Participation Fees, Standee Quantity, Company Presentation, Amount Paid.</p>
+        <strong>Required Razorpay columns</strong>
+        <p>payment date, item name, item quantity, total payment amount, payment status, member_name, email, phone, billing_details.</p>
         <small>
-          Separate additional participant names with <b>|</b>. Use Yes/No for Company Presentation.
-          <b>Participation Fees</b> is calculated automatically from the number of names and the event fee.
-          <b> Amount Paid</b> is also calculated automatically from participation, standee quantity and company presentation.
+          The importer ignores non-participation rows and non-captured payments.
+          A QR pass registration is created only when <b>item name = Participation Fees</b> and <b>payment status = captured</b>.
+          When item quantity is greater than 1, enter the additional QR pass names in the <b>Pass Names</b> fields below before sending WhatsApp.
         </small>
       </div>
 
@@ -217,7 +217,7 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
       <div className="admin-upload-results-head">
         <div>
           <h2>QR passes ready</h2>
-          <p>Open WhatsApp for each registration and send the generated pass link manually.</p>
+          <p>Review the generated passes, add participant names when required, then send the pass link through WhatsApp.</p>
         </div>
         <span>{results.length} ready</span>
       </div>

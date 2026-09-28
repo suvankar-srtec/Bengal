@@ -187,7 +187,7 @@ export default async function ReportPage({
           </div>
 
           {registrations.length ? <div className="report-table-scroll">
-            {reportType === "event" ? <table className="report-table manager-report-table event-report-table">
+            {reportType === "event" ? <table className={`report-table manager-report-table event-report-table${session.role === "manager" ? " manager-event-report-table" : ""}`}>
               <thead>
                 <tr>
                   <th className="report-date-column">Date</th>

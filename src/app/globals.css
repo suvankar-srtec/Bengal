@@ -1588,3 +1588,67 @@ body{font-size:14px;line-height:1.5}
     grid-column:1/-1;
   }
 }
+
+
+/* Upload success popup */
+.admin-upload-success-popup{
+  position:fixed;
+  top:24px;
+  right:24px;
+  z-index:1000;
+  width:min(390px,calc(100vw - 32px));
+  display:grid;
+  grid-template-columns:38px 1fr 28px;
+  align-items:start;
+  gap:12px;
+  padding:14px 14px 14px 13px;
+  border:1px solid #cfe8d9;
+  border-radius:12px;
+  background:#f2fbf5;
+  color:#245f45;
+  box-shadow:0 12px 32px rgba(24,47,70,.16);
+}
+.admin-upload-success-popup-icon{
+  width:34px;
+  height:34px;
+  border-radius:50%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  background:#dff3e7;
+  color:#236849;
+  font-size:19px;
+  font-weight:900;
+}
+.admin-upload-success-popup strong{
+  display:block;
+  font-size:13px;
+  margin-bottom:3px;
+}
+.admin-upload-success-popup p{
+  margin:0;
+  font-size:12px;
+  line-height:1.45;
+}
+.admin-upload-success-popup>button{
+  width:28px;
+  height:28px;
+  border:0;
+  border-radius:7px;
+  background:transparent;
+  color:#4f6b5e;
+  font-size:20px;
+  line-height:1;
+  padding:0;
+}
+.admin-upload-success-popup>button:hover{
+  background:#e4f4ea;
+}
+@media(max-width:600px){
+  .admin-upload-success-popup{
+    top:14px;
+    right:16px;
+    left:16px;
+    width:auto;
+  }
+}

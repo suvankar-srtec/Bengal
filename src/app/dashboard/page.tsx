@@ -88,7 +88,9 @@ export default async function DashboardPage() {
       <nav className="admin-nav">
         <a className="active" href="/dashboard">Dashboard</a>
         {session.role === "admin" && <a href="/members">Members</a>}
-        {session.role === "admin" && <a href="/managers">Manager</a>}
+        {session.role === "admin" && <a href="/managers">Manager</a>
+        <a href="/upload">Upload</a>}
+        {session.role === "admin" && <a href="/upload">Upload</a>}
         <a className="mobile-scanner-nav" href="/scanner">Scanner</a>
         {session.role === "admin" ? <div className="admin-nav-group">
           <span className="admin-nav-parent">Report</span>

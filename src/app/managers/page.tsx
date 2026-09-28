@@ -67,7 +67,7 @@ export default async function ManagersPage() {
   }
 
   return <div className="admin-dashboard-shell">
-    <MobileAdminNav role={session.role} eventId={session.role === "manager" ? session.eventId : undefined} />
+    <MobileAdminNav role="admin" />
     <aside className="admin-sidebar">
       <Link prefetch={false} className="admin-sidebar-brand" href="/dashboard" aria-label="Bengal Business Council">
         <img className="bbc-logo bbc-logo-sidebar" src={BBC_LOGO_DATA_URL} alt="Bengal Business Council" />

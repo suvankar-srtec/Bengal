@@ -1,7 +1,6 @@
 import QRCode from "qrcode";
 import sharp from "sharp";
 import { BBC_LOGO_DATA_URL } from "./bbc-logo";
-import { memberPhotoDataUri } from "./member-photo";
 import { mealChoicesLabel, type MealChoice } from "./registration";
 import { passVerificationUrl } from "./pass-token";
 
@@ -11,6 +10,9 @@ export type PassRegistration = {
   event_id: string;
   event_name: string;
   event_date: string;
+  event_time?: string | null;
+  event_end_time?: string | null;
+  venue?: string | null;
   participant_names: string[];
   email: string;
   billing_details: string;
@@ -135,16 +137,22 @@ export function participantPass(registration: PassRegistration, index: number) {
   };
 }
 
+function eventTimeLabel(value: string | null | undefined) {
+  const match = String(value ?? "").match(/^(\\d{1,2}):(\\d{2})/);
+  if (!match) return "";
+  const hour = Number(match[1]);
+  const minute = Number(match[2]);
+  if (!Number.isInteger(hour) || !Number.isInteger(minute)) return "";
+  const suffix = hour >= 12 ? "PM" : "AM";
+  return `${hour % 12 || 12}:${String(minute).padStart(2, "0")} ${suffix}`;
+}
+
 export async function renderParticipantPass(registration: PassRegistration, index: number) {
   const pass = participantPass(registration, index);
-  const photoSvg = decodeURIComponent(
-    memberPhotoDataUri(pass.participantName.replace(/[<>&"']/g, ""), index + 20).split(",")[1],
-  );
 
-  const [qr, logo, photo] = await Promise.all([
+  const [qr, logo] = await Promise.all([
     QRCode.toDataURL(pass.payload, { width: 430, margin: 3, errorCorrectionLevel: "M" }),
     sharp(Buffer.from(BBC_LOGO_DATA_URL.split(",")[1], "base64")).png().toBuffer(),
-    sharp(Buffer.from(photoSvg)).png().toBuffer(),
   ]);
 
   const date = new Date(`${registration.event_date}T12:00:00Z`).toLocaleDateString("en-IN", {
@@ -154,8 +162,13 @@ export async function renderParticipantPass(registration: PassRegistration, inde
     timeZone: "UTC",
   });
 
-  // 750 x 1050 keeps the requested 2.5 x 3.5 inch pass ratio.
-  // All visible text is rendered as SVG paths, so Vercel does not depend on installed fonts.
+  const startTime = eventTimeLabel(registration.event_time);
+  const endTime = eventTimeLabel(registration.event_end_time);
+  const eventTime = startTime && endTime
+    ? `${startTime} - ${endTime}`
+    : startTime || endTime || "Time to be announced";
+  const venue = String(registration.venue || "Venue to be announced");
+
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="750" height="1050">
     <rect width="750" height="1050" fill="#ffffff"/>
     <rect width="750" height="14" fill="#c74c40"/>
@@ -163,29 +176,23 @@ export async function renderParticipantPass(registration: PassRegistration, inde
     ${pixelText("BENGAL BUSINESS COUNCIL", 45, 53, 3, "#182f46", 28)}
     ${pixelText("INDIVIDUAL EVENT PASS", 45, 91, 2.4, "#c74c40", 30)}
     <image href="data:image/png;base64,${logo.toString("base64")}" x="545" y="28" width="160" height="108"/>
-    <path d="M45 150H705" stroke="#e5e8ea" stroke-width="2"/>
 
-    ${pixelText(`PARTICIPANT ${pass.participantNumber}`, 45, 184, 2.2, "#626f7b", 28)}
-    ${pixelText(pass.participantName, 45, 220, 4, "#182f46", 24)}
+    ${pixelText(`EVENT ${registration.event_name}`, 45, 128, 1.75, "#626f7b", 48)}
+    ${pixelText(`TIME ${eventTime}`, 45, 154, 1.75, "#626f7b", 48)}
+    ${pixelText(`VENUE ${venue}`, 45, 180, 1.75, "#626f7b", 48)}
+    <path d="M45 210H705" stroke="#e5e8ea" stroke-width="2"/>
 
-    <defs><clipPath id="photo"><circle cx="640" cy="222" r="47"/></clipPath></defs>
-    <circle cx="640" cy="222" r="50" fill="#f4edf9"/>
-    <image href="data:image/png;base64,${photo.toString("base64")}" x="593" y="175" width="94" height="94" clip-path="url(#photo)"/>
+    ${pixelText(`PARTICIPANT ${pass.participantNumber}`, 45, 238, 2.2, "#626f7b", 28)}
+    ${pixelText(pass.participantName, 45, 276, 4, "#182f46", 24)}
 
-    <rect x="45" y="285" width="660" height="115" rx="8" fill="#f8f9fa"/>
-    ${pixelText("EMAIL ADDRESS", 60, 303, 2, "#626f7b", 24)}
-    ${pixelText(registration.email, 60, 330, 2.35, "#182f46", 39)}
-    ${pixelText("BILLING DETAILS", 60, 365, 2, "#626f7b", 24)}
-    ${pixelText(registration.billing_details, 60, 390, 2.45, "#182f46", 28)}
+    <image href="data:image/png;base64,${qr.split(",")[1]}" x="160" y="330" width="430" height="430"/>
 
-    <rect x="45" y="420" width="660" height="62" rx="8" fill="#fff8f5"/>
-    ${pixelText("MEALS INCLUDED", 60, 437, 1.9, "#8a6c64", 24)}
-    ${pixelText(pass.mealLabel, 60, 462, 2.7, "#182f46", 24)}
+    <rect x="45" y="790" width="660" height="74" rx="8" fill="#fff8f5"/>
+    ${pixelText("MEALS INCLUDED", 60, 807, 1.9, "#8a6c64", 24)}
+    ${pixelText(pass.mealLabel, 60, 838, 2.7, "#182f46", 30)}
 
-    <image href="data:image/png;base64,${qr.split(",")[1]}" x="160" y="505" width="430" height="430"/>
-
-    ${pixelText("SCAN QR FOR PARTICIPATION DETAILS", 157, 968, 2, "#626f7b", 38)}
-    ${pixelText(date, 252, 1008, 1.7, "#626f7b", 28)}
+    ${pixelText("SCAN QR FOR PARTICIPATION DETAILS", 157, 910, 2, "#626f7b", 38)}
+    ${pixelText(date, 252, 952, 1.7, "#626f7b", 28)}
   </svg>`;
 
   return sharp(Buffer.from(svg)).png().toBuffer();

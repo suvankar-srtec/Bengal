@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { ADMIN_SESSION_COOKIE, readAdminSession } from "@/lib/admin-auth";
 import { AdminLogoutButton } from "@/components/admin-logout-button";
 import { ManagerCreator } from "@/components/manager-creator";
+import { ManagerPasswordEditor } from "@/components/manager-password-editor";
 import { BBC_LOGO_DATA_URL } from "@/lib/bbc-logo";
 import { getDatabase } from "@/lib/db";
 
@@ -109,6 +110,7 @@ export default async function ManagersPage() {
               <tr>
                 <th>User ID</th>
                 <th>Event</th>
+                <th>Password</th>
                 <th>Created</th>
               </tr>
             </thead>
@@ -116,9 +118,10 @@ export default async function ManagersPage() {
               {managers.length ? managers.map((manager) => <tr key={manager.id}>
                 <td><strong>{manager.user_id}</strong></td>
                 <td>{manager.event_title}</td>
+                <td><ManagerPasswordEditor managerId={manager.id} userId={manager.user_id} /></td>
                 <td>{dateLabel(manager.created_at)}</td>
               </tr>) : <tr>
-                <td colSpan={3}>
+                <td colSpan={4}>
                   <div className="members-empty-state">
                     <strong>No managers created yet</strong>
                     <span>Create a manager above and assign an event.</span>

@@ -1946,3 +1946,24 @@ body{font-size:14px;line-height:1.5}
     width:88px;
   }
 }
+
+
+.public-event-brand{
+  gap:18px;
+}
+.public-event-header-title{
+  font-size:18px;
+  font-weight:700;
+  letter-spacing:1.4px;
+  color:var(--ink);
+  white-space:nowrap;
+}
+@media(max-width:600px){
+  .public-event-brand{
+    gap:10px;
+  }
+  .public-event-header-title{
+    font-size:14px;
+    letter-spacing:1px;
+  }
+}

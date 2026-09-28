@@ -22,8 +22,7 @@ type RegistrationRow = {
 
 export async function POST(request: Request) {
   const session = readAdminSession((await cookies()).get(ADMIN_SESSION_COOKIE)?.value);
-  if (!session) return Response.json({ error: "Sign in as an administrator." }, { status: 401 });
-  if (session.role !== "admin") return Response.json({ error: "Only administrators can send registration passes." }, { status: 403 });
+  if (!session) return Response.json({ error: "Sign in to send registration passes." }, { status: 401 });
 
   let registrationId: string;
   try {
@@ -35,12 +34,17 @@ export async function POST(request: Request) {
   const database = getDatabase();
   await queueWhatsAppPasses(database, registrationId);
 
-  const sql = "SELECT r.id, r.event_name, r.phone, r.participant_names, d.media_token, d.status " +
+  const sql = "SELECT r.id, r.event_id, r.event_name, r.phone, r.participant_names, d.media_token, d.status " +
     "FROM public.bbc_event_registrations r " +
     "JOIN public.bbc_whatsapp_pass_deliveries d ON d.registration_id = r.id " +
     "WHERE r.id = $1 AND r.payment_status = 'paid' LIMIT 1";
-  const registration = (await database.query<RegistrationRow>(sql, [registrationId])).rows[0];
+  const registration = (await database.query<RegistrationRow & { event_id: string }>(sql, [registrationId])).rows[0];
   if (!registration) return Response.json({ error: "Paid registration or QR passes were not found." }, { status: 404 });
+
+  if (session.role === "manager" && registration.event_id !== String(session.eventId)) {
+    return Response.json({ error: "You can send WhatsApp only for your assigned event." }, { status: 403 });
+  }
+
   if (registration.status === "accepted") return Response.json({ ok: true, status: "accepted", alreadySent: true });
 
   const claimed = await database.query(

@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 
 type EventOption = { id: number; title: string; eventDate: string };
 type ImportResult = {
@@ -19,22 +19,6 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
   const [message, setMessage] = useState("");
   const [rowErrors, setRowErrors] = useState<Array<{ row: number; error: string }>>([]);
   const [results, setResults] = useState<ImportResult[]>([]);
-
-  const template = useMemo(() => [
-    "Primary Member,Additional Participants,Email,WhatsApp Number,Billing Details,Participation Quantity,Standee Quantity,Company Presentation,Amount Paid",
-    "Suvankar Das,Amit Dey|Rehan,suvankar@example.com,7980729034,ABCDE1234F,3,1,Yes,40710",
-    "Raja,,raja@example.com,9831134311,ABCDE1234G,1,0,No,2560",
-  ].join("\r\n"), []);
-
-  function downloadTemplate() {
-    const blob = new Blob([template], { type: "text/csv;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const anchor = document.createElement("a");
-    anchor.href = url;
-    anchor.download = "bbc-registration-import-template.csv";
-    anchor.click();
-    URL.revokeObjectURL(url);
-  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -97,7 +81,12 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
           <h2>Upload Excel or CSV</h2>
           <p>Imported registrations are marked as confirmed and paid, then QR passes are generated for manual WhatsApp sharing.</p>
         </div>
-        <button type="button" className="admin-upload-template" onClick={downloadTemplate}>Download CSV template</button>
+      </div>
+
+      <div className="admin-upload-example-row">
+        <span>Example File Format</span>
+        <a href="/templates/bbc-registration-upload-template.xlsx" download>Excel Format</a>
+        <small>Download the Excel template, fill the rows under the existing headings, save it, then upload the same file below.</small>
       </div>
 
       <form className="admin-upload-form" onSubmit={submit}>

@@ -8,6 +8,7 @@ import { ReportAutoSearch } from "@/components/report-auto-search";
 import { Icon } from "@/components/icon";
 import { getDatabase } from "@/lib/db";
 import { BBC_LOGO_DATA_URL } from "@/lib/bbc-logo";
+import { ManagerWhatsAppSend } from "@/components/manager-whatsapp-send";
 
 export const dynamic = "force-dynamic";
 
@@ -193,6 +194,7 @@ export default async function ReportPage({
                   <th>Primary member</th>
                   <th>Participants</th>
                   <th>WhatsApp</th>
+                  {session.role === "manager" && <th>Action</th>}
                   <th>Meals included</th>
                   <th>Provided meal</th>
                 </tr>
@@ -224,6 +226,7 @@ export default async function ReportPage({
                       </div>
                     </td>
                     <td>{registration.phone}</td>
+                    {session.role === "manager" && <td><ManagerWhatsAppSend registrationId={registration.id} /></td>}
                     <td>{includedMeals.length ? includedMeals.map((meal) => meal[0].toUpperCase() + meal.slice(1)).join(", ") : "None"}</td>
                     <td>
                       <div className="report-provided-meals">

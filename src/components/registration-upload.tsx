@@ -179,7 +179,24 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
               <td><strong>{result.primaryMember}</strong>{result.existing && <small>Already imported</small>}</td>
               <td>{result.additionalParticipants}</td>
               <td>{result.whatsapp}</td>
-              <td><button type="button" className="admin-upload-copy" onClick={() => void copyLink(result.passUrl)}>Copy pass link</button></td>
+              <td>
+                <div className="admin-upload-pass-actions">
+                  <button type="button" className="admin-upload-copy" onClick={() => void copyLink(result.passUrl)}>Copy pass link</button>
+                  <a
+                    className="admin-upload-preview-link"
+                    href={result.passUrl}
+                    target="_blank"
+                    rel="noreferrer"
+                    aria-label={"Preview QR passes for " + result.primaryMember}
+                    title="Preview QR passes"
+                  >
+                    <svg viewBox="0 0 24 24" aria-hidden="true">
+                      <path d="M2.5 12s3.4-5.5 9.5-5.5S21.5 12 21.5 12 18.1 17.5 12 17.5 2.5 12 2.5 12Z" fill="none" stroke="currentColor" strokeWidth="1.7"/>
+                      <circle cx="12" cy="12" r="2.6" fill="none" stroke="currentColor" strokeWidth="1.7"/>
+                    </svg>
+                  </a>
+                </div>
+              </td>
               <td>
                 <button
                   type="button"

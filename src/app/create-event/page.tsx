@@ -7,6 +7,7 @@ import { EventContentEditor } from "@/components/event-content-editor";
 import { DEFAULT_EVENT_CONTENT, eventContentFromRow } from "@/lib/event-content";
 import { getDatabase } from "@/lib/db";
 import { BBC_LOGO_DATA_URL } from "@/lib/bbc-logo";
+import { MobileAdminNav } from "@/components/mobile-admin-nav";
 import { PRICES, participationPricesFromRow, type ParticipationPrices } from "@/lib/registration";
 
 export const dynamic = "force-dynamic";
@@ -41,6 +42,7 @@ export default async function CreateEventPage({
   }
 
   return <div className="admin-dashboard-shell">
+    <MobileAdminNav role={session.role} eventId={session.role === "manager" ? session.eventId : undefined} />
     <aside className="admin-sidebar">
       <Link prefetch={false} className="admin-sidebar-brand" href="/dashboard" aria-label="Bengal Business Council">
         <img className="bbc-logo bbc-logo-sidebar" src={BBC_LOGO_DATA_URL} alt="Bengal Business Council" />

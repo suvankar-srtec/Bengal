@@ -222,6 +222,7 @@ export function ManagerQrScanner() {
           <small>{supported ? "Use the device camera to scan a QR pass." : "Camera scanning unavailable in this browser."}</small>
         </div>}
         {active && <div className="manager-scanner-frame" aria-hidden="true" />}
+        {active && <div className="manager-scanner-status-overlay" role="status">{message}</div>}
       </div>
 
       <div className="manager-scanner-side">

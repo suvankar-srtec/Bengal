@@ -525,6 +525,17 @@ body{font-size:14px;line-height:1.5}
 .report-select-loading{display:flex;align-items:center;justify-content:center;right:38px;background:transparent}
 
 @media(min-width:901px){
+  .admin-sidebar{
+    position:fixed;
+    top:0;
+    left:0;
+    bottom:0;
+    width:190px;
+    height:100vh;
+    z-index:100;
+    overflow-y:auto;
+  }
+  .admin-dashboard-main{grid-column:2;min-width:0}
   .report-main{padding-left:26px;padding-right:26px}
   .admin-sidebar-brand{padding-left:2px;padding-right:2px}
   .bbc-logo-sidebar{max-width:132px;height:auto}

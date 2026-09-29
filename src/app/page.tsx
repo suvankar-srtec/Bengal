@@ -14,7 +14,7 @@ export default async function Home() {
         <div className="admin-login-card-brand" aria-label="Bengal Business Council">
           <img className="bbc-logo bbc-logo-login" src={BBC_LOGO_DATA_URL} alt="Bengal Business Council" />
         </div>
-        <h2>Sign in to open the event dashboard.</h2>
+        <h2>Sign in to Event Dashboard.</h2>
         <AdminLoginForm />
       </div>
     </section>

@@ -16,7 +16,13 @@ export function ReportAutoSearch({ reportKey }: { reportKey: string }) {
 
     for (const row of rows) {
       const haystack = `${row.dataset.reportSearch ?? ""} ${row.textContent ?? ""}`.toLocaleLowerCase();
-      row.hidden = !words.every((word) => haystack.includes(word));
+      const visible = words.every((word) => haystack.includes(word));
+
+      // Mobile report rows use display:block, which can override the browser's
+      // default [hidden] styling. Keep both the hidden attribute and an inline
+      // display override so filtering behaves identically on desktop and mobile.
+      row.hidden = !visible;
+      row.style.display = visible ? "" : "none";
     }
 
     const emptyState = table.querySelector<HTMLElement>("[data-report-search-empty]");

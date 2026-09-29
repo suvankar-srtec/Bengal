@@ -41,7 +41,7 @@ export function MobileAdminNav({
         <Link className={linkClass("/dashboard")} href="/dashboard" onClick={() => setOpen(false)}>Dashboard</Link>
         {role === "admin" && <Link className={linkClass("/managers")} href="/managers" onClick={() => setOpen(false)}>Manager</Link>}
         {role === "admin" && <Link className={linkClass("/upload")} href="/upload" onClick={() => setOpen(false)}>Upload</Link>}
-        <Link className={linkClass("/scanner")} href="/scanner" onClick={() => setOpen(false)}>Scanner</Link>
+        {role === "manager" && <Link className={linkClass("/scanner")} href="/scanner" onClick={() => setOpen(false)}>Scanner</Link>}
         {role === "admin" ? <>
           <span className="mobile-admin-menu-label">Report</span>
           <Link href="/report?report=registration" onClick={() => setOpen(false)}>Registration Report</Link>

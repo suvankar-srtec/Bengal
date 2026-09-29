@@ -15,6 +15,9 @@ const requestSchema = z.object({ registrationId: z.uuid() });
 type RegistrationRow = {
   id: string;
   event_name: string;
+  event_date: string | null;
+  event_time: string | null;
+  event_end_time: string | null;
   venue: string | null;
   google_maps_url: string | null;
   phone: string;
@@ -37,7 +40,7 @@ export async function POST(request: Request) {
   const database = getDatabase();
   await queueWhatsAppPasses(database, registrationId);
 
-  const sql = "SELECT r.id, r.event_id, r.event_name, r.phone, r.participant_names, d.media_token, d.status, e.venue, e.google_maps_url " +
+  const sql = "SELECT r.id, r.event_id, r.event_name, r.event_date::text AS event_date, e.event_time::text AS event_time, e.event_end_time::text AS event_end_time, r.phone, r.participant_names, d.media_token, d.status, e.venue, e.google_maps_url " +
     "FROM public.bbc_event_registrations r " +
     "JOIN public.bbc_whatsapp_pass_deliveries d ON d.registration_id = r.id " +
     "LEFT JOIN public.bbc_event_content e ON e.id::text = r.event_id " +
@@ -73,6 +76,9 @@ export async function POST(request: Request) {
         passUrl,
         venue: registration.venue,
         googleMapsUrl: registration.google_maps_url,
+        eventDate: registration.event_date,
+        eventTime: registration.event_time,
+        eventEndTime: registration.event_end_time,
       }),
     }, config);
 

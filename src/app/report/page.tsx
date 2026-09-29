@@ -38,7 +38,7 @@ type RegistrationRow = {
   total_paise: number;
   payment_status: string;
   participant_names: string[];
-  provided_meals: Array<{ participantNumber: number; meal: "snacks" | "lunch" | "dinner" }>;
+  provided_meals: Array<{ participantNumber: number; meal: "snacks" | "lunch" | "dinner"; redeemedAt: string }>;
   created_at: Date | string;
 };
 
@@ -50,6 +50,19 @@ function dateLabel(value: Date | string) {
     month: "short",
     year: "numeric",
     timeZone: "UTC",
+  }).format(date);
+}
+
+function mealTimeLabel(value?: string | Date) {
+  if (!value) return "";
+  const date = value instanceof Date ? value : new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("en-IN", {
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+    timeZone: "Asia/Kolkata",
   }).format(date);
 }
 
@@ -103,7 +116,8 @@ export default async function ReportPage({
           ${reportType === "event" ? `COALESCE((
             SELECT jsonb_agg(jsonb_build_object(
               'participantNumber', redemption.participant_number,
-              'meal', redemption.meal_choice
+              'meal', redemption.meal_choice,
+              'redeemedAt', redemption.redeemed_at
             ) ORDER BY redemption.participant_number, redemption.redeemed_at)
             FROM public.bbc_meal_redemptions redemption
             WHERE redemption.registration_id = bbc_event_registrations.id
@@ -242,11 +256,18 @@ export default async function ReportPage({
                         {participants.map((name, index) => {
                           const participantMeals = (registration.provided_meals ?? [])
                             .filter((item) => Number(item.participantNumber) === index + 1)
-                            .map((item) => mealChoiceLabel(item.meal));
+                            .map((item) => {
+                              const scanTime = mealTimeLabel(item.redeemedAt);
+                              return scanTime
+                                ? `${mealChoiceLabel(item.meal)} · ${scanTime}`
+                                : mealChoiceLabel(item.meal);
+                            });
 
                           return <span key={`${registration.id}-provided-${index}`}>
                             <strong>{name}</strong>
-                            <small>{participantMeals.length ? participantMeals.join(", ") : "Not provided"}</small>
+                            <small className={participantMeals.length ? "provided" : ""}>
+                              {participantMeals.length ? participantMeals.join(", ") : "Not provided"}
+                            </small>
                           </span>;
                         })}
                       </div>

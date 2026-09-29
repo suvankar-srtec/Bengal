@@ -83,9 +83,9 @@ export const registrationSchema = z.object({
   memberName: z.string().trim().min(2, "Enter your full name.").max(120, "Use 120 characters or fewer."),
   email: z.email("Enter a valid email address.").max(254).transform((email) => email.toLowerCase()),
   phone: z.string().regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit Indian WhatsApp number."),
-  billingDetails: z.string().trim().toUpperCase().regex(
-    /^(?:[A-Z]{5}[0-9]{4}[A-Z]|[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][A-Z0-9]Z[A-Z0-9])$/,
-    "Enter a valid 10-character PAN or 15-character GSTIN.",
+  billingDetails: z.string().trim().toUpperCase().refine(
+    (value) => value === "" || /^(?:[A-Z]{5}[0-9]{4}[A-Z]|[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][A-Z0-9]Z[A-Z0-9])$/.test(value),
+    "Enter a valid 10-character PAN or 15-character GSTIN, or leave it blank.",
   ),
   photoDataUrl: z.string()
     .max(220000, "Photo is too large.")

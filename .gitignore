@@ -9,3 +9,4 @@ artifacts/
 .browser/
 .env.local
 
+project.tar.gz

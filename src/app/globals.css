@@ -2264,3 +2264,9 @@ body{font-size:14px;line-height:1.5}
     padding-top:22px;
   }
 }
+
+
+/* Ensure searched-out report rows stay hidden on mobile */
+.report-table [data-report-row][hidden]{
+  display:none!important;
+}

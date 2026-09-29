@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isGoogleMapsUrl } from "./venue-map";
 
 export const eventContentSchema = z.object({
   titleBn: z.string().trim().min(1).max(160),
@@ -8,6 +9,7 @@ export const eventContentSchema = z.object({
   eventEndTime: z.string().regex(/^\d{2}:\d{2}$/),
   organizer: z.string().trim().min(1).max(160),
   venue: z.string().trim().min(1).max(220),
+  googleMapsUrl: z.string().trim().max(2048).refine((value) => !value || isGoogleMapsUrl(value), "Enter a valid HTTPS Google Maps link.").default(""),
   aboutTagline1: z.string().trim().min(1).max(220),
   aboutParagraph1: z.string().trim().min(1).max(1500),
   aboutTagline2: z.string().trim().max(220),
@@ -36,6 +38,7 @@ export const DEFAULT_EVENT_CONTENT: EventContent = {
   eventEndTime: "20:00",
   organizer: "Bengal Business Council",
   venue: "Venue to be announced",
+  googleMapsUrl: "",
   aboutTagline1: "Good business begins with a conversation.",
   aboutParagraph1: "Aalap Alochona is the official networking format of the Bengal Business Council. A space to go beyond introductions, exchange ideas, and build meaningful professional and personal relationships.",
   aboutTagline2: "",
@@ -73,6 +76,7 @@ export function eventContentFromRow(row: Record<string, unknown> | undefined): E
     eventEndTime: normalizeEventTime(row.event_end_time ?? DEFAULT_EVENT_CONTENT.eventEndTime),
     organizer: String(row.organizer ?? DEFAULT_EVENT_CONTENT.organizer),
     venue: String(row.venue ?? DEFAULT_EVENT_CONTENT.venue),
+    googleMapsUrl: String(row.google_maps_url ?? ""),
     aboutTagline1: String(
       row.tagline_line_1 ??
       row.about_title ??

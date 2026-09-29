@@ -13,6 +13,7 @@ export type PassRegistration = {
   event_time?: string | null;
   event_end_time?: string | null;
   venue?: string | null;
+  google_maps_url?: string | null;
   participant_names: string[];
   email: string;
   billing_details: string;

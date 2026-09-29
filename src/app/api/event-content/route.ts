@@ -87,10 +87,10 @@ export async function POST(request: Request) {
         event_date, event_time, event_end_time, organizer, venue, about_title, about_paragraph_1, about_paragraph_2,
         bengali_paragraph_1, bengali_paragraph_2,
         participation_unit_paise, standee_unit_paise, presentation_unit_paise,
-        meal_option, snacks_unit_paise, lunch_unit_paise, dinner_unit_paise, included_meals
+        meal_option, snacks_unit_paise, lunch_unit_paise, dinner_unit_paise, included_meals, google_maps_url
       ) VALUES (
         $1, $2, $3, $4, $5, $6::date, $7::time, $8::time, $9, $10, $11, $12, $13, $14, $15,
-        $16, $17, $18, $19, 0, 0, 0, $20
+        $16, $17, $18, $19, 0, 0, 0, $20, $21
       )
       RETURNING id`,
       [
@@ -100,6 +100,7 @@ export async function POST(request: Request) {
         parsed.data.presentationPaise,
         parsed.data.includedMeals[0],
         parsed.data.includedMeals,
+        parsed.data.googleMapsUrl,
       ],
     );
     return NextResponse.json({ ok: true, eventId: result.rows[0]?.id }, { status: 201 });
@@ -155,6 +156,7 @@ export async function PUT(request: Request) {
         lunch_unit_paise = 0,
         dinner_unit_paise = 0,
         included_meals = $20,
+        google_maps_url = $22,
         updated_at = NOW()
       WHERE id = $21`,
       [
@@ -165,6 +167,7 @@ export async function PUT(request: Request) {
         parsed.data.includedMeals[0],
         parsed.data.includedMeals,
         eventId,
+        parsed.data.googleMapsUrl,
       ],
     );
     if (!result.rowCount) return NextResponse.json({ error: "Event not found." }, { status: 404 });

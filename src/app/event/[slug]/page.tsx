@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import { EventVenue } from "@/components/event-venue";
 import { RegistrationForm } from "@/components/registration-form";
 import { Icon } from "@/components/icon";
 import { eventContentFromRow } from "@/lib/event-content";
@@ -81,6 +82,7 @@ export default async function PublicEventPage({
             </div>
           </div>
 
+          <EventVenue venue={event.venue} googleMapsUrl={event.googleMapsUrl} />
           <div className="section-rule" />
           <h2 className="about-title">{event.aboutTagline1}</h2>
           <p className="about-copy">{event.aboutParagraph1}</p>

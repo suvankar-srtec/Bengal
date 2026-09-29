@@ -2,7 +2,8 @@ import { cookies } from "next/headers";
 import { z } from "zod";
 import { ADMIN_SESSION_COOKIE, readAdminSession } from "@/lib/admin-auth";
 import { getDatabase } from "@/lib/db";
-import { queueWhatsAppPasses } from "@/lib/whatsapp-delivery";
+import { whatsappPassMessage } from "@/lib/whatsapp-pass-message";
+import { passBundlePath, queueWhatsAppPasses } from "@/lib/whatsapp-delivery";
 import { whatsappConfiguration, WhatsAppError } from "@/lib/wapmonkey";
 import { sendWhatsAppText } from "@/lib/wapmonkey-text";
 
@@ -14,6 +15,8 @@ const requestSchema = z.object({ registrationId: z.uuid() });
 type RegistrationRow = {
   id: string;
   event_name: string;
+  venue: string | null;
+  google_maps_url: string | null;
   phone: string;
   participant_names: string[];
   media_token: string;
@@ -34,9 +37,10 @@ export async function POST(request: Request) {
   const database = getDatabase();
   await queueWhatsAppPasses(database, registrationId);
 
-  const sql = "SELECT r.id, r.event_id, r.event_name, r.phone, r.participant_names, d.media_token, d.status " +
+  const sql = "SELECT r.id, r.event_id, r.event_name, r.phone, r.participant_names, d.media_token, d.status, e.venue, e.google_maps_url " +
     "FROM public.bbc_event_registrations r " +
     "JOIN public.bbc_whatsapp_pass_deliveries d ON d.registration_id = r.id " +
+    "LEFT JOIN public.bbc_event_content e ON e.id::text = r.event_id " +
     "WHERE r.id = $1 AND r.payment_status = 'paid' LIMIT 1";
   const registration = (await database.query<RegistrationRow & { event_id: string }>(sql, [registrationId])).rows[0];
   if (!registration) return Response.json({ error: "Paid registration or QR passes were not found." }, { status: 404 });
@@ -57,23 +61,19 @@ export async function POST(request: Request) {
   const config = whatsappConfiguration();
   const participantCount = registration.participant_names.length;
   const primaryMember = registration.participant_names[0] ?? "Member";
-  const passUrl = config.origin + "/passes/" + registration.media_token + "?v=2";
+  const passUrl = config.origin + passBundlePath(registration.media_token);
 
   try {
     const messageId = await sendWhatsAppText({
       phone: registration.phone,
-      message: [
-        "Hello " + primaryMember + ",",
-        "",
-        "Your registration for " + registration.event_name + " is confirmed.",
-        "Your " + participantCount + " QR " + (participantCount === 1 ? "pass is" : "passes are") + " ready.",
-        "",
-        "View or download your passes here:",
+      message: whatsappPassMessage({
+        memberName: primaryMember,
+        eventName: registration.event_name,
+        participantCount,
         passUrl,
-        "",
-        "Please keep the QR pass ready at the venue entrance.",
-        "Bengal Business Council",
-      ].join("\n"),
+        venue: registration.venue,
+        googleMapsUrl: registration.google_maps_url,
+      }),
     }, config);
 
     await database.query(

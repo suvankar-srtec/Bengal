@@ -1,5 +1,6 @@
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import { EventVenue } from "@/components/event-venue";
 import { RegistrationForm } from "@/components/registration-form";
 import { Icon } from "@/components/icon";
 import { ADMIN_SESSION_COOKIE, validAdminSession } from "@/lib/admin-auth";
@@ -78,7 +79,8 @@ export default async function RegisterPage({
               <h1 id="event-title" lang="bn">{event.titleBn}<span lang="en">{event.titleEn}</span></h1>
               <div className="event-date"><span className="date-icon"><Icon name="calendar" size={23} /></span><div><strong>{eventDateLabel}</strong><span>{eventDayLabel} <i /> {eventTimeLabel(event.eventTime)} – {eventTimeLabel(event.eventEndTime)} <i /> {event.organizer}</span></div></div>
 
-            <div className="section-rule" />
+            <EventVenue venue={event.venue} googleMapsUrl={event.googleMapsUrl} />
+          <div className="section-rule" />
             <h2 className="about-title">{event.aboutTagline1}</h2>
             <p className="about-copy">{event.aboutParagraph1}</p>
             {(event.aboutTagline2 || event.aboutParagraph2) && <>

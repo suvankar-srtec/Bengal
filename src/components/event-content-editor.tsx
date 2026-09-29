@@ -2,6 +2,8 @@
 
 import { useState, type FormEvent } from "react";
 import type { EventContent } from "@/lib/event-content";
+import { isGoogleMapsUrl } from "@/lib/venue-map";
+import { VenueAddressField } from "@/components/venue-address-field";
 import { eventPublicPath } from "@/lib/event-public-link";
 import { EventPublicLinkCard } from "@/components/event-public-link-card";
 import {
@@ -90,6 +92,11 @@ export function EventContentEditor({
     if (!pricing) {
       setMessage({ type: "error", text: "Pricing is incomplete. Go back and complete Step 1." });
       setStep("pricing");
+      return;
+    }
+
+    if (form.googleMapsUrl && !isGoogleMapsUrl(form.googleMapsUrl.trim())) {
+      setMessage({ type: "error", text: "Enter a valid HTTPS Google Maps link, or leave it blank to use the venue address." });
       return;
     }
 
@@ -226,7 +233,10 @@ export function EventContentEditor({
         <label><span>Event time from</span><input type="time" value={form.eventTime} onChange={(e) => set("eventTime", e.target.value)} required /></label>
         <label><span>Event time to</span><input type="time" value={form.eventEndTime} onChange={(e) => set("eventEndTime", e.target.value)} required /></label>
         <label><span>Organizer</span><input value={form.organizer} onChange={(e) => set("organizer", e.target.value)} required /></label>
-        <label><span>Venue</span><input value={form.venue} onChange={(e) => set("venue", e.target.value)} required /></label>
+        <VenueAddressField address={form.venue} mapsUrl={form.googleMapsUrl} onChange={(venue, googleMapsUrl) => {
+          setForm((current) => ({ ...current, venue, googleMapsUrl }));
+          setMessage(null);
+        }} />
       </div>
     </section>
 

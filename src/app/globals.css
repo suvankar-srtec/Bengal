@@ -2293,3 +2293,34 @@ body{font-size:14px;line-height:1.5}
 .whatsapp-history-pagination span{margin-right:auto;color:var(--muted)}
 .whatsapp-history-pagination a{color:var(--ink);border:1px solid var(--line);border-radius:6px;padding:7px 12px;text-decoration:none}
 @media(max-width:600px){.whatsapp-history-filters label,.whatsapp-history-filters label:first-child{width:100%;min-width:0;flex:auto}.whatsapp-history-filters{padding:16px}.whatsapp-history-pagination{gap:8px;padding:16px}}
+
+.venue-map-link{display:inline-flex;align-items:center;gap:6px;color:var(--coral);font-size:13px;font-weight:650;text-underline-offset:3px;overflow-wrap:anywhere}
+.event-venue-details{margin-top:18px;padding:16px 18px;border:1px solid var(--line);border-radius:10px;background:white}
+.event-venue-details>strong{font-size:12px;color:var(--muted)}
+.event-venue-details>p{margin:5px 0 10px;font-size:14px;line-height:1.6;overflow-wrap:anywhere}
+.public-pass-venue{max-width:1120px;margin:0 auto 22px}
+.public-pass-venue .event-venue-details{margin:0}
+.event-editor-grid label>small{color:var(--muted);font-size:12px;font-weight:400;line-height:1.5}
+
+.venue-address-field{grid-column:1/-1;display:flex;flex-direction:column;gap:8px}
+.venue-address-field>label{font-size:12px;font-weight:650}
+.venue-address-input{display:flex;align-items:stretch;border:1px solid var(--line);border-radius:7px;background:white;overflow:hidden}
+.event-editor-grid .venue-address-input>input{border:0;box-shadow:none;flex:1;min-width:0;border-radius:0}
+.venue-address-input:focus-within{outline:2px solid var(--coral);outline-offset:2px}
+.venue-address-input>button{display:grid;place-items:center;width:48px;flex-shrink:0;border:0;border-left:1px solid var(--line);background:#f8fafb;cursor:pointer}
+.venue-address-input>button:hover{background:#eef4ff}
+.venue-picker-dialog{width:min(760px,calc(100vw - 32px));max-height:calc(100dvh - 32px);overflow-y:auto;border:1px solid var(--line);border-radius:16px;padding:24px;color:var(--ink);background:white;box-shadow:0 20px 80px #182f4633}
+.venue-picker-dialog::backdrop{background:#182f4670}
+.venue-picker-heading{display:flex;justify-content:space-between;gap:16px;align-items:flex-start;margin-bottom:18px}
+.venue-picker-heading h2{margin:0;font-size:20px}
+.venue-picker-heading p{margin:7px 0 0;font-size:13px;color:var(--muted)}
+.venue-picker-heading>button,.venue-picker-actions>button{border:1px solid var(--line);border-radius:7px;background:white;color:var(--ink);padding:10px 16px;font:inherit;font-size:13px;cursor:pointer}
+.venue-picker-search{margin-bottom:12px}
+.venue-picker-search>gmp-place-autocomplete{width:100%;color-scheme:light}
+.venue-picker-map{height:340px;width:100%;background:#f1f4f6;border-radius:9px}
+.venue-picker-selection,.venue-picker-message{margin:14px 0;padding:14px;background:#f5f7f8;border-radius:8px;font-size:13px;line-height:1.6}
+.venue-picker-error{color:#a42f25;font-size:13px;line-height:1.5}
+.venue-picker-actions{display:flex;justify-content:flex-end;gap:10px;margin-top:18px}
+.venue-picker-actions>button:last-child{background:var(--coral);border-color:var(--coral);color:white}
+.venue-picker-actions>button:disabled{opacity:.5;cursor:not-allowed}
+@media(max-width:600px){.venue-picker-dialog{padding:16px}.venue-picker-map{height:280px}.venue-picker-heading h2{font-size:17px}}

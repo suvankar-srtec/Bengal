@@ -3,6 +3,7 @@ import { cookies } from "next/headers";
 import { ADMIN_SESSION_COOKIE, readAdminSession } from "@/lib/admin-auth";
 import { parseRegistrationImport } from "@/lib/admin-registration-import";
 import { getDatabase } from "@/lib/db";
+import { passBundlePath } from "@/lib/whatsapp-delivery";
 import { calculateTotal, participationPricesFromRow, registrationSchema } from "@/lib/registration";
 
 export const runtime = "nodejs";
@@ -326,7 +327,7 @@ export async function POST(request: Request) {
         participants: row.participantNames.length,
         additionalParticipants: Math.max(0, row.participantNames.length - 1),
         whatsapp: "+91" + row.phone,
-        passUrl: origin + "/passes/" + delivery.media_token,
+        passUrl: origin + passBundlePath(delivery.media_token),
         deliveryStatus: delivery.status,
         existing,
       });

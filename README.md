@@ -64,3 +64,12 @@ This creates a uniquely identified synthetic registration in the configured data
 Your details appears before Your participation. The member name is participant 1 and the primary contact. Increasing participation adds required name fields for participants 2 onward; reducing it hides the extra fields. Previously typed names remain available if the count is increased again, but only names for the current quantity are submitted.
 
 The server requires exactly one valid name per selected participant. All names are stored in order in `bbc_event_registrations.participant_names` and included in the confirmation and downloadable registration summary. `member_name` remains the primary contact for checkout. Migration `003_participant_names.sql` preserves the known primary name on older registrations; it does not invent names that were never collected.
+## Venue selection on Google Maps
+
+The map icon beside Venue address opens a Google Maps picker. Selecting a search result or a point on the map fills the formatted address and saves a Google Maps link for that location. WhatsApp pass messages use that same saved address and link. Manual address edits clear the previous selected location so an outdated map pin is not sent.
+
+Set `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` in `.env.local` and in Vercel before building. Enable Maps JavaScript API, Places API (New), and Geocoding API for the Google Cloud project. This is a browser-visible key: restrict it to the app domains and those APIs, including localhost only for development. Google requires a billing-enabled project. Optionally set `NEXT_PUBLIC_GOOGLE_MAPS_MAP_ID` for a custom map; otherwise the picker uses Google's demo map ID. Restart development or rebuild the deployment after changing public environment variables.
+
+Setup: https://developers.google.com/maps/documentation/javascript/get-api-key
+
+Without the key, manual venue entry remains available, and the map dialog explains that automatic selection is not configured.

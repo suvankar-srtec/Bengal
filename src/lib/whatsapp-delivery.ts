@@ -5,6 +5,7 @@ import { getDatabase } from "./db";
 import { participantPass, type PassRegistration } from "./participant-pass";
 import { whatsappConfiguration, WhatsAppError } from "./wapmonkey";
 import { sendWhatsAppText } from "./wapmonkey-text";
+import { whatsappPassMessage } from "./whatsapp-pass-message";
 
 export type DeliveryStatus = "pending" | "sending" | "accepted" | "failed" | "unknown";
 type DeliveryRow = {
@@ -23,14 +24,14 @@ export function passImagePath(token: string, participantNumber: number) {
 }
 
 export function passBundlePath(token: string) {
-  return `/passes/${token}`;
+  return `/passes/${token}?v=4`;
 }
 
 export async function loadPassRegistration(registrationId: string) {
   return (await getDatabase().query<PassRegistration & { phone: string }>(`
     SELECT r.id, r.reference, r.event_id, r.event_name, r.event_date::text,
       e.event_time::text AS event_time, e.event_end_time::text AS event_end_time,
-      COALESCE(e.venue, 'Venue to be announced') AS venue,
+      COALESCE(e.venue, 'Venue to be announced') AS venue, e.google_maps_url,
       r.participant_names, r.email, r.billing_details,
       r.participation_quantity, r.standee_quantity, r.meal_choice, r.included_meals, r.presentation_selected,
       r.participation_unit_paise, r.standee_unit_paise, r.presentation_unit_paise, r.meal_unit_paise,
@@ -65,25 +66,21 @@ export async function deliverWhatsAppPasses(registrationId: string) {
     if (!registration) throw new WhatsAppError("registration_not_paid");
     if (!registration.participant_names.length) throw new WhatsAppError("passes_missing");
 
-    const passUrl = `${config.origin}${passBundlePath(row.media_token)}?v=2`;
+    const passUrl = `${config.origin}${passBundlePath(row.media_token)}`;
     const primaryMember = registration.participant_names[0] ?? "Member";
     const participantCount = registration.participant_names.length;
 
     submitted = true;
     const messageId = await sendWhatsAppText({
       phone: registration.phone,
-      message: [
-        `Hello ${primaryMember},`,
-        "",
-        `Your payment for ${registration.event_name} has been received successfully.`,
-        `Your ${participantCount} QR ${participantCount === 1 ? "pass is" : "passes are"} ready.`,
-        "",
-        "View or download your passes here:",
+      message: whatsappPassMessage({
+        memberName: primaryMember,
+        eventName: registration.event_name,
+        participantCount,
         passUrl,
-        "",
-        "Please keep the QR pass ready at the venue entrance.",
-        "Bengal Business Council",
-      ].join("\n"),
+        venue: registration.venue,
+        googleMapsUrl: registration.google_maps_url,
+      }),
     }, config);
     await database.query(`UPDATE public.bbc_whatsapp_pass_deliveries
       SET status = 'accepted', provider_message_id = $2, error_code = NULL, accepted_at = NOW(), updated_at = NOW()

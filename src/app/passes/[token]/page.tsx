@@ -1,3 +1,6 @@
+import { cache } from "react";
+import type { Metadata } from "next";
+import { EventVenue } from "@/components/event-venue";
 import { notFound } from "next/navigation";
 import { BBC_LOGO_DATA_URL } from "@/lib/bbc-logo";
 import { getDatabase } from "@/lib/db";
@@ -6,37 +9,7 @@ import { loadPassRegistration, passImagePath } from "@/lib/whatsapp-delivery";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
-  title: "Your Event Passes | Bengal Business Council",
-  description: "Register for Aalap Alochona on 29 September 2026. Meet, exchange ideas, and build meaningful connections with Bengal Business Council.",
-  robots: { index: false, follow: false },
-  openGraph: {
-    title: "Your Event Passes | Bengal Business Council",
-    description: "Register for Aalap Alochona on 29 September 2026. Meet, exchange ideas, and build meaningful connections with Bengal Business Council.",
-    type: "website",
-    images: [
-      {
-        url: "/api/share-preview?v=2",
-        width: 1200,
-        height: 630,
-        alt: "Bengal Business Council",
-      },
-    ],
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Your Event Passes | Bengal Business Council",
-    description: "Register for Aalap Alochona on 29 September 2026. Meet, exchange ideas, and build meaningful connections with Bengal Business Council.",
-    images: ["/api/share-preview?v=2"],
-  },
-};
-
-export default async function PassBundlePage({
-  params,
-}: {
-  params: Promise<{ token: string }>;
-}) {
-  const { token } = await params;
+const getPassRegistration = cache(async (token: string) => {
   if (!/^[a-f0-9]{64}$/.test(token)) notFound();
 
   const delivery = (
@@ -53,6 +26,35 @@ export default async function PassBundlePage({
 
   const registration = await loadPassRegistration(delivery.registration_id);
   if (!registration) notFound();
+
+  return registration;
+});
+
+export const metadata: Metadata = {
+  title: "Your Event Pass | Bengal Business Council",
+  description: "",
+  robots: { index: false, follow: false },
+  openGraph: {
+    title: "Your Event Pass | Bengal Business Council",
+    description: "",
+    type: "website",
+    images: [{ url: "/api/share-preview?v=2", width: 1200, height: 630, alt: "Bengal Business Council" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Your Event Pass | Bengal Business Council",
+    description: "",
+    images: ["/api/share-preview?v=2"],
+  },
+};
+
+export default async function PassBundlePage({
+  params,
+}: {
+  params: Promise<{ token: string }>;
+}) {
+  const { token } = await params;
+  const registration = await getPassRegistration(token);
 
   const passes = registration.participant_names.map((_, index) => {
     const { payload: _payload, ...pass } = participantPass(registration, index);
@@ -79,6 +81,10 @@ export default async function PassBundlePage({
           <p>{registration.event_name} · {eventDate}</p>
         </div>
       </header>
+
+      <section className="public-pass-venue" aria-label="Event venue">
+        <EventVenue venue={registration.venue} googleMapsUrl={registration.google_maps_url} />
+      </section>
 
       <section className="public-pass-summary">
         <div>

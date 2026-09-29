@@ -67,6 +67,7 @@ export default async function ManagersPage() {
   }
 
   return <div className="admin-dashboard-shell">
+    {/* Admin-only page: role is narrowed above. */}
     <MobileAdminNav role="admin" />
     <aside className="admin-sidebar">
       <Link prefetch={false} className="admin-sidebar-brand" href="/dashboard" aria-label="Bengal Business Council">

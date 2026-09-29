@@ -3,6 +3,11 @@
 import { useEffect, useRef, useState } from "react";
 import { mealChoiceLabel } from "@/lib/registration";
 
+type ProvidedMeal = {
+  meal: string;
+  redeemedAt: string;
+};
+
 type ScanResult = {
   participantName: string;
   participantNumber: number;
@@ -11,7 +16,7 @@ type ScanResult = {
   eventDate: string;
   paymentStatus: string;
   meals: string[];
-  providedMeals: string[];
+  providedMeals: ProvidedMeal[];
 };
 
 declare global {
@@ -25,6 +30,19 @@ declare global {
 function mealLabel(meal: string) {
   if (meal === "snacks" || meal === "lunch" || meal === "dinner") return mealChoiceLabel(meal);
   return meal ? meal[0].toUpperCase() + meal.slice(1) : meal;
+}
+
+function mealScanTime(value?: string) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return new Intl.DateTimeFormat("en-IN", {
+    hour: "numeric",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true,
+    timeZone: "Asia/Kolkata",
+  }).format(date);
 }
 
 export function ManagerQrScanner() {
@@ -57,7 +75,14 @@ export function ManagerQrScanner() {
       setScannedValue(value);
       setResult({
         ...data,
-        providedMeals: Array.isArray(data.providedMeals) ? data.providedMeals : [],
+        providedMeals: Array.isArray(data.providedMeals)
+          ? data.providedMeals.filter((item: unknown): item is ProvidedMeal =>
+              Boolean(item)
+              && typeof item === "object"
+              && "meal" in item
+              && "redeemedAt" in item
+            )
+          : [],
       });
       setMessage("Pass verified successfully.");
       stopCamera();
@@ -91,9 +116,13 @@ export function ManagerQrScanner() {
         providedMeals: Array.isArray(data.providedMeals) ? data.providedMeals : current.providedMeals,
       } : current);
 
+      const providedEntry = Array.isArray(data.providedMeals)
+        ? data.providedMeals.find((item: ProvidedMeal) => item.meal === meal)
+        : undefined;
+      const providedAt = mealScanTime(providedEntry?.redeemedAt);
       setMealMessage(data.status === "already_provided"
-        ? `${mealLabel(meal)} already provided.`
-        : `${mealLabel(meal)} marked as provided.`);
+        ? `${mealLabel(meal)} already provided${providedAt ? ` at ${providedAt}` : ""}.`
+        : `${mealLabel(meal)} marked as provided${providedAt ? ` at ${providedAt}` : ""}.`);
     } catch (error) {
       setMealMessage(error instanceof Error ? error.message : "Unable to update meal.");
     } finally {
@@ -178,12 +207,7 @@ export function ManagerQrScanner() {
   useEffect(() => () => stopCamera(), []);
 
   return <div className="manager-scanner-card">
-    <div className="manager-scanner-heading">
-      <div>
-        <span className="eyebrow">QR PASS SCANNER</span>
-        <h2>Scan participant pass</h2>
-        <p>Only passes for your assigned event will be accepted.</p>
-      </div>
+    <div className="manager-scanner-heading manager-scanner-heading-compact">
       {!active
         ? <button type="button" onClick={() => void startCamera()}>{result ? "Scan another pass" : "Start camera"}</button>
         : <button type="button" className="secondary" onClick={stopCamera}>Stop camera</button>}
@@ -220,11 +244,15 @@ export function ManagerQrScanner() {
 
             <div className="manager-meal-list">
               {result.meals.length ? result.meals.map((meal) => {
-                const provided = result.providedMeals.includes(meal);
+                const providedEntry = result.providedMeals.find((item) => item.meal === meal);
+                const provided = Boolean(providedEntry);
+                const providedAt = mealScanTime(providedEntry?.redeemedAt);
                 return <div className={`manager-meal-row ${provided ? "provided" : "available"}`} key={meal}>
                   <div>
                     <strong>{mealLabel(meal)}</strong>
-                    <span>{provided ? "Meal provided" : "Available"}</span>
+                    <span>{provided
+                      ? <><b>Provided</b>{providedAt ? ` · ${providedAt}` : ""}</>
+                      : "Available"}</span>
                   </div>
                   <button
                     type="button"

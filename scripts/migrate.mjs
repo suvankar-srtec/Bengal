@@ -3,8 +3,17 @@ import pg from "pg";
 
 if (!process.env.DATABASE_URL) throw new Error("Set DATABASE_URL in .env.local first.");
 const connection = new URL(process.env.DATABASE_URL);
-connection.searchParams.set("sslmode", "verify-full");
-const client = new pg.Client({ connectionString: connection.toString(), enableChannelBinding: true, connectionTimeoutMillis: 15000 });
+const isLocalDatabase = ["127.0.0.1", "localhost"].includes(connection.hostname);
+
+if (!isLocalDatabase) {
+  connection.searchParams.set("sslmode", "verify-full");
+}
+
+const client = new pg.Client({
+  connectionString: connection.toString(),
+  enableChannelBinding: !isLocalDatabase,
+  connectionTimeoutMillis: 15000,
+});
 try {
   await client.connect();
   await client.query("BEGIN");

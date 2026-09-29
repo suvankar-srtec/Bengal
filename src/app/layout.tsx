@@ -4,7 +4,7 @@ import "./payment.css";
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.APP_PUBLIC_URL || "https://bengal-bbc.vercel.app"),
-  title: "Aalap Alochona · Bengal Business Council",
+  title: "Bengal Business Council",
   description: "Event registration and participant passes from Bengal Business Council.",
   robots: { index: false, follow: false },
 };

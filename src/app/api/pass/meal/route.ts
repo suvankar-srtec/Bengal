@@ -92,8 +92,8 @@ export async function POST(request: Request) {
 
     const status = inserted.rowCount ? "provided" : "already_provided";
 
-    const providedResult = await database.query<{ meal_choice: string }>(`
-      SELECT meal_choice
+    const providedResult = await database.query<{ meal_choice: string; redeemed_at: Date | string }>(`
+      SELECT meal_choice, redeemed_at
       FROM public.bbc_meal_redemptions
       WHERE registration_id = $1
         AND participant_number = $2
@@ -105,7 +105,10 @@ export async function POST(request: Request) {
       status,
       message: status === "provided" ? "Meal marked as provided." : "Meal already provided.",
       meal,
-      providedMeals: providedResult.rows.map((row) => row.meal_choice),
+      providedMeals: providedResult.rows.map((row) => ({
+        meal: row.meal_choice,
+        redeemedAt: row.redeemed_at,
+      })),
     });
   } catch {
     return NextResponse.json({ error: "Unable to update meal status." }, { status: 500 });

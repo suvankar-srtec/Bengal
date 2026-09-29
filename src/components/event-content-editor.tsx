@@ -128,7 +128,7 @@ export function EventContentEditor({
       }
 
       if (eventId) {
-        window.location.assign(`/register?id=${savedEventId}`);
+        window.location.assign("/dashboard");
         return;
       }
 

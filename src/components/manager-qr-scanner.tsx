@@ -77,7 +77,7 @@ export function ManagerQrScanner() {
         ...data,
         providedMeals: Array.isArray(data.providedMeals)
           ? data.providedMeals.filter((item: unknown): item is ProvidedMeal =>
-              Boolean(item)
+              item !== null
               && typeof item === "object"
               && "meal" in item
               && "redeemedAt" in item

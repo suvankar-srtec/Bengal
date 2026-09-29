@@ -122,8 +122,6 @@ export default async function WhatsAppReportPage({ searchParams }: {
       <section className="report-table-card">
         <div className="report-table-heading"><div>
           <h2>WhatsApp send history</h2>
-          <p>Sent to provider means WapMonkey accepted the message; delivery and read confirmation are unavailable. Times are in IST.</p>
-          <p>Numbers shown are the current registration numbers. Each row shows the latest status and total attempts, not a log of every retry.</p>
         </div></div>
         {failed ? <div className="report-empty-state" role="alert">Could not load WhatsApp history. Please refresh to try again.</div>
           : rows.length === 0 ? <div className="report-empty-state">{query || status || page > 1 ? "No WhatsApp records match these filters or page." : "No WhatsApp pass history yet."}</div>

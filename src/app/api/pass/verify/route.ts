@@ -72,15 +72,18 @@ export async function POST(request: Request) {
         ? [registration.meal_choice]
         : [];
 
-    const redemptionResult = await getDatabase().query<{ meal_choice: string }>(`
-      SELECT meal_choice
+    const redemptionResult = await getDatabase().query<{ meal_choice: string; redeemed_at: Date | string }>(`
+      SELECT meal_choice, redeemed_at
       FROM public.bbc_meal_redemptions
       WHERE registration_id = $1
         AND participant_number = $2
       ORDER BY redeemed_at ASC
     `, [registration.id, pass.participantNumber]);
 
-    const providedMeals = redemptionResult.rows.map((row) => row.meal_choice);
+    const providedMeals = redemptionResult.rows.map((row) => ({
+      meal: row.meal_choice,
+      redeemedAt: row.redeemed_at,
+    }));
 
     return NextResponse.json({
       ok: true,

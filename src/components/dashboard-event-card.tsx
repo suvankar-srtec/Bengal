@@ -109,7 +109,7 @@ export function DashboardEventCard({
 
       {canManage ? <>
         <div className="dashboard-paid-value">
-          <span>Paid value</span>
+          <span>Amount received</span>
           <strong>{revenueLabel}</strong>
         </div>
 

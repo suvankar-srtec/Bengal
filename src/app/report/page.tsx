@@ -7,6 +7,7 @@ import { ReportEventSelector } from "@/components/report-event-selector";
 import { ReportAutoSearch } from "@/components/report-auto-search";
 import { Icon } from "@/components/icon";
 import { getDatabase } from "@/lib/db";
+import { mealChoiceLabel } from "@/lib/registration";
 import { BBC_LOGO_DATA_URL } from "@/lib/bbc-logo";
 import { MobileAdminNav } from "@/components/mobile-admin-nav";
 import { ManagerWhatsAppSend } from "@/components/manager-whatsapp-send";
@@ -147,6 +148,7 @@ export default async function ReportPage({
           <div className="admin-nav-submenu">
             <Link prefetch={false} aria-current={reportType === "registration" ? "page" : undefined} className={reportType === "registration" ? "active" : ""} href={selectedEvent ? `/report?eventId=${selectedEvent.id}&report=registration` : "/report?report=registration"}>Registration Report</Link>
             <Link prefetch={false} aria-current={reportType === "event" ? "page" : undefined} className={reportType === "event" ? "active" : ""} href={selectedEvent ? `/report?eventId=${selectedEvent.id}&report=event` : "/report?report=event"}>Event Report</Link>
+            <Link prefetch={false} href="/report/whatsapp">WhatsApp</Link>
           </div>
         </div> : <Link prefetch={false} className="active" href={`/report?eventId=${session.eventId}`}>Report</Link>}
       </nav>
@@ -216,8 +218,8 @@ export default async function ReportPage({
                     registration.member_name,
                     ...participants,
                     registration.phone,
-                    ...includedMeals,
-                    ...(registration.provided_meals ?? []).map((item) => item.meal),
+                    ...includedMeals.map(mealChoiceLabel),
+                    ...(registration.provided_meals ?? []).map((item) => mealChoiceLabel(item.meal)),
                   ].join(" ");
 
                   return <tr key={registration.id} data-report-row data-report-search={searchText}>
@@ -234,13 +236,13 @@ export default async function ReportPage({
                         : registration.phone}
                     </td>
                     {session.role === "manager" && <td data-label="Action"><ManagerWhatsAppSend registrationId={registration.id} /></td>}
-                    <td data-label="Meals included">{includedMeals.length ? includedMeals.map((meal) => meal[0].toUpperCase() + meal.slice(1)).join(", ") : "None"}</td>
+                    <td data-label="Meals included">{includedMeals.length ? includedMeals.map(mealChoiceLabel).join(", ") : "None"}</td>
                     <td data-label="Provided meal">
                       <div className="report-provided-meals">
                         {participants.map((name, index) => {
                           const participantMeals = (registration.provided_meals ?? [])
                             .filter((item) => Number(item.participantNumber) === index + 1)
-                            .map((item) => item.meal[0].toUpperCase() + item.meal.slice(1));
+                            .map((item) => mealChoiceLabel(item.meal));
 
                           return <span key={`${registration.id}-provided-${index}`}>
                             <strong>{name}</strong>
@@ -279,7 +281,7 @@ export default async function ReportPage({
                     registration.email,
                     registration.phone,
                     registration.billing_details,
-                    ...(registration.included_meals ?? []),
+                    ...(registration.included_meals?.length ? registration.included_meals : registration.meal_choice ? [registration.meal_choice] : []).map(mealChoiceLabel),
                     registration.payment_status,
                     money(registration.total_paise),
                   ].join(" ")}
@@ -294,7 +296,7 @@ export default async function ReportPage({
                   <td>{registration.email}</td>
                   <td>{registration.phone}</td>
                   <td>{registration.billing_details}</td>
-                  <td>{registration.included_meals?.length ? registration.included_meals.map((meal) => meal[0].toUpperCase() + meal.slice(1)).join(", ") : registration.meal_choice ? registration.meal_choice[0].toUpperCase() + registration.meal_choice.slice(1) : "None"}</td>
+                  <td>{registration.included_meals?.length ? registration.included_meals.map(mealChoiceLabel).join(", ") : registration.meal_choice ? mealChoiceLabel(registration.meal_choice) : "None"}</td>
                   <td>{registration.standee_quantity}</td>
                   <td>{registration.presentation_selected ? "Yes" : "No"}</td>
                   <td>{money(registration.total_paise)}</td>

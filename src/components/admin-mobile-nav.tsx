@@ -81,6 +81,7 @@ export function AdminMobileNav({
             >
               Event Report
             </Link>
+            <Link prefetch={false} className={active("/report/whatsapp") ? "active" : ""} href="/report/whatsapp" onClick={() => setOpen(false)}>WhatsApp</Link>
           </div> : <Link
             className={active("/report") ? "active" : ""}
             href={eventId ? `/report?eventId=${eventId}` : "/report"}

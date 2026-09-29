@@ -39,7 +39,7 @@ export function mealPriceForChoice(prices: ParticipationPrices, choice: MealChoi
 }
 
 export function mealChoiceLabel(choice: MealChoice) {
-  return choice === "snacks" ? "Snacks" : choice === "lunch" ? "Lunch" : "Dinner";
+  return choice === "snacks" ? "Hi-Tea" : choice === "lunch" ? "Lunch" : "Dinner";
 }
 
 export function mealChoicesLabel(choices: readonly MealChoice[]) {

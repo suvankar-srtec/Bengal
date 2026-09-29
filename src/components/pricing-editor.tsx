@@ -135,7 +135,7 @@ export function PricingEditor({
 
       <div className="pricing-meal-grid">
         {([
-          { key: "snacks" as const, label: "Snacks", value: snacks, setValue: setSnacks, current: initial.snacks },
+          { key: "snacks" as const, label: mealChoiceLabel("snacks"), value: snacks, setValue: setSnacks, current: initial.snacks },
           { key: "lunch" as const, label: "Lunch", value: lunch, setValue: setLunch, current: initial.lunch },
           { key: "dinner" as const, label: "Dinner", value: dinner, setValue: setDinner, current: initial.dinner },
         ]).map((item) => <label className={`pricing-meal-card${mealOption === item.key ? " selected" : ""}`} key={item.key}>

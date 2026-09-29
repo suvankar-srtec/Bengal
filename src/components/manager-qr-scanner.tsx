@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { mealChoiceLabel } from "@/lib/registration";
 
 type ScanResult = {
   participantName: string;
@@ -22,6 +23,7 @@ declare global {
 }
 
 function mealLabel(meal: string) {
+  if (meal === "snacks" || meal === "lunch" || meal === "dinner") return mealChoiceLabel(meal);
   return meal ? meal[0].toUpperCase() + meal.slice(1) : meal;
 }
 

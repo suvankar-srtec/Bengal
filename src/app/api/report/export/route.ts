@@ -1,6 +1,7 @@
 import { cookies } from "next/headers";
 import { ADMIN_SESSION_COOKIE, readAdminSession } from "@/lib/admin-auth";
 import { getDatabase } from "@/lib/db";
+import { mealChoiceLabel } from "@/lib/registration";
 import { BBC_LOGO_DATA_URL } from "@/lib/bbc-logo";
 
 export const runtime = "nodejs";
@@ -81,9 +82,9 @@ function excelXml(event: ExportEvent, registrations: ExportRegistration[]) {
     registration.phone,
     registration.billing_details,
     registration.included_meals?.length
-      ? registration.included_meals.map((meal) => meal[0].toUpperCase() + meal.slice(1)).join(", ")
+      ? registration.included_meals.map(mealChoiceLabel).join(", ")
       : registration.meal_choice
-        ? registration.meal_choice[0].toUpperCase() + registration.meal_choice.slice(1)
+        ? mealChoiceLabel(registration.meal_choice)
         : "None",
     registration.standee_quantity,
     registration.presentation_selected ? "Yes" : "No",
@@ -226,9 +227,9 @@ async function buildPdf(event: ExportEvent, registrations: ExportRegistration[])
 
   const rows: PdfRegistrationRow[] = registrations.map((registration) => {
     const meal = registration.included_meals?.length
-      ? registration.included_meals.map((item) => item[0].toUpperCase() + item.slice(1)).join(", ")
+      ? registration.included_meals.map(mealChoiceLabel).join(", ")
       : registration.meal_choice
-        ? registration.meal_choice[0].toUpperCase() + registration.meal_choice.slice(1)
+        ? mealChoiceLabel(registration.meal_choice)
         : "None";
 
     const values = [

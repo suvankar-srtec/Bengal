@@ -98,6 +98,7 @@ export default async function DashboardPage() {
           <div className="admin-nav-submenu">
             <Link prefetch={false} href="/report?report=registration">Registration Report</Link>
             <Link prefetch={false} href="/report?report=event">Event Report</Link>
+            <Link prefetch={false} href="/report/whatsapp">WhatsApp</Link>
           </div>
         </div> : <Link prefetch={false} href={`/report?eventId=${session.eventId}`}>Report</Link>}
       </nav>

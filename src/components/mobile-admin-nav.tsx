@@ -46,6 +46,7 @@ export function MobileAdminNav({
           <span className="mobile-admin-menu-label">Report</span>
           <Link href="/report?report=registration" onClick={() => setOpen(false)}>Registration Report</Link>
           <Link href="/report?report=event" onClick={() => setOpen(false)}>Event Report</Link>
+          <Link prefetch={false} className={linkClass("/report/whatsapp")} href="/report/whatsapp" onClick={() => setOpen(false)}>WhatsApp</Link>
         </> : <Link href={eventId ? `/report?eventId=${eventId}` : "/report"} onClick={() => setOpen(false)}>Report</Link>}
       </nav>
       <div className="mobile-admin-menu-footer">

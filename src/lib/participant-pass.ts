@@ -188,8 +188,7 @@ export async function renderParticipantPass(registration: PassRegistration, inde
     <image href="data:image/png;base64,${qr.split(",")[1]}" x="160" y="330" width="430" height="430"/>
 
     <rect x="45" y="790" width="660" height="74" rx="8" fill="#fff8f5"/>
-    ${pixelText("MEALS INCLUDED", 60, 807, 1.9, "#8a6c64", 24)}
-    ${pixelText(pass.mealLabel, 60, 838, 2.7, "#182f46", 30)}
+    ${pixelText("MEALS INCLUDED", (750 - ("MEALS INCLUDED".length * 6 - 1) * 2.7) / 2, 817.5, 2.7, "#182f46")}
 
     ${pixelText("SCAN QR FOR PARTICIPATION DETAILS", 157, 910, 2, "#626f7b", 38)}
     ${pixelText(date, 252, 952, 1.7, "#626f7b", 28)}

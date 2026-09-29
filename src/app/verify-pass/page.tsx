@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { BBC_LOGO_DATA_URL } from "@/lib/bbc-logo";
 import { getDatabase } from "@/lib/db";
+import { mealChoiceLabel, type MealChoice } from "@/lib/registration";
 import { readPassToken } from "@/lib/pass-token";
 
 export const dynamic = "force-dynamic";
@@ -33,8 +34,8 @@ export default async function VerifyPassPage({
     event_date: Date | string;
     participant_names: string[];
     payment_status: string;
-    included_meals: string[];
-    meal_choice: string | null;
+    included_meals: MealChoice[];
+    meal_choice: MealChoice | null;
   }>(`
     SELECT reference, event_id, event_name, event_date, participant_names,
       payment_status, included_meals, meal_choice
@@ -71,7 +72,7 @@ export default async function VerifyPassPage({
         <div><dt>Event date</dt><dd>{dateLabel(registration.event_date)}</dd></div>
         <div><dt>Reference</dt><dd>{registration.reference}</dd></div>
         <div><dt>Payment</dt><dd>{valid ? "Paid" : registration.payment_status}</dd></div>
-        <div><dt>Meals included</dt><dd>{meals.length ? meals.map((meal) => meal[0].toUpperCase() + meal.slice(1)).join(", ") : "None"}</dd></div>
+        <div><dt>Meals included</dt><dd>{meals.length ? meals.map(mealChoiceLabel).join(", ") : "None"}</dd></div>
       </dl>
 
       <small>This QR contains a secure verification link. No random code needs to be interpreted manually.</small>

@@ -53,6 +53,7 @@ export default async function MembersPage() {
           <div className="admin-nav-submenu">
             <Link prefetch={false} href="/report?report=registration">Registration Report</Link>
             <Link prefetch={false} href="/report?report=event">Event Report</Link>
+            <Link prefetch={false} href="/report/whatsapp">WhatsApp</Link>
           </div>
         </div>
       </nav>

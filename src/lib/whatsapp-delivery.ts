@@ -80,6 +80,9 @@ export async function deliverWhatsAppPasses(registrationId: string) {
         passUrl,
         venue: registration.venue,
         googleMapsUrl: registration.google_maps_url,
+        eventDate: registration.event_date,
+        eventTime: registration.event_time,
+        eventEndTime: registration.event_end_time,
       }),
     }, config);
     await database.query(`UPDATE public.bbc_whatsapp_pass_deliveries

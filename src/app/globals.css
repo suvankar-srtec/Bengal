@@ -2324,3 +2324,18 @@ body{font-size:14px;line-height:1.5}
 .venue-picker-actions>button:last-child{background:var(--coral);border-color:var(--coral);color:white}
 .venue-picker-actions>button:disabled{opacity:.5;cursor:not-allowed}
 @media(max-width:600px){.venue-picker-dialog{padding:16px}.venue-picker-map{height:280px}.venue-picker-heading h2{font-size:17px}}
+
+
+/* Simplified scanner heading and meal scan status */
+.manager-scanner-heading-compact{
+  justify-content:flex-end;
+  margin-bottom:16px;
+}
+.manager-meal-row.provided span b{
+  font-weight:800;
+  color:#245f45;
+}
+.report-provided-meals small.provided{
+  font-weight:700;
+  color:#245f45;
+}

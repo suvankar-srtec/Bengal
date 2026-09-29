@@ -43,18 +43,18 @@ export function whatsappPassMessage(input: {
     : startTime || endTime;
 
   return [
-    `Hello ${input.memberName},`,
+    `Hello *${input.memberName}*,`,
     "",
     `Your registration for ${input.eventName} is confirmed.`,
     `Your ${input.participantCount} QR ${input.participantCount === 1 ? "pass is" : "passes are"} ready.`,
     "",
-    "View or download your passes here:",
+    "*View or download your passes here:*",
     input.passUrl,
     "",
-    `Venue: ${input.venue?.trim() || "Venue to be announced"}`,
+    `*Venue:* ${input.venue?.trim() || "Venue to be announced"}`,
     ...(map ? ["Google Maps:", map] : []),
-    ...(date ? [`Date: ${date}`] : []),
-    ...(time ? [`Time: ${time}`] : []),
+    ...(date ? [`*Date:* ${date}`] : []),
+    ...(time ? [`*Time:* ${time}`] : []),
     "",
     "Please keep the QR pass ready at the venue entrance.",
     "Bengal Business Council",

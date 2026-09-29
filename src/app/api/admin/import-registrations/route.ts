@@ -33,6 +33,13 @@ function phone(raw: string) {
   return digits.length === 12 && digits.startsWith("91") ? digits.slice(2) : digits;
 }
 
+function optionalBillingDetails(raw: string) {
+  const value = raw.trim().toUpperCase();
+  return /^(?:[A-Z]{5}[0-9]{4}[A-Z]|[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][A-Z0-9]Z[A-Z0-9])$/.test(value)
+    ? value
+    : "";
+}
+
 function participants(raw: string, primary: string) {
   const names = raw.split(/[|;\n]+/).map((value) => value.trim()).filter(Boolean);
   if (names[0]?.toLowerCase() === primary.trim().toLowerCase()) names.shift();
@@ -118,7 +125,7 @@ export async function POST(request: Request) {
       const memberName = field(row, ["member_name", "primary_member", "name"]);
       const email = field(row, ["email", "email_address"]);
       const whatsapp = phone(field(row, ["phone", "whatsapp_number", "whatsapp", "mobile", "mobile_number"]));
-      const billingDetails = field(row, ["billing_details", "billing", "gst_pan", "gstin_pan", "gst_pan_number"]).toUpperCase();
+      const billingDetails = optionalBillingDetails(field(row, ["billing_details", "billing", "gst_pan", "gstin_pan", "gst_pan_number"]));
       const quantity = Number(field(row, ["item_quantity", "participation_quantity", "participant_count"]));
       const amountPaidRupees = moneyRupees(field(row, ["total_payment_amount", "amount_paid", "paid_amount", "amount"]));
       const paymentDate = field(row, ["payment_date"]);
@@ -190,7 +197,7 @@ export async function POST(request: Request) {
     const memberName = field(row, ["primary_member", "member_name", "primary_member_name", "name"]);
     const email = field(row, ["email", "email_address"]);
     const whatsapp = phone(field(row, ["whatsapp_number", "whatsapp", "phone", "mobile", "mobile_number"]));
-    const billingDetails = field(row, ["billing_details", "billing", "gst_pan", "gstin_pan", "gst_pan_number"]).toUpperCase();
+    const billingDetails = optionalBillingDetails(field(row, ["billing_details", "billing", "gst_pan", "gstin_pan", "gst_pan_number"]));
     const additional = participants(field(row, ["additional_participants", "participant_names", "participants"]), memberName);
     const participantNames = [memberName, ...additional];
     const quantityText = field(row, ["participation_quantity", "participant_count", "participants_count"]);

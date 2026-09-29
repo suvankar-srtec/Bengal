@@ -890,7 +890,9 @@ body{font-size:14px;line-height:1.5}
   .manager-scanner-card{padding:15px}
   .manager-scanner-heading{flex-direction:column}
   .manager-scanner-heading>button{width:100%}
-  .manager-scanner-camera,.manager-scanner-camera video{min-height:300px}
+  .manager-scanner-camera{height:68vh;min-height:460px;max-height:620px}
+  .manager-scanner-camera video{height:100%;min-height:460px}
+  .manager-scanner-frame{width:min(72%,360px)}
   .manager-manual-scan>div{flex-direction:column}
   .manager-manual-scan button{width:100%}
   .pass-verification-card{padding:24px 18px}

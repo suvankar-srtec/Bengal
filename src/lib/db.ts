@@ -8,11 +8,16 @@ export function getDatabase() {
   if (!process.env.DATABASE_URL) throw new Error("DATABASE_URL is not configured");
 
   const connection = new URL(process.env.DATABASE_URL);
-  // Keep TLS certificate validation enabled, including with newer pg versions.
-  connection.searchParams.set("sslmode", "verify-full");
+  const isLocalDatabase = ["127.0.0.1", "localhost"].includes(connection.hostname);
+
+  if (!isLocalDatabase) {
+    // Keep TLS certificate validation enabled for hosted PostgreSQL services.
+    connection.searchParams.set("sslmode", "verify-full");
+  }
+
   const pool = new Pool({
     connectionString: connection.toString(),
-    enableChannelBinding: true,
+    enableChannelBinding: !isLocalDatabase,
     max: 4,
     connectionTimeoutMillis: 8000,
     idleTimeoutMillis: 60000,

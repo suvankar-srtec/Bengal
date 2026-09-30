@@ -65,8 +65,8 @@ export function AdminMobileNav({
 
           <Link className={active("/scanner") ? "active" : ""} href="/scanner" onClick={() => setOpen(false)}>Scanner</Link>
 
-          {role === "admin" ? <div className="admin-mobile-report-group">
-            <span>Report</span>
+          {role === "admin" ? <details className="admin-mobile-report-group">
+            <summary>Report</summary>
             <Link
               className={pathname === "/report" && reportType === "registration" ? "active" : ""}
               href="/report?report=registration"
@@ -82,7 +82,7 @@ export function AdminMobileNav({
               Event Report
             </Link>
             <Link prefetch={false} className={active("/report/whatsapp") ? "active" : ""} href="/report/whatsapp" onClick={() => setOpen(false)}>WhatsApp</Link>
-          </div> : <Link
+          </details> : <Link
             className={active("/report") ? "active" : ""}
             href={eventId ? `/report?eventId=${eventId}` : "/report"}
             onClick={() => setOpen(false)}

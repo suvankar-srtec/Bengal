@@ -127,8 +127,8 @@ export async function POST(request: Request) {
         id, submission_id, request_hash, reference, event_id, event_name, event_date,
         member_name, email, phone, billing_details,
         participation_quantity, standee_quantity, meal_choice, included_meals, presentation_selected,
-        participation_unit_paise, standee_unit_paise, presentation_unit_paise, meal_unit_paise, total_paise, participant_names
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NULL, $14, $15, $16, $17, $18, 0, $19, $20)
+        participation_unit_paise, standee_unit_paise, presentation_unit_paise, meal_unit_paise, total_paise, participant_names, payment_status
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NULL, $14, $15, $16, $17, $18, 0, $19, $20, 'unpaid')
       ON CONFLICT (submission_id) DO NOTHING
       RETURNING id, reference, total_paise, payment_status, request_hash
     `, [id, data.submissionId, fingerprint, reference, eventId, eventName, eventDate,

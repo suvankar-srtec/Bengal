@@ -1,10 +1,20 @@
-import { venueMapUrl } from "@/lib/venue-map";
+import { venueMapEmbedUrl } from "@/lib/venue-map";
+import { Icon } from "./icon";
 
-export function EventVenue({ venue, googleMapsUrl }: { venue?: string | null; googleMapsUrl?: string | null }) {
-  const mapUrl = venueMapUrl(venue, googleMapsUrl);
-  return <div className="event-venue-details">
-    <strong>Venue</strong>
-    <p>{venue || "Venue to be announced"}</p>
-    {mapUrl && <a className="venue-map-link" href={mapUrl} target="_blank" rel="noopener noreferrer">Open in Google Maps</a>}
-  </div>;
+export function EventVenue({ venue, googleMapsUrl, dateLabel, timeLabel }: { venue?: string | null; googleMapsUrl?: string | null; dateLabel?: string; timeLabel?: string }) {
+  const mapUrl = venueMapEmbedUrl(venue, googleMapsUrl);
+  const address = venue?.trim() || "Venue to be announced";
+  return <section className="event-venue-details" aria-label="Venue and event schedule">
+    <div className="event-venue-content">
+      <div className="event-venue-heading">
+        <span className="event-venue-pin"><Icon name="pin" size={22} /></span>
+        <div><span className="event-venue-eyebrow">Venue</span><p className="event-venue-address">{address}</p></div>
+      </div>
+      {(dateLabel || timeLabel) && <dl className="event-venue-schedule">
+        {dateLabel && <div className="event-venue-date"><dt><Icon name="calendar" size={16} /> Event date</dt><dd>{dateLabel}</dd></div>}
+        {timeLabel && <div className="event-venue-time"><dt><Icon name="clock" size={16} /> Event time</dt><dd>{timeLabel}</dd></div>}
+      </dl>}
+    </div>
+    {mapUrl && <div className="event-venue-map"><iframe title={`Google Maps location: ${address}`} src={mapUrl} loading="lazy" referrerPolicy="strict-origin-when-cross-origin" allowFullScreen /></div>}
+  </section>;
 }

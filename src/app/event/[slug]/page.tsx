@@ -1,3 +1,4 @@
+import { EventAbout } from "@/components/event-about";
 import { notFound } from "next/navigation";
 import { EventVenue } from "@/components/event-venue";
 import { RegistrationForm } from "@/components/registration-form";
@@ -82,14 +83,10 @@ export default async function PublicEventPage({
             </div>
           </div>
 
-          <EventVenue venue={event.venue} googleMapsUrl={event.googleMapsUrl} />
           <div className="section-rule" />
-          <h2 className="about-title">{event.aboutTagline1}</h2>
-          <p className="about-copy">{event.aboutParagraph1}</p>
-          {(event.aboutTagline2 || event.aboutParagraph2) && <>
-            {event.aboutTagline2 && <h2 className="about-title about-title-secondary">{event.aboutTagline2}</h2>}
-            {event.aboutParagraph2 && <p className="about-copy">{event.aboutParagraph2}</p>}
-          </>}
+          <EventAbout event={event} />
+
+          <EventVenue venue={event.venue} googleMapsUrl={event.googleMapsUrl} dateLabel={`${eventDayLabel}, ${eventDateLabel}`} timeLabel={`${eventTimeLabel(event.eventTime)} – ${eventTimeLabel(event.eventEndTime)}`} />
 
         </section>
 

@@ -20,3 +20,18 @@ export function venueMapUrl(venue: string | null | undefined, savedUrl?: string 
   if (!address || address.toLowerCase() === "venue to be announced") return null;
   return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`;
 }
+
+export function venueMapEmbedUrl(venue: string | null | undefined, savedUrl?: string | null) {
+  const mapUrl = venueMapUrl(venue, savedUrl);
+  if (!mapUrl) return null;
+  const saved = new URL(mapUrl);
+  // Preserve Google Maps' shared embed locations when supplied.
+  if (saved.pathname === "/maps/embed" && saved.searchParams.has("pb")) {
+    return `https://www.google.com/maps/embed?${new URLSearchParams({ pb: saved.searchParams.get("pb")! })}`;
+  }
+  const address = venue?.trim();
+  const query = saved.searchParams.get("query") || saved.searchParams.get("q")
+    || (address && address.toLowerCase() !== "venue to be announced" ? address : null);
+  if (!query) return null;
+  return `https://www.google.com/maps?${new URLSearchParams({ q: query, output: "embed", z: "16" })}`;
+}

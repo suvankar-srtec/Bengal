@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
-import type { EventContent } from "@/lib/event-content";
+import { useRef, useState, type FormEvent } from "react";
+import { eventAboutSections, MAX_ABOUT_SECTIONS, type EventContent } from "@/lib/event-content";
 import { isGoogleMapsUrl } from "@/lib/venue-map";
 import { VenueAddressField } from "@/components/venue-address-field";
 import { eventPublicPath } from "@/lib/event-public-link";
@@ -36,7 +36,14 @@ export function EventContentEditor({
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
   const [publicLink, setPublicLink] = useState<string | null>(null);
-  const [showSecondAbout, setShowSecondAbout] = useState(Boolean(initial.aboutTagline2 || initial.aboutParagraph2));
+  const [aboutSections, setAboutSections] = useState(() => eventAboutSections(initial).map((section, id) => ({ ...section, id })));
+  const nextSectionId = useRef(aboutSections.length);
+
+  function updateAboutSection(id: number, field: "tagline" | "paragraph", value: string) {
+    setAboutSections((current) => current.map((section) => section.id === id ? { ...section, [field]: value } : section));
+    setMessage(null);
+  }
+
 
   const [participation, setParticipation] = useState(rupees(initialPrices.participation));
   const [standee, setStandee] = useState(rupees(initialPrices.standee));
@@ -106,6 +113,11 @@ export function EventContentEditor({
     try {
       const payload = {
         ...form,
+        aboutTagline1: aboutSections[0].tagline,
+        aboutParagraph1: aboutSections[0].paragraph,
+        aboutTagline2: aboutSections[1]?.tagline ?? "",
+        aboutParagraph2: aboutSections[1]?.paragraph ?? "",
+        additionalAboutSections: aboutSections.slice(2).map(({ tagline, paragraph }) => ({ tagline, paragraph })),
         ...(eventId ? { eventId } : {}),
         participationPaise: pricing.participation,
         standeePaise: pricing.standee,
@@ -243,41 +255,37 @@ export function EventContentEditor({
     <section className="event-editor-section">
       <div className="about-editor-heading">
         <h2>About event</h2>
-        {!showSecondAbout && <button
+        {aboutSections.length < MAX_ABOUT_SECTIONS && <button
           type="button"
           className="about-add-group"
           aria-label="Add another tagline and paragraph"
           title="Add another tagline and paragraph"
-          onClick={() => setShowSecondAbout(true)}
+          onClick={() => {
+            const id = nextSectionId.current++;
+            setAboutSections((current) => [...current, { id, tagline: "", paragraph: "" }]);
+            setMessage(null);
+          }}
         >+</button>}
       </div>
 
-      <div className="about-editor-group">
-        <span className="about-group-label">01</span>
-        <div className="event-editor-grid">
-          <label className="full"><span>Tagline</span><input value={form.aboutTagline1} onChange={(e) => set("aboutTagline1", e.target.value)} required /></label>
-          <label className="full"><span>Paragraph</span><textarea rows={4} value={form.aboutParagraph1} onChange={(e) => set("aboutParagraph1", e.target.value)} required /></label>
-        </div>
-      </div>
-
-      {showSecondAbout && <div className="about-editor-group">
+      {aboutSections.map((section, index) => <div className="about-editor-group" key={section.id}>
         <div className="about-group-top">
-          <span className="about-group-label">02</span>
-          <button
+          <span className="about-group-label">{String(index + 1).padStart(2, "0")}</span>
+          {index > 0 && <button
             type="button"
             className="about-remove-group"
+            aria-label={`Remove paragraph section ${index + 1}`}
             onClick={() => {
-              set("aboutTagline2", "");
-              set("aboutParagraph2", "");
-              setShowSecondAbout(false);
+              setAboutSections((current) => current.filter((item) => item.id !== section.id));
+              setMessage(null);
             }}
-          >Remove</button>
+          >Remove</button>}
         </div>
         <div className="event-editor-grid">
-          <label className="full"><span>Tagline</span><input value={form.aboutTagline2} onChange={(e) => set("aboutTagline2", e.target.value)} /></label>
-          <label className="full"><span>Paragraph</span><textarea rows={4} value={form.aboutParagraph2} onChange={(e) => set("aboutParagraph2", e.target.value)} /></label>
+          <label className="full" htmlFor={`about-tagline-${section.id}`}><span>Tagline</span><input id={`about-tagline-${section.id}`} value={section.tagline} maxLength={220} onChange={(e) => updateAboutSection(section.id, "tagline", e.target.value)} required={index === 0} /></label>
+          <label className="full" htmlFor={`about-paragraph-${section.id}`}><span>Paragraph</span><textarea id={`about-paragraph-${section.id}`} rows={4} value={section.paragraph} maxLength={1500} onChange={(e) => updateAboutSection(section.id, "paragraph", e.target.value)} required={index === 0} /></label>
         </div>
-      </div>}
+      </div>)}
     </section>
 
     {message && <div className={`event-editor-message ${message.type}`} role="status">{message.text}</div>}

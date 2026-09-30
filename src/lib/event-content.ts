@@ -1,6 +1,13 @@
 import { z } from "zod";
 import { isGoogleMapsUrl } from "./venue-map";
 
+export const MAX_ABOUT_SECTIONS = 20;
+export const aboutSectionSchema = z.object({
+  tagline: z.string().trim().max(220),
+  paragraph: z.string().trim().max(1500),
+});
+const additionalAboutSectionsSchema = z.array(aboutSectionSchema).max(MAX_ABOUT_SECTIONS - 2);
+
 export const eventContentSchema = z.object({
   titleBn: z.string().trim().min(1).max(160),
   titleEn: z.string().trim().min(1).max(160),
@@ -14,6 +21,7 @@ export const eventContentSchema = z.object({
   aboutParagraph1: z.string().trim().min(1).max(1500),
   aboutTagline2: z.string().trim().max(220),
   aboutParagraph2: z.string().trim().max(1500),
+  additionalAboutSections: additionalAboutSectionsSchema.default([]),
 });
 
 export const createEventSchema = eventContentSchema.extend({
@@ -43,6 +51,7 @@ export const DEFAULT_EVENT_CONTENT: EventContent = {
   aboutParagraph1: "Aalap Alochona is the official networking format of the Bengal Business Council. A space to go beyond introductions, exchange ideas, and build meaningful professional and personal relationships.",
   aboutTagline2: "",
   aboutParagraph2: "",
+  additionalAboutSections: [],
 };
 
 function normalizeEventDate(value: unknown) {
@@ -85,5 +94,14 @@ export function eventContentFromRow(row: Record<string, unknown> | undefined): E
     aboutParagraph1: String(row.about_paragraph_1 ?? DEFAULT_EVENT_CONTENT.aboutParagraph1),
     aboutTagline2: String(row.tagline_line_2 ?? ""),
     aboutParagraph2: String(row.about_paragraph_2 ?? ""),
+    additionalAboutSections: additionalAboutSectionsSchema.parse(row.additional_about_sections ?? []),
   };
+}
+
+export function eventAboutSections(event: EventContent) {
+  return [
+    { tagline: event.aboutTagline1, paragraph: event.aboutParagraph1 },
+    { tagline: event.aboutTagline2, paragraph: event.aboutParagraph2 },
+    ...event.additionalAboutSections,
+  ].filter((section) => section.tagline.trim() || section.paragraph.trim());
 }

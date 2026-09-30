@@ -91,14 +91,14 @@ export default async function WhatsAppReportPage({ searchParams }: {
         <Link prefetch={false} href="/managers">Manager</Link>
         <Link prefetch={false} href="/upload">Upload</Link>
         <Link prefetch={false} className="mobile-scanner-nav" href="/scanner">Scanner</Link>
-        <div className="admin-nav-group">
-          <span className="admin-nav-parent active">Report</span>
+        <details className="admin-nav-group">
+          <summary className="admin-nav-parent active">Report</summary>
           <div className="admin-nav-submenu">
             <Link prefetch={false} href="/report?report=registration">Registration Report</Link>
             <Link prefetch={false} href="/report?report=event">Event Report</Link>
             <Link prefetch={false} className="active" aria-current="page" href="/report/whatsapp">WhatsApp</Link>
           </div>
-        </div>
+        </details>
       </nav>
       <div className="admin-sidebar-footer"><AdminLogoutButton /></div>
     </aside>
@@ -131,11 +131,11 @@ export default async function WhatsAppReportPage({ searchParams }: {
               <th scope="col">Status</th><th scope="col">Attempts</th><th scope="col">Sent to provider at</th><th scope="col">Last updated</th>
             </tr></thead>
             <tbody>{rows.map((row) => <tr key={row.registration_id}>
-              <td><strong>{row.member_name}</strong><small>{row.reference}</small></td>
-              <td>{row.phone.startsWith("+") ? row.phone : row.phone.length === 10 ? `+91${row.phone}` : `+${row.phone}`}</td>
-              <td>{row.event_name}</td>
-              <td><span className={`whatsapp-history-status ${row.status}`}>{statuses[row.status] ?? row.status}</span>{row.error_code && <small>{row.error_code.replaceAll("_", " ")}</small>}</td>
-              <td>{row.attempts}</td><td>{dateTime(row.accepted_at)}</td><td>{dateTime(row.updated_at)}</td>
+              <td data-label="Member / reference"><strong>{row.member_name}</strong><small>{row.reference}</small></td>
+              <td data-label="WhatsApp number">{row.phone.startsWith("+") ? row.phone : row.phone.length === 10 ? `+91${row.phone}` : `+${row.phone}`}</td>
+              <td data-label="Event">{row.event_name}</td>
+              <td data-label="Status"><span className={`whatsapp-history-status ${row.status}`}>{statuses[row.status] ?? row.status}</span>{row.error_code && <small>{row.error_code.replaceAll("_", " ")}</small>}</td>
+              <td data-label="Attempts">{row.attempts}</td><td data-label="Sent to provider at">{dateTime(row.accepted_at)}</td><td data-label="Last updated">{dateTime(row.updated_at)}</td>
             </tr>)}</tbody>
           </table></div>}
         {!failed && <nav className="whatsapp-history-pagination" aria-label="WhatsApp history pages">

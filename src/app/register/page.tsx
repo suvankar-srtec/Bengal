@@ -1,3 +1,4 @@
+import { EventAbout } from "@/components/event-about";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { EventVenue } from "@/components/event-venue";
@@ -79,14 +80,10 @@ export default async function RegisterPage({
               <h1 id="event-title" lang="bn">{event.titleBn}<span lang="en">{event.titleEn}</span></h1>
               <div className="event-date"><span className="date-icon"><Icon name="calendar" size={23} /></span><div><strong>{eventDateLabel}</strong><span>{eventDayLabel} <i /> {eventTimeLabel(event.eventTime)} – {eventTimeLabel(event.eventEndTime)} <i /> {event.organizer}</span></div></div>
 
-            <EventVenue venue={event.venue} googleMapsUrl={event.googleMapsUrl} />
           <div className="section-rule" />
-            <h2 className="about-title">{event.aboutTagline1}</h2>
-            <p className="about-copy">{event.aboutParagraph1}</p>
-            {(event.aboutTagline2 || event.aboutParagraph2) && <>
-              {event.aboutTagline2 && <h2 className="about-title about-title-secondary">{event.aboutTagline2}</h2>}
-              {event.aboutParagraph2 && <p className="about-copy">{event.aboutParagraph2}</p>}
-            </>}
+            <EventAbout event={event} />
+
+            <EventVenue venue={event.venue} googleMapsUrl={event.googleMapsUrl} dateLabel={`${eventDayLabel}, ${eventDateLabel}`} timeLabel={`${eventTimeLabel(event.eventTime)} – ${eventTimeLabel(event.eventEndTime)}`} />
 
             <div className="impact-card">
               <div className="impact-icon"><Icon name="users" size={26} /></div>

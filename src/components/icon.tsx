@@ -1,8 +1,10 @@
 import type { CSSProperties } from "react";
 
-type IconName = "arrow" | "calendar" | "check" | "chevron" | "download" | "lock" | "minus" | "plus" | "users" | "spark";
+type IconName = "arrow" | "calendar" | "check" | "chevron" | "download" | "lock" | "minus" | "plus" | "users" | "spark" | "pin" | "clock";
 const paths: Record<IconName, React.ReactNode> = {
   arrow: <><path d="M4 12h15M13 6l6 6-6 6" /></>,
+  pin: <><path d="M20 10c0 6-8 12-8 12S4 16 4 10a8 8 0 1 1 16 0Z" /><circle cx="12" cy="10" r="2.5" /></>,
+  clock: <><circle cx="12" cy="12" r="9" /><path d="M12 7v5l3 2" /></>,
   calendar: <><rect x="4" y="5" width="16" height="16" rx="3" /><path d="M8 3v4m8-4v4M4 11h16m-11 4h2m3 0h2" /></>,
   check: <path d="m5 12 4 4L19 6" />,
   chevron: <path d="m9 5 7 7-7 7" />,

@@ -42,12 +42,12 @@ export function MobileAdminNav({
         {role === "admin" && <Link className={linkClass("/managers")} href="/managers" onClick={() => setOpen(false)}>Manager</Link>}
         {role === "admin" && <Link className={linkClass("/upload")} href="/upload" onClick={() => setOpen(false)}>Upload</Link>}
         {role === "manager" && <Link className={linkClass("/scanner")} href="/scanner" onClick={() => setOpen(false)}>Scanner</Link>}
-        {role === "admin" ? <>
-          <span className="mobile-admin-menu-label">Report</span>
+        {role === "admin" ? <details className="mobile-report-menu">
+          <summary className="mobile-admin-menu-label">Report</summary>
           <Link href="/report?report=registration" onClick={() => setOpen(false)}>Registration Report</Link>
           <Link href="/report?report=event" onClick={() => setOpen(false)}>Event Report</Link>
           <Link prefetch={false} className={linkClass("/report/whatsapp")} href="/report/whatsapp" onClick={() => setOpen(false)}>WhatsApp</Link>
-        </> : <Link href={eventId ? `/report?eventId=${eventId}` : "/report"} onClick={() => setOpen(false)}>Report</Link>}
+        </details> : <Link href={eventId ? `/report?eventId=${eventId}` : "/report"} onClick={() => setOpen(false)}>Report</Link>}
       </nav>
       <div className="mobile-admin-menu-footer">
         <AdminLogoutButton />

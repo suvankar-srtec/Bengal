@@ -25,14 +25,14 @@ export default async function ScannerPage() {
         {session.role === "admin" && <Link prefetch={false} href="/managers">Manager</Link>}
         {session.role === "admin" && <Link prefetch={false} href="/upload">Upload</Link>}
         <Link prefetch={false} className="active mobile-scanner-nav" href="/scanner">Scanner</Link>
-        {session.role === "admin" ? <div className="admin-nav-group">
-          <span className="admin-nav-parent">Report</span>
+        {session.role === "admin" ? <details className="admin-nav-group">
+          <summary className="admin-nav-parent">Report</summary>
           <div className="admin-nav-submenu">
             <Link prefetch={false} href="/report?report=registration">Registration Report</Link>
             <Link prefetch={false} href="/report?report=event">Event Report</Link>
             <Link prefetch={false} href="/report/whatsapp">WhatsApp</Link>
           </div>
-        </div> : <Link prefetch={false} href={`/report?eventId=${session.eventId}`}>Report</Link>}
+        </details> : <Link prefetch={false} href={`/report?eventId=${session.eventId}`}>Report</Link>}
       </nav>
       <div className="admin-sidebar-footer"><AdminLogoutButton /></div>
     </aside>

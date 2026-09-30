@@ -564,6 +564,9 @@ export async function GET(request: Request) {
     return Response.json({ error: "This event is not assigned to your manager account." }, { status: 403 });
   }
   const format = url.searchParams.get("format");
+  const reportType = session.role === "manager" || url.searchParams.get("report") === "event"
+    ? "event"
+    : "registration";
 
   if (!Number.isInteger(eventId) || eventId < 1) {
     return Response.json({ error: "Invalid event." }, { status: 400 });
@@ -602,6 +605,7 @@ export async function GET(request: Request) {
         created_at
       FROM public.bbc_event_registrations
       WHERE event_id = $1
+        ${reportType === "registration" ? "AND admin_import_key IS NULL" : ""}
       ORDER BY created_at DESC
     `, [String(eventId)]);
 

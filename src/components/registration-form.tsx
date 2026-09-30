@@ -1,10 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type FormEvent } from "react";
 import { calculateTotal, formatMoney, LIMITS, mealChoicesLabel, registrationSchema, registrationFieldKey, type FieldErrors, type ParticipationPrices, type RegistrationReceipt } from "@/lib/registration";
 import { Icon } from "./icon";
-import { PaymentCheckout } from "./payment-checkout";
-import { WhatsAppDeliveryStatus } from "./whatsapp-delivery-status";
 import { BBC_LOGO_DATA_URL } from "@/lib/bbc-logo";
 
 function Quantity({ label, value, minimum, maximum, onChange }: {
@@ -26,53 +24,40 @@ export function RegistrationForm({ eventContentId, prices }: { eventContentId: n
   const [errorMessage, setErrorMessage] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [receipt, setReceipt] = useState<RegistrationReceipt | null>(null);
-  const [qrPasses, setQrPasses] = useState<Array<{ participantNumber: number; participantName: string; passId: string; mealLabel: string; passUrl: string }>>([]);
-  const [qrGenerating, setQrGenerating] = useState(false);
-  const [qrError, setQrError] = useState("");
-  const [qrRetryKey, setQrRetryKey] = useState(0);
   const submission = useRef<{ key: string; id: string } | null>(null);
   const inFlight = useRef(false);
   const confirmationHeading = useRef<HTMLHeadingElement>(null);
   const participationQuantity = 1 + additionalParticipantNames.length;
   const participantNames = [fields.memberName, ...additionalParticipantNames];
   const total = calculateTotal({ participationQuantity, standeeQuantity, presentationSelected }, prices);
-  const participantKey = participantNames.map((name) => name.trim()).join("\u001f");
+
+  const focusAfterReset = useRef(false);
+  const resetForm = useCallback(() => {
+    focusAfterReset.current = true;
+    setReceipt(null);
+    setFields({ memberName: "", email: "", phone: "", billingDetails: "" });
+    setAdditionalParticipantNames([]);
+    setStandeeQuantity(0);
+    setPresentationSelected(false);
+    setErrors({});
+    setErrorMessage("");
+    setIsSubmitting(false);
+    submission.current = null;
+    inFlight.current = false;
+  }, []);
 
   useEffect(() => {
-    if (receipt?.paymentStatus === "paid") confirmationHeading.current?.focus();
-  }, [receipt?.paymentStatus]);
-
-  useEffect(() => {
-    if (!receipt || receipt.paymentStatus !== "paid") {
-      setQrPasses([]);
-      setQrGenerating(false);
-      setQrError("");
+    if (!receipt) {
+      if (focusAfterReset.current) {
+        document.getElementById("memberName")?.focus();
+        focusAfterReset.current = false;
+      }
       return;
     }
-
-    let cancelled = false;
-    setQrGenerating(true);
-    setQrPasses([]);
-    setQrError("");
-
-    void (async () => {
-      const response = await fetch("/api/passes", {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ registrationId: receipt.id, submissionId: submission.current?.id }),
-        signal: AbortSignal.timeout(30000),
-      });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error);
-      const passes = result.passes;
-      if (!cancelled) setQrPasses(passes);
-    })().catch(() => {
-      if (!cancelled) setQrError("We couldn’t generate the participant passes. Please retry.");
-    }).finally(() => {
-      if (!cancelled) setQrGenerating(false);
-    });
-
-    return () => { cancelled = true; };
-  }, [receipt?.id, receipt?.reference, receipt?.paymentStatus, participantKey, qrRetryKey]);
+    confirmationHeading.current?.focus();
+    const timer = window.setTimeout(resetForm, 5000);
+    return () => window.clearTimeout(timer);
+  }, [receipt, resetForm]);
 
   function updateField(field: keyof typeof fields, value: string) {
     setFields((current) => ({ ...current, [field]: value }));
@@ -145,58 +130,13 @@ export function RegistrationForm({ eventContentId, prices }: { eventContentId: n
     }
   }
 
-  function downloadParticipantPass(pass: { participantNumber: number; participantName: string; passId: string; passUrl: string }) {
-    const safeName = pass.participantName.replace(/[^a-zA-Z0-9_-]+/g, "-").replace(/^-+|-+$/g, "") || `participant-${pass.participantNumber}`;
-    const anchor = document.createElement("a");
-    anchor.href = pass.passUrl;
-    anchor.download = `${receipt?.reference ?? "BBC"}-P${pass.participantNumber}-${safeName}-pass.png`;
-    anchor.click();
-  }
-
-  if (receipt && receipt.paymentStatus !== "paid") return <div className="registration-card payment-stage-card">
-    <span className="eyebrow">PAYMENT</span>
-    <h2>Scan the payment QR</h2>
-    <p>Scan the QR below to view the exact total amount for this registration.</p>
-    <PaymentCheckout autoStart registration={receipt} submissionId={submission.current?.id ?? ""} member={fields} onPaid={() => setReceipt((current) => current ? { ...current, paymentStatus: "paid" } : current)} />
-  </div>;
-
-  if (receipt?.paymentStatus === "paid" && (qrGenerating || (!qrError && qrPasses.length !== participantNames.length))) return <div className="registration-card qr-generating-card" role="status" aria-live="polite">
-    <span className="qr-loader" aria-hidden="true" />
-    <span className="eyebrow">PAYMENT SUCCESSFUL</span>
-    <h2>Generating participant passes…</h2>
-    <p>Please wait while we create one individual pass with name, included meals and QR code for each participant.</p>
-    <div className="qr-generation-count">{participantNames.length} {participantNames.length === 1 ? "pass" : "passes"} being generated</div>
-  </div>;
-
-  if (receipt?.paymentStatus === "paid" && qrError) return <div className="registration-card qr-generating-card">
-    <span className="eyebrow">PAYMENT SUCCESSFUL</span>
-    <h2>Pass generation needs a retry</h2>
-    <div className="error-banner" role="alert">{qrError}</div>
-    <button className="submit-button" type="button" onClick={() => setQrRetryKey((value) => value + 1)}>Generate passes again</button>
-  </div>;
-
-  if (receipt?.paymentStatus === "paid") return <div className="registration-card success-card qr-ready-card">
+  if (receipt) return <div className="registration-card success-card spot-registration-success" role="status" aria-live="polite">
     <span className="success-icon"><Icon name="check" size={32} /></span>
-    <span className="eyebrow">PARTICIPANT PASSES READY</span>
-    <h2 ref={confirmationHeading} tabIndex={-1}>Your passes are ready.</h2>
-    <p>Each participant has an individual pass showing their name, included meals and QR code.</p>
-    <WhatsAppDeliveryStatus registrationId={receipt.id} submissionId={submission.current?.id ?? ""} />
-    <div className="qr-pass-grid">
-      {qrPasses.map((pass) => <article className="qr-pass-card" key={pass.passId}>
-        <div className="qr-pass-image-wrap participant-pass-preview"><img src={pass.passUrl} alt={`Event pass for ${pass.participantName}`} onError={() => setQrError("We could not load your pass image. Please retry.")} /></div>
-        <div className="qr-pass-meta">
-          <span>Participant {pass.participantNumber}</span>
-          <strong>{pass.participantName}</strong>
-          <small>{pass.passId}</small>
-        </div>
-        <button type="button" onClick={() => downloadParticipantPass(pass)}><Icon name="download" size={16} /> Download pass</button>
-      </article>)}
-    </div>
-    <button className="new-registration" type="button" onClick={() => {
-      setReceipt(null); setFields({ memberName: "", email: "", phone: "", billingDetails: "" });
-      setAdditionalParticipantNames([]); setStandeeQuantity(0); setPresentationSelected(false);
-      setQrPasses([]); setQrError(""); submission.current = null;
-    }}>Register another member <Icon name="arrow" size={16} /></button>
+    <span className="eyebrow">REGISTRATION SAVED</span>
+    <h2 ref={confirmationHeading} tabIndex={-1}>Registration successful!</h2>
+    <p>Your registration has been saved successfully.</p>
+    <p>The form will reset in 5 seconds for the next registration.</p>
+    <button className="new-registration" type="button" onClick={resetForm}>Register another member <Icon name="arrow" size={16} /></button>
   </div>;
 
   return <div className="registration-card">
@@ -250,12 +190,11 @@ export function RegistrationForm({ eventContentId, prices }: { eventContentId: n
           <label className={`fee-row presentation-option${presentationSelected ? " selected" : ""}`} htmlFor="presentationSelected"><div><span className="fee-label">Company presentation</span><span className="fee-description">20-minute presentation slot</span><span className="fee-price">{formatMoney(prices.presentation)}</span></div><input id="presentationSelected" name="presentationSelected" type="checkbox" checked={presentationSelected} onChange={(event) => setPresentationSelected(event.target.checked)} /></label>
         </div>
 
-        <p className="participant-count-hint" role="status">Participant fee is calculated automatically from the {participationQuantity} member {participationQuantity === 1 ? "name" : "names"} above.</p>
 
         <div className="total-row"><div><span>Total amount</span><small>{participationQuantity} {participationQuantity === 1 ? "participant" : "participants"}{standeeQuantity > 0 ? ` · ${standeeQuantity} ${standeeQuantity === 1 ? "standee" : "standees"}` : ""}{presentationSelected ? " · Presentation" : ""}</small></div><output aria-label="Total amount" aria-live="polite">{formatMoney(total)}</output></div>
         {errorMessage && <div className="error-banner" role="alert">{errorMessage}</div>}
-        <button className="submit-button" type="submit" disabled={isSubmitting}>{isSubmitting ? <><span className="spinner" /> Preparing payment QR…</> : <>Proceed to payment <Icon name="arrow" size={19} /></>}</button>
-        <p className="submit-note">Your payment QR is generated after the registration details are saved.</p>
+        <button className="submit-button" type="submit" disabled={isSubmitting}>{isSubmitting ? <><span className="spinner" /> Saving registration...</> : <>Submit registration <Icon name="arrow" size={19} /></>}</button>
+        <p className="submit-note">Your registration details will be saved when you submit this form.</p>
       </fieldset>
     </form>
   </div>;

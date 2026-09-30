@@ -48,14 +48,14 @@ export default async function MembersPage() {
         <Link prefetch={false} href="/managers">Manager</Link>
         <Link prefetch={false} href="/upload">Upload</Link>
         <Link prefetch={false} className="mobile-scanner-nav" href="/scanner">Scanner</Link>
-        <div className="admin-nav-group">
-          <span className="admin-nav-parent">Report</span>
+        <details className="admin-nav-group">
+          <summary className="admin-nav-parent">Report</summary>
           <div className="admin-nav-submenu">
             <Link prefetch={false} href="/report?report=registration">Registration Report</Link>
             <Link prefetch={false} href="/report?report=event">Event Report</Link>
             <Link prefetch={false} href="/report/whatsapp">WhatsApp</Link>
           </div>
-        </div>
+        </details>
       </nav>
 
       <div className="admin-sidebar-footer"><AdminLogoutButton /></div>

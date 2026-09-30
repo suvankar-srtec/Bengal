@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start --hostname 127.0.0.1",
     "typecheck": "tsc --noEmit",
-    "test": "tsx --test tests/registration.test.ts tests/payment-security.test.ts tests/venue-map.test.ts",
+    "test": "tsx --test tests/registration.test.ts tests/payment-security.test.ts tests/venue-map.test.ts tests/event-content.test.ts",
     "db:migrate": "node --env-file=.env.local scripts/migrate.mjs",
     "test:integration": "node --env-file=.env.local scripts/verify-registration.mjs",
     "test:payments": "node --env-file=.env.local scripts/verify-payments.mjs",

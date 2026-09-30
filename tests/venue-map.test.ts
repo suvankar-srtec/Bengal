@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { isGoogleMapsUrl, venueMapUrl } from "../src/lib/venue-map";
+import { isGoogleMapsUrl, venueMapUrl, venueMapEmbedUrl } from "../src/lib/venue-map";
 import { DEFAULT_EVENT_CONTENT, eventContentFromRow, eventContentSchema } from "../src/lib/event-content";
 import { whatsappPassMessage } from "../src/lib/whatsapp-pass-message";
 
@@ -31,7 +31,7 @@ test("WhatsApp pass message includes the saved address and map after the pass li
   const passUrl = "https://example.com/passes/test?v=3";
   const map = "https://maps.app.goo.gl/exactVenue";
   const message = whatsappPassMessage({ memberName: "Test Member", eventName: "October Meetup", participantCount: 2, passUrl, venue: "Venue A, Kolkata", googleMapsUrl: map });
-  assert.ok(message.includes("Venue: Venue A, Kolkata"));
+  assert.ok(message.includes("*Venue:* Venue A, Kolkata"));
   assert.ok(message.includes(`Google Maps:\n${map}`));
   assert.ok(message.indexOf(passUrl) < message.indexOf(map));
   assert.ok(message.includes("2 QR passes are ready"));
@@ -43,4 +43,16 @@ test("WhatsApp pass message includes the saved address and map after the pass li
   const noVenue = whatsappPassMessage({ memberName: "Test", eventName: "Event", participantCount: 1, passUrl });
   assert.ok(noVenue.includes("Venue to be announced"));
   assert.ok(!noVenue.includes("Google Maps:"));
+});
+
+test("embedded maps use the saved address safely and omit unknown locations", () => {
+  const url = new URL(venueMapEmbedUrl("Hall A & B, Kolkata")!);
+  assert.equal(url.origin, "https://www.google.com");
+  assert.equal(url.searchParams.get("q"), "Hall A & B, Kolkata");
+  assert.equal(url.searchParams.get("output"), "embed");
+  assert.equal(new URL(venueMapEmbedUrl("Old address", "https://www.google.com/maps/search/?api=1&query=Selected%20venue")!).searchParams.get("q"), "Selected venue");
+  assert.equal(new URL(venueMapEmbedUrl("Kolkata", "https://evil.example/maps?q=Bad")!).searchParams.get("q"), "Kolkata");
+  assert.equal(venueMapEmbedUrl("Venue to be announced"), null);
+  assert.equal(venueMapEmbedUrl("", "https://maps.app.goo.gl/test"), null);
+  assert.equal(new URL(venueMapEmbedUrl("Venue", "https://www.google.com/maps/embed?pb=shared-location")!).searchParams.get("pb"), "shared-location");
 });

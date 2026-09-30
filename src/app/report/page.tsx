@@ -127,6 +127,7 @@ export default async function ReportPage({
         WHERE event_id = COALESCE($1::text, (
           SELECT id::text FROM public.bbc_event_content ORDER BY created_at DESC, id DESC LIMIT 1
         ))
+        ${reportType === "registration" ? "AND admin_import_key IS NULL" : ""}
         ORDER BY created_at DESC
       `, [selectedId === null ? null : String(selectedId)]),
     ]);
@@ -157,14 +158,14 @@ export default async function ReportPage({
         {session.role === "admin" && <Link prefetch={false} href="/managers">Manager</Link>}
         {session.role === "admin" && <Link prefetch={false} href="/upload">Upload</Link>}
         <Link prefetch={false} className="mobile-scanner-nav" href="/scanner">Scanner</Link>
-        {session.role === "admin" ? <div className="admin-nav-group">
-          <span className="admin-nav-parent active">Report</span>
+        {session.role === "admin" ? <details className="admin-nav-group">
+          <summary className="admin-nav-parent active">Report</summary>
           <div className="admin-nav-submenu">
             <Link prefetch={false} aria-current={reportType === "registration" ? "page" : undefined} className={reportType === "registration" ? "active" : ""} href={selectedEvent ? `/report?eventId=${selectedEvent.id}&report=registration` : "/report?report=registration"}>Registration Report</Link>
             <Link prefetch={false} aria-current={reportType === "event" ? "page" : undefined} className={reportType === "event" ? "active" : ""} href={selectedEvent ? `/report?eventId=${selectedEvent.id}&report=event` : "/report?report=event"}>Event Report</Link>
             <Link prefetch={false} href="/report/whatsapp">WhatsApp</Link>
           </div>
-        </div> : <Link prefetch={false} className="active" href={`/report?eventId=${session.eventId}`}>Report</Link>}
+        </details> : <Link prefetch={false} className="active" href={`/report?eventId=${session.eventId}`}>Report</Link>}
       </nav>
 
       <div className="admin-sidebar-footer"><AdminLogoutButton /></div>
@@ -174,7 +175,7 @@ export default async function ReportPage({
       <div className="report-page-heading">
         <div>
           <h1>Report</h1>
-          <p>{session.role === "manager" ? "View participant and meal distribution details for your assigned event." : "Select a created event to view its complete registration report."}</p>
+          <p>{session.role === "manager" ? "View participant and meal distribution details for your assigned event." : reportType === "registration" ? "View registrations submitted through the form. New submissions are marked Unpaid." : "Select an event to view participant and meal distribution details."}</p>
         </div>
         <ReportEventSelector
           events={selectorEvents}
@@ -307,26 +308,26 @@ export default async function ReportPage({
                     money(registration.total_paise),
                   ].join(" ")}
                 >
-                  <td className="report-date-column">{dateLabel(registration.created_at)}</td>
-                  <td><strong>{registration.member_name}</strong></td>
-                  <td>
+                  <td className="report-date-column" data-label="Date">{dateLabel(registration.created_at)}</td>
+                  <td data-label="Primary member"><strong>{registration.member_name}</strong></td>
+                  <td data-label="Participants">
                     <div className="report-participant-names">
                       {(registration.participant_names ?? [registration.member_name]).map((name, index) => <span key={`${registration.id}-${index}`}>{name}</span>)}
                     </div>
                   </td>
-                  <td>{registration.email}</td>
-                  <td>{registration.phone}</td>
-                  <td>{registration.billing_details}</td>
-                  <td>{registration.included_meals?.length ? registration.included_meals.map(mealChoiceLabel).join(", ") : registration.meal_choice ? mealChoiceLabel(registration.meal_choice) : "None"}</td>
-                  <td>{registration.standee_quantity}</td>
-                  <td>{registration.presentation_selected ? "Yes" : "No"}</td>
-                  <td>{money(registration.total_paise)}</td>
-                  <td><span className={`report-payment-status ${registration.payment_status}`}>{registration.payment_status}</span></td>
+                  <td data-label="Email">{registration.email}</td>
+                  <td data-label="WhatsApp">{registration.phone}</td>
+                  <td data-label="Billing">{registration.billing_details}</td>
+                  <td data-label="Meals included">{registration.included_meals?.length ? registration.included_meals.map(mealChoiceLabel).join(", ") : registration.meal_choice ? mealChoiceLabel(registration.meal_choice) : "None"}</td>
+                  <td data-label="Standee">{registration.standee_quantity}</td>
+                  <td data-label="Presentation">{registration.presentation_selected ? "Yes" : "No"}</td>
+                  <td data-label="Amount">{money(registration.total_paise)}</td>
+                  <td data-label="Payment"><span className={`report-payment-status ${registration.payment_status}`}>{registration.payment_status}</span></td>
                 </tr>)}
               </tbody>
             </table>}
             <div className="report-search-empty" data-report-search-empty hidden>No matching records found.</div>
-          </div> : <div className="report-empty-state">No registrations have been recorded for this event yet.</div>}
+          </div> : <div className="report-empty-state">{reportType === "registration" ? "No form submissions have been recorded for this event yet." : "No registrations have been recorded for this event yet."}</div>}
         </section>
       </> : <div className="report-empty-state">Create an event first to view event reports.</div>}
     </main>

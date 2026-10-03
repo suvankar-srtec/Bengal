@@ -30,11 +30,13 @@ export async function validateReceipt(file: File) {
     return { data, mime: "image/jpeg", name: "bank-receipt.jpg", hash };
   } catch { throw new RequestError("The receipt must be a readable JPG, PNG or PDF file."); }
 }
-export async function submitPayment(input: { registrationId: string; submissionId: string; requestId: string; method: "cash" | "bank"; transactionId: string }, receipt: Awaited<ReturnType<typeof validateReceipt>> | null) {
+export async function submitPayment(input: { registrationId: string; submissionId: string; requestId: string; method: "cash" | "bank"; transactionId?: string }, receipt: Awaited<ReturnType<typeof validateReceipt>> | null) {
   if (input.method === "bank" && !receipt) throw new RequestError("Upload your bank transfer receipt.");
   if (input.method === "cash" && receipt) throw new RequestError("Cash payments do not need a bank receipt.");
-  const confirmationSuffix = input.transactionId.replace(/[^A-Za-z0-9]/g, "").slice(-4).toUpperCase();
-  if (confirmationSuffix.length !== 4) throw new RequestError("Enter a valid transaction ID.");
+  const confirmationSuffix = input.method === "bank"
+    ? String(input.transactionId || "").replace(/[^A-Za-z0-9]/g, "").slice(-4).toUpperCase()
+    : null;
+  if (input.method === "bank" && confirmationSuffix?.length !== 4) throw new RequestError("Enter a valid bank transaction ID.");
   const db = await getDatabase().connect();
   try {
     await db.query("BEGIN");
@@ -44,7 +46,7 @@ export async function submitPayment(input: { registrationId: string; submissionI
     const existing = (await db.query(`SELECT id,status,method,receipt_hash,note,confirmation_suffix FROM public.bbc_registration_payment_reviews
       WHERE registration_id=$1 AND (id=$2 OR status IN ('pending','approved')) ORDER BY created_at DESC LIMIT 1`,[input.registrationId,input.requestId])).rows[0];
     if (existing) {
-      if (existing.id !== input.requestId || existing.method !== input.method || existing.receipt_hash !== (receipt?.hash || null) || existing.confirmation_suffix !== confirmationSuffix) throw new RequestError("A payment request already exists. Refresh its status before submitting again.",409);
+      if (existing.id !== input.requestId || existing.method !== input.method || existing.receipt_hash !== (receipt?.hash || null) || (input.method === "bank" && existing.confirmation_suffix !== confirmationSuffix)) throw new RequestError("A payment request already exists. Refresh its status before submitting again.",409);
       await db.query("COMMIT");
       return existing;
     }
@@ -65,8 +67,8 @@ export async function reviewPayment(id: string, decision: "approved" | "rejected
     await db.query("SELECT id FROM public.bbc_event_registrations WHERE id=$1 FOR UPDATE",[found.registration_id]);
     const review = (await db.query("SELECT * FROM public.bbc_registration_payment_reviews WHERE id=$1 FOR UPDATE",[id])).rows[0];
     if (review.status !== "pending" && review.status !== decision) throw new RequestError("This request has already been reviewed.",409);
-    if (decision === "approved" && review.status === "pending") {
-      if (!review.confirmation_suffix) throw new RequestError("This older payment request has no transaction confirmation code. Reject it and ask the participant to submit the payment request again.",409);
+    if (decision === "approved" && review.status === "pending" && review.method === "bank") {
+      if (!review.confirmation_suffix) throw new RequestError("This bank-transfer request has no transaction confirmation code. Reject it and ask the participant to submit the payment request again.",409);
       if (confirmationSuffix.toUpperCase() !== review.confirmation_suffix) throw new RequestError("The last 4 characters of the transaction ID do not match.",400);
     }
     if (review.status === "pending") {

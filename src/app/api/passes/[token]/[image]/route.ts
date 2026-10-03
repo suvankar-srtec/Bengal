@@ -20,9 +20,11 @@ export async function GET(_request: Request, context: { params: Promise<{ token:
     if (!registration || !registration.participant_names[index]) return new Response(null, { status: 404, headers });
 
     const photo = await participantPhoto(registration.id, participantNumber);
-    if (!photo) return Response.json({ error: "Participant photo is still pending." }, { status: 409, headers });
+    if (!photo && !registration.admin_import_key) {
+      return Response.json({ error: "Participant photo is still pending." }, { status: 409, headers });
+    }
 
-    const png = await renderParticipantPass(registration, index, photo.photo_data);
+    const png = await renderParticipantPass(registration, index, photo?.photo_data || null);
     return new Response(new Uint8Array(png), { headers: { ...headers, "Content-Type": "image/png", "X-Content-Type-Options": "nosniff" } });
   } catch {
     return new Response(null, { status: 503, headers });

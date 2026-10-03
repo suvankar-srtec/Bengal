@@ -834,6 +834,8 @@ body{font-size:14px;line-height:1.5}
 @media(max-width:520px){
   .dashboard-events-grid{grid-template-columns:1fr}
   .dashboard-event-card-shell,.dashboard-create-event-card{height:225px}
+  .manager-event-card .dashboard-event-stats{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .manager-event-card .manager-paid-value{display:none}
 }
 
 

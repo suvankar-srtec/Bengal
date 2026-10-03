@@ -38,8 +38,8 @@ type RegistrationPhotoContext = {
 };
 
 function secret() {
-  const value = process.env.PARTICIPANT_PHOTO_SECRET || process.env.QR_PASS_SECRET || process.env.ADMIN_SESSION_SECRET;
-  if (!value || value.length < 32) throw new Error("PARTICIPANT_PHOTO_SECRET is not configured.");
+  const value = process.env.PARTICIPANT_PHOTO_SECRET || process.env.QR_PASS_SECRET || process.env.ADMIN_SESSION_SECRET || process.env.WAPMONKEY_API_KEY || process.env.DATABASE_URL;
+  if (!value || value.length < 32) throw new Error("A secure participant photo signing secret is not configured.");
   return value;
 }
 

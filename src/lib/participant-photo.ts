@@ -255,11 +255,20 @@ export async function participantPhoto(registrationId: string, participantNumber
 }
 
 export async function participantPhotoProgress(registrationId: string) {
-  return (await getDatabase().query<{ total: number; uploaded: number; email_sent: number; whatsapp_sent: number }>(`
+  return (await getDatabase().query<{
+    total: number;
+    uploaded: number;
+    email_sent: number;
+    whatsapp_sent: number;
+    email_error: string | null;
+    whatsapp_error: string | null;
+  }>(`
     SELECT COUNT(*)::int AS total,
       COUNT(*) FILTER (WHERE photo_data IS NOT NULL)::int AS uploaded,
       COUNT(*) FILTER (WHERE email_status='accepted')::int AS email_sent,
-      COUNT(*) FILTER (WHERE whatsapp_status='accepted')::int AS whatsapp_sent
+      COUNT(*) FILTER (WHERE whatsapp_status='accepted')::int AS whatsapp_sent,
+      MAX(email_error) FILTER (WHERE email_error IS NOT NULL) AS email_error,
+      MAX(whatsapp_error) FILTER (WHERE whatsapp_error IS NOT NULL) AS whatsapp_error
     FROM public.bbc_participant_photos WHERE registration_id=$1`, [registrationId])).rows[0];
 }
 

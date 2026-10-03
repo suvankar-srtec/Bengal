@@ -16,7 +16,7 @@ export function PaymentReviewActions({id,registrationId,status,method}:{id:strin
       const response=await fetch(decision==="retry"?"/api/admin/send-registration-whatsapp":`/api/admin/payment-reviews/${id}`,{
         method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(decision==="retry"?{registrationId}:{decision,note}),signal:AbortSignal.timeout(55000)});
       const result=await response.json();if(!response.ok)throw new Error(result.error||"The request failed.");
-      setMessage(decision==="retry"?result.message:decision==="approved"?"Payment approved. Pass delivery is queued.":"Payment rejected; registration remains unpaid.");
+      setMessage(decision==="retry"?result.message:decision==="approved"?"Payment approved. Participant photo links are being sent.":"Payment rejected; registration remains unpaid.");
       void refreshNotificationStatus();
       router.refresh();
     }catch(error){setMessage(error instanceof Error?error.message:"Please retry.");}
@@ -26,10 +26,10 @@ export function PaymentReviewActions({id,registrationId,status,method}:{id:strin
     {status==="pending"&&<>
       <label className="sr-only" htmlFor={`review-note-${id}`}>Review note or rejection reason</label>
       <input id={`review-note-${id}`} value={note} onChange={event=>setNote(event.target.value)} placeholder="Note / rejection reason" maxLength={500} disabled={busy}/>
-      <button type="button" className="payment-approve" disabled={busy} onClick={()=>void act("approved")}>{busy?"Please wait...":method==="cash"?"Confirm cash & issue passes":"Approve & issue passes"}</button>
+      <button type="button" className="payment-approve" disabled={busy} onClick={()=>void act("approved")}>{busy?"Please wait...":method==="cash"?"Confirm cash & request photos":"Approve & request photos"}</button>
       <button type="button" disabled={busy} onClick={()=>void act("rejected")}>Reject</button>
     </>}
-    {status==="approved"&&<button type="button" disabled={busy} onClick={()=>void act("retry")}>{busy?"Sending...":"Retry pending / failed delivery"}</button>}
+    {status==="approved"&&<button type="button" disabled={busy} onClick={()=>void act("retry")}>{busy?"Sending...":"Retry photo-link delivery"}</button>}
     {message&&<p role="status">{message}</p>}
   </div>;
 }

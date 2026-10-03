@@ -57,11 +57,21 @@ function tokenHash(token: string) {
 }
 
 function publicOrigin() {
-  const value = process.env.APP_PUBLIC_URL?.trim();
-  let url: URL;
-  try { url = new URL(value || ""); } catch { throw new Error("APP_PUBLIC_URL is not configured."); }
-  if (url.protocol !== "https:" || url.username || url.password) throw new Error("APP_PUBLIC_URL must be a public HTTPS origin.");
-  return url.origin;
+  const candidates = [
+    process.env.APP_PUBLIC_URL?.trim(),
+    process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "",
+    process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "",
+  ].filter(Boolean);
+
+  for (const candidate of candidates) {
+    try {
+      const url = new URL(candidate);
+      if (url.protocol === "https:" && !url.username && !url.password) return url.origin;
+    } catch {
+      // Try the next server-provided public URL.
+    }
+  }
+  throw new Error("public_url_missing");
 }
 
 export function participantPhotoLink(row: Pick<PhotoRow, "id" | "token_nonce">) {

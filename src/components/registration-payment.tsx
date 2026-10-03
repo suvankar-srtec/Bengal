@@ -64,8 +64,8 @@ export function RegistrationPayment({
     }
 
     const normalizedTransactionId = transactionId.trim();
-    if (!/^[A-Za-z0-9._\/-]{4,100}$/.test(normalizedTransactionId)) {
-      setError("Enter the transaction ID used for this payment.");
+    if (method === "bank" && !/^[A-Za-z0-9._\/-]{4,100}$/.test(normalizedTransactionId)) {
+      setError("Enter the transaction ID used for this bank transfer.");
       return;
     }
 
@@ -84,7 +84,7 @@ export function RegistrationPayment({
     form.set("submissionId", submissionId);
     form.set("requestId", requestId.current);
     form.set("method", method);
-    form.set("transactionId", normalizedTransactionId);
+    if (method === "bank") form.set("transactionId", normalizedTransactionId);
     if (method === "bank" && file) form.set("receipt", file);
 
     try {
@@ -136,10 +136,12 @@ export function RegistrationPayment({
           <p>
             {review?.method === "bank"
               ? "Your bank receipt and transaction ID have been submitted for review."
-              : "Your payment request and transaction ID have been submitted for review."}
+              : "Your cash payment request has been submitted for review."}
           </p>
           <p>
-            Your registration remains unpaid until the admin confirms the last 4 characters of the transaction ID.
+            {review?.method === "bank"
+              ? "Your registration remains unpaid until the admin confirms the last 4 characters of the transaction ID."
+              : "Your registration remains unpaid until the admin confirms that the cash payment was received."}
           </p>
         </div>
       ) : (
@@ -176,29 +178,29 @@ export function RegistrationPayment({
             </label>
           </fieldset>
 
-          <div className="field">
-            <label htmlFor="payment-transaction-id">Transaction ID *</label>
-            <input
-              id="payment-transaction-id"
-              type="text"
-              value={transactionId}
-              maxLength={100}
-              autoComplete="off"
-              disabled={busy}
-              onChange={(event) => {
-                setTransactionId(event.target.value);
-                requestId.current = "";
-                setError("");
-              }}
-              placeholder="Enter the payment transaction ID"
-            />
-            <span className="field-hint">
-              The admin confirms your payment by entering the last 4 characters of this transaction ID.
-            </span>
-          </div>
-
           {method === "bank" ? (
-            <div className="field receipt-upload">
+            <>
+              <div className="field">
+                <label htmlFor="payment-transaction-id">Transaction ID *</label>
+                <input
+                  id="payment-transaction-id"
+                  type="text"
+                  value={transactionId}
+                  maxLength={100}
+                  autoComplete="off"
+                  disabled={busy}
+                  onChange={(event) => {
+                    setTransactionId(event.target.value);
+                    requestId.current = "";
+                    setError("");
+                  }}
+                  placeholder="Enter the bank transaction ID"
+                />
+                <span className="field-hint">
+                  The admin confirms the bank transfer by entering the last 4 characters of this transaction ID.
+                </span>
+              </div>
+              <div className="field receipt-upload">
               <label htmlFor="bank-receipt">Bank transfer receipt *</label>
               <p>Transfer the amount using the bank details provided by the organizer, then upload your receipt.</p>
               <input
@@ -212,13 +214,14 @@ export function RegistrationPayment({
                 }}
               />
               <span className="field-hint">JPG, PNG or PDF. Maximum 3 MB. Only admins can view your receipt.</span>
-            </div>
+              </div>
+            </>
           ) : (
-            <p>Enter the transaction/reference ID supplied for this payment. The admin will confirm its last 4 characters.</p>
+            <p>Pay the organizer in cash. The admin will confirm the cash receipt directly; no transaction ID is required.</p>
           )}
 
           <button className="submit-button" type="button" disabled={busy} onClick={() => void submit()}>
-            {busy ? "Saving..." : method === "bank" ? "Submit receipt for approval" : "Submit payment for approval"}
+            {busy ? "Saving..." : method === "bank" ? "Submit receipt for approval" : "Confirm cash payment choice"}
           </button>
         </>
       )}

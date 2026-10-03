@@ -12,6 +12,7 @@ type ImportResult = {
   whatsapp: string;
   passUrl: string;
   deliveryStatus: string;
+  canSendPasses: boolean;
   existing: boolean;
 };
 
@@ -55,7 +56,7 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
         return;
       }
 
-      const importedResults: ImportResult[] = Array.isArray(data.results) ? data.results.map((item: ImportResult) => ({ ...item, deliveryStatus: "pending" })) : [];
+      const importedResults: ImportResult[] = Array.isArray(data.results) ? data.results : [];
       setResults(importedResults);
       setMessage("");
       setSuccessPopup(String(data.count ?? 0) + " registration" + (data.count === 1 ? "" : "s") + " processed successfully.");
@@ -69,7 +70,7 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
   }
 
   async function sendWhatsApp(result: ImportResult) {
-    if (sendingId || result.deliveryStatus === "accepted") return;
+    if (sendingId || !result.canSendPasses) return;
     setSendingId(result.registrationId);
     setMessage("");
 
@@ -89,7 +90,13 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
 
       setResults((items) => items.map((item) =>
         item.registrationId === result.registrationId
-          ? { ...item, deliveryStatus: data.status }
+          ? {
+              ...item,
+              deliveryStatus: data.status,
+              canSendPasses: typeof data.canSendPasses === "boolean"
+                ? data.canSendPasses
+                : data.status !== "accepted",
+            }
           : item
       ));
       setMessage("");
@@ -214,14 +221,16 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
                 <button
                   type="button"
                   className="admin-upload-whatsapp"
-                  disabled={sendingId === result.registrationId || result.deliveryStatus === "accepted"}
+                  disabled={sendingId === result.registrationId || !result.canSendPasses}
                   onClick={() => void sendWhatsApp(result)}
                 >
-                  {result.deliveryStatus === "accepted"
-                    ? "Sent"
-                    : sendingId === result.registrationId
-                      ? "Sending…"
-                      : "Send passes"}
+                  {sendingId === result.registrationId
+                    ? "Sending…"
+                    : result.canSendPasses
+                      ? result.deliveryStatus === "accepted"
+                        ? "Send again"
+                        : "Send passes"
+                      : "Sent"}
                 </button>
               </td>
             </tr>)}

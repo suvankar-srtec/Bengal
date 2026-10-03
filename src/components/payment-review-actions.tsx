@@ -8,6 +8,7 @@ export function PaymentReviewActions({
   id,
   registrationId,
   status,
+  method,
 }: {
   id: string;
   registrationId: string;
@@ -20,13 +21,20 @@ export function PaymentReviewActions({
   const [confirmationSuffix, setConfirmationSuffix] = useState("");
   const [message, setMessage] = useState("");
   const locked = useRef(false);
+  const bankTransfer = method === "bank";
 
   async function act(decision: "approved" | "rejected" | "retry") {
     if (locked.current) return;
-    if (decision === "approved" && !/^[A-Za-z0-9]{4}$/.test(confirmationSuffix.trim())) {
+
+    if (
+      decision === "approved" &&
+      bankTransfer &&
+      !/^[A-Za-z0-9]{4}$/.test(confirmationSuffix.trim())
+    ) {
       setMessage("Enter the last 4 characters of the transaction ID.");
       return;
     }
+
     if (decision === "rejected" && !note.trim()) {
       setMessage("Enter a reason for rejecting this payment.");
       return;
@@ -50,9 +58,10 @@ export function PaymentReviewActions({
               : {
                   decision,
                   note,
-                  confirmationSuffix: decision === "approved"
-                    ? confirmationSuffix.trim().toUpperCase()
-                    : undefined,
+                  confirmationSuffix:
+                    decision === "approved" && bankTransfer
+                      ? confirmationSuffix.trim().toUpperCase()
+                      : undefined,
                 },
           ),
           signal: AbortSignal.timeout(55000),
@@ -89,18 +98,29 @@ export function PaymentReviewActions({
     <div className="payment-review-actions">
       {status === "pending" && (
         <>
-          <label className="sr-only" htmlFor={`transaction-last4-${id}`}>
-            Last 4 characters of transaction ID
-          </label>
-          <input
-            id={`transaction-last4-${id}`}
-            value={confirmationSuffix}
-            onChange={(event) => setConfirmationSuffix(event.target.value.replace(/[^A-Za-z0-9]/g, "").slice(0, 4).toUpperCase())}
-            placeholder="Last 4 of transaction ID"
-            maxLength={4}
-            autoComplete="off"
-            disabled={busy}
-          />
+          {bankTransfer && (
+            <>
+              <label className="sr-only" htmlFor={`transaction-last4-${id}`}>
+                Last 4 characters of transaction ID
+              </label>
+              <input
+                id={`transaction-last4-${id}`}
+                value={confirmationSuffix}
+                onChange={(event) =>
+                  setConfirmationSuffix(
+                    event.target.value
+                      .replace(/[^A-Za-z0-9]/g, "")
+                      .slice(0, 4)
+                      .toUpperCase(),
+                  )
+                }
+                placeholder="Last 4 of transaction ID"
+                maxLength={4}
+                autoComplete="off"
+                disabled={busy}
+              />
+            </>
+          )}
 
           <label className="sr-only" htmlFor={`review-note-${id}`}>
             Review note or rejection reason
@@ -120,7 +140,11 @@ export function PaymentReviewActions({
             disabled={busy}
             onClick={() => void act("approved")}
           >
-            {busy ? "Please wait..." : "Confirm payment & request photos"}
+            {busy
+              ? "Please wait..."
+              : bankTransfer
+                ? "Confirm bank payment & request photos"
+                : "Confirm cash & request photos"}
           </button>
 
           <button type="button" disabled={busy} onClick={() => void act("rejected")}>

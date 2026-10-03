@@ -6,6 +6,7 @@ const labels:Record<string,string>={accepted:"Sent to provider",pending:"Queued"
 export function RegistrationPayment({receipt,submissionId,onReset}:{receipt:RegistrationReceipt;submissionId:string;onReset:()=>void}) {
   const [method,setMethod]=useState<"cash"|"bank">("cash");
   const [file,setFile]=useState<File|null>(null);
+  const [transactionId,setTransactionId]=useState("");
   const [review,setReview]=useState<Review|null>(null);
   const [delivery,setDelivery]=useState<{whatsapp?:string;email?:string}>({});
   const [busy,setBusy]=useState(false);
@@ -29,10 +30,12 @@ export function RegistrationPayment({receipt,submissionId,onReset}:{receipt:Regi
   async function submit(){
     if(locked.current)return;
     if(method==="bank"&&!file){setError("Upload your bank transfer receipt.");return;}
+    const normalizedTransactionId=transactionId.trim();
+    if(!/^[A-Za-z0-9._\/-]{4,100}$/.test(normalizedTransactionId)){setError("Enter the transaction ID used for this payment.");return;}
     if(file&&file.size>3*1024*1024){setError("The receipt must be 3 MB or smaller.");return;}
     locked.current=true;setBusy(true);setError("");
     requestId.current ||= crypto.randomUUID();
-    const form=new FormData();form.set("registrationId",receipt.id);form.set("submissionId",submissionId);form.set("requestId",requestId.current);form.set("method",method);
+    const form=new FormData();form.set("registrationId",receipt.id);form.set("submissionId",submissionId);form.set("requestId",requestId.current);form.set("method",method);form.set("transactionId",normalizedTransactionId);
     if(method==="bank"&&file)form.set("receipt",file);
     try{
       const response=await fetch("/api/registration-payments",{method:"POST",body:form,signal:AbortSignal.timeout(30000)});
@@ -69,7 +72,7 @@ export function RegistrationPayment({receipt,submissionId,onReset}:{receipt:Regi
         {(["cash","bank"] as const).map(value=><label key={value} className={method===value?"selected":""}><input type="radio" name="payment-method" checked={method===value} onChange={()=>{setMethod(value);requestId.current="";setError("");}}/>{value==="cash"?"Cash":"Bank transfer"}</label>)}
         <label className="unavailable"><input type="radio" name="payment-method" disabled/>Razorpay<small>Not available yet</small></label>
       </fieldset>
-      {method==="bank"?<div className="field receipt-upload"><label htmlFor="bank-receipt">Bank transfer receipt *</label><p>Transfer the amount using the bank details provided by the organizer, then upload your receipt.</p>
+      <div className="field"><label htmlFor="payment-transaction-id">Transaction ID *</label><input id="payment-transaction-id" type="text" value={transactionId} maxLength={100} autoComplete="off" disabled={busy} onChange={event=>{setTransactionId(event.target.value);requestId.current="";setError("");}} placeholder="Enter the payment transaction ID"/><span className="field-hint">The admin will confirm the payment using the last 4 characters of this ID.</span></div>\n      {method==="bank"?<div className="field receipt-upload"><label htmlFor="bank-receipt">Bank transfer receipt *</label><p>Transfer the amount using the bank details provided by the organizer, then upload your receipt.</p>
         <input id="bank-receipt" type="file" accept="image/jpeg,image/png,application/pdf" disabled={busy} onChange={event=>{setFile(event.target.files?.[0]||null);requestId.current="";}}/><span className="field-hint">JPG, PNG or PDF. Maximum 3 MB. Only admins can view your receipt.</span>
       </div>:<p>Pay the organizer in cash. Your QR passes will be issued after the admin confirms receipt.</p>}
       <button className="submit-button" type="button" disabled={busy} onClick={()=>void submit()}>{busy?"Saving...":method==="bank"?"Submit receipt for approval":"Confirm cash payment choice"}</button>

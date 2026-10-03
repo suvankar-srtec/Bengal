@@ -64,7 +64,11 @@ export async function reviewPayment(id: string, decision: "approved" | "rejected
     if (!found) throw new RequestError("Payment request not found.",404);
     await db.query("SELECT id FROM public.bbc_event_registrations WHERE id=$1 FOR UPDATE",[found.registration_id]);
     const review = (await db.query("SELECT * FROM public.bbc_registration_payment_reviews WHERE id=$1 FOR UPDATE",[id])).rows[0];
-    if (review.status !== "pending" && review.status !== decision) throw new RequestError("This request has already been reviewed.",409);\n    if (decision === "approved" && review.status === "pending") {\n      if (!review.confirmation_suffix) throw new RequestError("This older payment request has no transaction confirmation code. Reject it and ask the participant to submit the payment request again.",409);\n      if (confirmationSuffix.toUpperCase() !== review.confirmation_suffix) throw new RequestError("The last 4 characters of the transaction ID do not match.",400);\n    }
+    if (review.status !== "pending" && review.status !== decision) throw new RequestError("This request has already been reviewed.",409);
+    if (decision === "approved" && review.status === "pending") {
+      if (!review.confirmation_suffix) throw new RequestError("This older payment request has no transaction confirmation code. Reject it and ask the participant to submit the payment request again.",409);
+      if (confirmationSuffix.toUpperCase() !== review.confirmation_suffix) throw new RequestError("The last 4 characters of the transaction ID do not match.",400);
+    }
     if (review.status === "pending") {
       await db.query("UPDATE public.bbc_registration_payment_reviews SET status=$2,note=$3,reviewed_at=NOW(),read_at=COALESCE(read_at,NOW()) WHERE id=$1",[id,decision,note]);
       if (decision === "approved") {

@@ -10,8 +10,8 @@ export async function POST(request: Request) {
     let form: FormData;
     try { form = await new Response(new Uint8Array(bytes),{headers:{"Content-Type":type}}).formData(); }
     catch { throw new RequestError("The payment form could not be read."); }
-    const parsed = paymentAccessSchema.extend({requestId:z.uuid(),method:z.enum(["cash","bank"])}).safeParse(Object.fromEntries(form));
-    if (!parsed.success) throw new RequestError("Choose Cash or Bank transfer.");
+    const parsed = paymentAccessSchema.extend({requestId:z.uuid(),method:z.enum(["cash","bank"]),transactionId:z.string().trim().regex(/^[A-Za-z0-9._\\/-]{4,100}$/)}).safeParse(Object.fromEntries(form));
+    if (!parsed.success) throw new RequestError("Choose a payment method and enter a valid transaction ID.");
     const file = form.get("receipt");
     const receipt = file instanceof File && file.size ? await validateReceipt(file) : null;
     return Response.json({review:await submitPayment(parsed.data,receipt)}, {headers:{"Cache-Control":"no-store"}});

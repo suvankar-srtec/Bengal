@@ -66,11 +66,10 @@ export function ParticipantPhotoUploader({ token, participantName, alreadyUpload
 
       {uploaded && !file ? (
         <div className="participant-photo-success">
-          <strong>Photo uploaded successfully</strong>
-          <p>Your QR pass is ready.</p>
+          <strong>Photo already uploaded</strong>
+          <p>This photo-upload link has been used and is now disabled.</p>
           <div className="participant-photo-actions">
             <a href={passUrl} target="_blank" rel="noreferrer">View / Download Pass</a>
-            <button type="button" onClick={() => setUploaded(false)}>Replace photo</button>
           </div>
         </div>
       ) : (
@@ -120,7 +119,7 @@ export function ParticipantPhotoUploader({ token, participantName, alreadyUpload
         </div>
       )}
 
-      <p className="participant-photo-help">Use a clear, front-facing photo. JPG, PNG and WebP are accepted up to 5 MB.</p>
+      {!uploaded && <p className="participant-photo-help">Use a clear, front-facing photo. JPG, PNG and WebP are accepted up to 5 MB. The upload link can be used only once.</p>}
     </section>
   );
 }

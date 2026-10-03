@@ -126,7 +126,7 @@ export function DashboardEventCard({
       </> : <div className="dashboard-event-stats">
         <div><span>Registrations</span><strong>{registrations}</strong></div>
         <div><span>Participants</span><strong>{participants}</strong></div>
-        <div className="manager-paid-value"><span>Paid value</span><strong>{revenueLabel}</strong></div>
+        <div className="manager-paid-value"><span>Amount received</span><strong>{revenueLabel}</strong></div>
       </div>}
 
       <span className="dashboard-event-created">Event date {eventDate}</span>

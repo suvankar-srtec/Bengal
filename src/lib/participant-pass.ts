@@ -26,6 +26,7 @@ export type PassRegistration = {
   standee_unit_paise: number;
   presentation_unit_paise: number;
   meal_unit_paise: number;
+  admin_import_key?: string | null;
 };
 
 const GLYPHS: Record<string, string[]> = {
@@ -174,8 +175,10 @@ export async function renderParticipantPass(registration: PassRegistration, inde
     ? `<rect x="45" y="350" width="180" height="220" rx="10" fill="#f3f5f7"/>
        <image href="data:image/jpeg;base64,${participantPhoto.toString("base64")}" x="45" y="350" width="180" height="220" preserveAspectRatio="xMidYMid slice"/>
        <rect x="45" y="350" width="180" height="220" rx="10" fill="none" stroke="#dfe3e8" stroke-width="2"/>`
-    : `<rect x="45" y="350" width="180" height="220" rx="10" fill="#f3f5f7" stroke="#dfe3e8" stroke-width="2"/>
-       ${pixelText("PHOTO", 88, 446, 3, "#9aa5af", 10)}`;
+    : "";
+  const qrX = participantPhoto ? 285 : 175;
+  const qrY = participantPhoto ? 325 : 320;
+  const qrSize = participantPhoto ? 400 : 400;
 
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="750" height="1050">
     <rect width="750" height="1050" fill="#ffffff"/>
@@ -194,7 +197,7 @@ export async function renderParticipantPass(registration: PassRegistration, inde
     ${pixelText(pass.participantName, 45, 276, 4, "#182f46", 24)}
 
     ${photoMarkup}
-    <image href="data:image/png;base64,${qr.split(",")[1]}" x="285" y="325" width="400" height="400"/>
+    <image href="data:image/png;base64,${qr.split(",")[1]}" x="${qrX}" y="${qrY}" width="${qrSize}" height="${qrSize}"/>
 
     <rect x="45" y="790" width="660" height="74" rx="8" fill="#fff8f5"/>
     ${pixelText("MEALS INCLUDED", (750 - ("MEALS INCLUDED".length * 6 - 1) * 2.7) / 2, 817.5, 2.7, "#182f46")}

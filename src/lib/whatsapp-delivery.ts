@@ -35,7 +35,7 @@ export async function loadPassRegistration(registrationId: string) {
       r.participant_names, r.email, r.billing_details,
       r.participation_quantity, r.standee_quantity, r.meal_choice, r.included_meals, r.presentation_selected,
       r.participation_unit_paise, r.standee_unit_paise, r.presentation_unit_paise, r.meal_unit_paise,
-      r.phone
+      r.phone, r.admin_import_key
     FROM public.bbc_event_registrations r
     LEFT JOIN public.bbc_event_content e ON e.id::text = r.event_id
     WHERE r.id = $1 AND r.payment_status = 'paid'`, [registrationId])).rows[0];

@@ -19,9 +19,6 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     if (!z.uuid().safeParse(id).success || !parsed.success) {
       throw new RequestError("Invalid payment review.");
     }
-    if (parsed.data.decision === "approved" && !parsed.data.confirmationSuffix) {
-      throw new RequestError("Enter the last 4 characters of the transaction ID.");
-    }
     if (parsed.data.decision === "rejected" && !parsed.data.note) {
       throw new RequestError("Enter a reason so the member can correct the payment request.");
     }

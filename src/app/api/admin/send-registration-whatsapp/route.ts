@@ -39,6 +39,15 @@ export async function POST(request: Request) {
     const ready = await allParticipantPhotosUploaded(id);
 
     if (!ready) {
+      // This endpoint is an explicit admin retry. Photo-link duplicates are safe,
+      // so retry failed and provider-unknown attempts instead of leaving members stuck.
+      await db.query(`
+        UPDATE public.bbc_participant_photos
+        SET email_status = CASE WHEN email_status IN ('failed','unknown') THEN 'pending' ELSE email_status END,
+            whatsapp_status = CASE WHEN whatsapp_status IN ('failed','unknown') THEN 'pending' ELSE whatsapp_status END,
+            updated_at = NOW()
+        WHERE registration_id = $1
+      `, [id]);
       await deliverParticipantPhotoRequests(id);
       const progress = await participantPhotoProgress(id);
       return Response.json({

@@ -19,23 +19,21 @@ export function ManagerWhatsAppSend({ registrationId }: { registrationId: string
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ registrationId }),
-        signal: AbortSignal.timeout(30000),
+        signal: AbortSignal.timeout(55000),
       });
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        setMessage(data.error || "WhatsApp could not send the passes.");
+        setMessage(data.error || "Pass delivery could not be completed.");
         return;
       }
 
-      setSent(true);
+      setSent(data.status === "accepted");
       setSuccess(
-        data.alreadySent
-          ? "WhatsApp passes were already sent successfully."
-          : "WhatsApp passes sent successfully."
+        data.message || "Pass delivery status updated."
       );
     } catch {
-      setMessage("WhatsApp could not send the passes. Please retry.");
+      setMessage("Pass delivery could not be completed. Please retry.");
     } finally {
       setSending(false);
     }
@@ -48,7 +46,7 @@ export function ManagerWhatsAppSend({ registrationId }: { registrationId: string
       disabled={sending || sent}
       onClick={() => void send()}
     >
-      {sent ? "Sent" : sending ? "Sending…" : "Send WhatsApp"}
+      {sent ? "Sent" : sending ? "Sending…" : "Send passes"}
     </button>
 
     {message && <small className="manager-report-whatsapp-error">{message}</small>}

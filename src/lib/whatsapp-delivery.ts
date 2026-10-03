@@ -2,7 +2,7 @@ import "server-only";
 import { randomBytes } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
 import { getDatabase } from "./db";
-import { participantPass, type PassRegistration } from "./participant-pass";
+import { type PassRegistration } from "./participant-pass";
 import { whatsappConfiguration, WhatsAppError } from "./wapmonkey";
 import { sendWhatsAppText } from "./wapmonkey-text";
 import { whatsappPassMessage } from "./whatsapp-pass-message";

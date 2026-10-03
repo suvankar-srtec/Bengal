@@ -1,3 +1,4 @@
+import { readPassToken } from "../src/lib/pass-token";
 import assert from "node:assert/strict";
 import test from "node:test";
 import sharp from "sharp";
@@ -171,14 +172,15 @@ test("configuration requires server credentials and a public HTTPS origin", () =
   );
 });
 
-test("QR data includes participant participation details", () => {
+test("QR data contains a signed participant verification URL", () => {
   const pass = participantPass(registration, 1);
   assert.equal(pass.passId, "BBC-TEST-P2");
-  assert.match(pass.payload, /Participant: Rohan \| NAME:someone/);
-  assert.match(pass.payload, /Participation fees: INR 1180\.00\/person x 2/);
-  assert.match(pass.payload, /Standee placement: 1 x INR 2950\.00/);
-  assert.match(pass.payload, /Meal preference: Lunch \(INR 500\.00\/person\)/);
-  assert.match(pass.payload, /Company presentation: Yes \(INR 35400\.00\)/);
+  assert.equal(pass.participantName, registration.participant_names[1]);
+  const url = new URL(pass.payload);
+  assert.equal(url.pathname, "/verify-pass");
+  const token = url.searchParams.get("token")!;
+  assert.deepEqual(readPassToken(token), { registrationId: registration.id, eventId: Number(registration.event_id), participantNumber: 2, reference: registration.reference });
+  assert.equal(readPassToken(`${token}tampered`), null);
   assert.throws(() => participantPass(registration, 2));
 });
 

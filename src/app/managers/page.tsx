@@ -1,3 +1,4 @@
+import { NotificationNavLink } from "@/components/notification-nav-link";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -86,6 +87,7 @@ export default async function ManagersPage() {
             <Link prefetch={false} href="/report/whatsapp">WhatsApp</Link>
           </div>
         </details>
+        <NotificationNavLink />
       </nav>
       <div className="admin-sidebar-footer"><AdminLogoutButton /></div>
     </aside>

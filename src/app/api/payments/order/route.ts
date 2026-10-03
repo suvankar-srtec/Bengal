@@ -1,4 +1,3 @@
-import { paymentHandler } from "@/lib/payments";
-export const runtime = "nodejs";
-export const maxDuration = 60;
-export async function POST(request: Request) { return paymentHandler(request, "order"); }
+export async function POST() {
+  return Response.json({ error: "Online payments are not enabled. Choose Cash or Bank transfer after registration." }, { status: 410 });
+}

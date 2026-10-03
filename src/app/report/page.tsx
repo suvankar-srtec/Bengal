@@ -1,3 +1,5 @@
+import { ReportParticipants } from "@/components/report-participants";
+import { NotificationNavLink } from "@/components/notification-nav-link";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -7,7 +9,7 @@ import { ReportEventSelector } from "@/components/report-event-selector";
 import { ReportAutoSearch } from "@/components/report-auto-search";
 import { Icon } from "@/components/icon";
 import { getDatabase } from "@/lib/db";
-import { mealChoiceLabel } from "@/lib/registration";
+import { mealChoiceLabel, type ParticipantContact } from "@/lib/registration";
 import { BBC_LOGO_DATA_URL } from "@/lib/bbc-logo";
 import { MobileAdminNav } from "@/components/mobile-admin-nav";
 import { ManagerWhatsAppSend } from "@/components/manager-whatsapp-send";
@@ -38,6 +40,7 @@ type RegistrationRow = {
   total_paise: number;
   payment_status: string;
   participant_names: string[];
+  additional_participant_contacts: ParticipantContact[];
   provided_meals: Array<{ participantNumber: number; meal: "snacks" | "lunch" | "dinner"; redeemedAt: string }>;
   created_at: Date | string;
 };
@@ -112,7 +115,7 @@ export default async function ReportPage({
       database.query<RegistrationRow>(`
         SELECT id, member_name, email, phone, billing_details,
           participation_quantity, standee_quantity, meal_choice, included_meals,
-          presentation_selected, total_paise, payment_status, participant_names,
+          presentation_selected, total_paise, payment_status, participant_names, additional_participant_contacts,
           ${reportType === "event" ? `COALESCE((
             SELECT jsonb_agg(jsonb_build_object(
               'participantNumber', redemption.participant_number,
@@ -166,6 +169,7 @@ export default async function ReportPage({
             <Link prefetch={false} href="/report/whatsapp">WhatsApp</Link>
           </div>
         </details> : <Link prefetch={false} className="active" href={`/report?eventId=${session.eventId}`}>Report</Link>}
+        {session.role === "admin" && <NotificationNavLink />}
       </nav>
 
       <div className="admin-sidebar-footer"><AdminLogoutButton /></div>
@@ -232,6 +236,7 @@ export default async function ReportPage({
                     dateLabel(registration.created_at),
                     registration.member_name,
                     ...participants,
+                    ...(registration.additional_participant_contacts ?? []).flatMap(({ email, phone }) => [email, phone]),
                     registration.phone,
                     ...includedMeals.map(mealChoiceLabel),
                     ...(registration.provided_meals ?? []).map((item) => mealChoiceLabel(item.meal)),
@@ -241,9 +246,7 @@ export default async function ReportPage({
                     <td className="report-date-column" data-label="Date">{dateLabel(registration.created_at)}</td>
                     <td data-label="Primary member"><strong>{registration.member_name}</strong></td>
                     <td data-label="Participants">
-                      <div className="report-participant-names">
-                        {participants.map((name, index) => <span key={`${registration.id}-${index}`}>{name}</span>)}
-                      </div>
+                      <ReportParticipants names={participants} contacts={registration.additional_participant_contacts ?? []} />
                     </td>
                     <td data-label="WhatsApp">
                       {session.role === "manager"
@@ -300,6 +303,7 @@ export default async function ReportPage({
                     dateLabel(registration.created_at),
                     registration.member_name,
                     ...(registration.participant_names ?? [registration.member_name]),
+                    ...(registration.additional_participant_contacts ?? []).flatMap(({ email, phone }) => [email, phone]),
                     registration.email,
                     registration.phone,
                     registration.billing_details,
@@ -311,9 +315,7 @@ export default async function ReportPage({
                   <td className="report-date-column" data-label="Date">{dateLabel(registration.created_at)}</td>
                   <td data-label="Primary member"><strong>{registration.member_name}</strong></td>
                   <td data-label="Participants">
-                    <div className="report-participant-names">
-                      {(registration.participant_names ?? [registration.member_name]).map((name, index) => <span key={`${registration.id}-${index}`}>{name}</span>)}
-                    </div>
+                    <ReportParticipants names={registration.participant_names ?? [registration.member_name]} contacts={registration.additional_participant_contacts ?? []} />
                   </td>
                   <td data-label="Email">{registration.email}</td>
                   <td data-label="WhatsApp">{registration.phone}</td>

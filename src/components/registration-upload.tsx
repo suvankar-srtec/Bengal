@@ -55,7 +55,7 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
         return;
       }
 
-      const importedResults: ImportResult[] = Array.isArray(data.results) ? data.results : [];
+      const importedResults: ImportResult[] = Array.isArray(data.results) ? data.results.map((item: ImportResult) => ({ ...item, deliveryStatus: "pending" })) : [];
       setResults(importedResults);
       setMessage("");
       setSuccessPopup(String(data.count ?? 0) + " registration" + (data.count === 1 ? "" : "s") + " processed successfully.");
@@ -78,28 +78,26 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ registrationId: result.registrationId }),
-        signal: AbortSignal.timeout(30000),
+        signal: AbortSignal.timeout(55000),
       });
       const data = await response.json().catch(() => ({}));
 
       if (!response.ok) {
-        setMessage(data.error || "WhatsApp could not send the passes.");
+        setMessage(data.error || "Pass delivery could not be completed.");
         return;
       }
 
       setResults((items) => items.map((item) =>
         item.registrationId === result.registrationId
-          ? { ...item, deliveryStatus: "accepted" }
+          ? { ...item, deliveryStatus: data.status }
           : item
       ));
       setMessage("");
       setWhatsAppSuccessPopup(
-        data.alreadySent
-          ? "WhatsApp passes were already sent successfully."
-          : "WhatsApp passes sent successfully."
+        data.message || "Pass delivery status updated."
       );
     } catch {
-      setMessage("WhatsApp could not send the passes. Please retry.");
+      setMessage("Pass delivery could not be completed. Please retry.");
     } finally {
       setSendingId(null);
     }
@@ -173,7 +171,7 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
       <div className="admin-upload-results-head">
         <div>
           <h2>QR passes ready</h2>
-          <p>Review the generated pass bundle, then send the pass link through WhatsApp.</p>
+          <p>Review the generated pass bundle, then send the pass link through WhatsApp and email.</p>
         </div>
         <span>{results.length} ready</span>
       </div>
@@ -223,7 +221,7 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
                     ? "Sent"
                     : sendingId === result.registrationId
                       ? "Sending…"
-                      : "Send WhatsApp"}
+                      : "Send passes"}
                 </button>
               </td>
             </tr>)}

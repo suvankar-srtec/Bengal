@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { NotificationNavLink } from "./notification-nav-link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { useState } from "react";
 import { AdminLogoutButton } from "@/components/admin-logout-button";
@@ -89,6 +90,7 @@ export function AdminMobileNav({
           >
             Report
           </Link>}
+          {role === "admin" && <NotificationNavLink onClick={() => setOpen(false)} />}
         </nav>
 
         <div className="admin-mobile-drawer-footer">

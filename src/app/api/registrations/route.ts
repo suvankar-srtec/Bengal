@@ -1,4 +1,6 @@
 import { createHash, randomUUID } from "node:crypto";
+import { RequestError, requestErrorResponse } from "@/lib/request-security";
+import type { PoolClient } from "pg";
 import { getDatabase } from "@/lib/db";
 import { calculateTotal, EVENT, PRICES, participationPricesFromRow, registrationSchema, registrationFieldKey } from "@/lib/registration";
 
@@ -17,7 +19,7 @@ async function readBody(request: Request): Promise<string> {
     const { done, value } = await reader.read();
     if (done) break;
     length += value.byteLength;
-    if (length > 16384) {
+    if (length > 32768) {
       await reader.cancel();
       throw new Error("BODY_TOO_LARGE");
     }
@@ -60,16 +62,26 @@ export async function POST(request: Request) {
   }
 
   const data = parsed.data;
-  const { additionalParticipantNames, ...originalFields } = data;
+  const { additionalParticipantNames, additionalParticipantContacts, ...originalFields } = data;
   // Keep the original single-participant fingerprint stable across this upgrade.
   const fingerprintData = additionalParticipantNames.length ? { ...originalFields, additionalParticipantNames } : originalFields;
+  if (additionalParticipantContacts?.length) Object.assign(fingerprintData, { additionalParticipantContacts });
   const fingerprint = createHash("sha256").update(JSON.stringify(fingerprintData)).digest("hex");
   const participantNames = [data.memberName, ...additionalParticipantNames];
   const id = randomUUID();
   const reference = `BBC-${id.toUpperCase()}`;
 
+  let database: PoolClient | undefined;
   try {
-    const database = getDatabase();
+    database = await getDatabase().connect();
+    await database.query("BEGIN");
+    await database.query("SELECT pg_advisory_xact_lock(hashtextextended($1, 0))", [data.submissionId]);
+    const existing = (await database.query(`SELECT id, reference, total_paise, payment_status, request_hash FROM public.bbc_event_registrations WHERE submission_id=$1`, [data.submissionId])).rows[0];
+    if (existing) {
+      if (existing.request_hash !== fingerprint) throw new RequestError("This submission was already saved with different details. Start a new registration.", 409);
+      await database.query("COMMIT");
+      return json({ registration: { id: existing.id, reference: existing.reference, totalPaise: existing.total_paise, paymentStatus: existing.payment_status } }, 200);
+    }
 
     let eventId: string = EVENT.id;
     let eventName: string = EVENT.name;
@@ -106,7 +118,7 @@ export async function POST(request: Request) {
       );
       const eventRecord = eventResult.rows[0];
       if (!eventRecord) {
-        return json({ error: "The selected event no longer exists. Return to the dashboard and choose an event again." }, 409);
+        throw new RequestError("The selected event no longer exists. Choose an event again.", 409);
       }
 
       eventId = String(eventRecord.id);
@@ -127,13 +139,13 @@ export async function POST(request: Request) {
         id, submission_id, request_hash, reference, event_id, event_name, event_date,
         member_name, email, phone, billing_details,
         participation_quantity, standee_quantity, meal_choice, included_meals, presentation_selected,
-        participation_unit_paise, standee_unit_paise, presentation_unit_paise, meal_unit_paise, total_paise, participant_names, payment_status
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NULL, $14, $15, $16, $17, $18, 0, $19, $20, 'unpaid')
+        participation_unit_paise, standee_unit_paise, presentation_unit_paise, meal_unit_paise, total_paise, participant_names, additional_participant_contacts, payment_status
+      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, NULL, $14, $15, $16, $17, $18, 0, $19, $20, $21::jsonb, 'unpaid')
       ON CONFLICT (submission_id) DO NOTHING
       RETURNING id, reference, total_paise, payment_status, request_hash
     `, [id, data.submissionId, fingerprint, reference, eventId, eventName, eventDate,
       data.memberName, data.email, `+91${data.phone}`, data.billingDetails,
-      data.participationQuantity, data.standeeQuantity, prices.includedMeals, data.presentationSelected, prices.participation, prices.standee, prices.presentation, totalPaise, participantNames]);
+      data.participationQuantity, data.standeeQuantity, prices.includedMeals, data.presentationSelected, prices.participation, prices.standee, prices.presentation, totalPaise, participantNames, JSON.stringify((additionalParticipantContacts ?? []).map((contact) => ({ ...contact, phone: `+91${contact.phone}` })))]);
 
     const record = inserted.rows[0] ?? (await database.query<{
       id: string; reference: string; total_paise: number; payment_status: "unpaid"; request_hash: string;
@@ -141,7 +153,7 @@ export async function POST(request: Request) {
         FROM public.bbc_event_registrations WHERE submission_id = $1`, [data.submissionId])).rows[0];
 
     if (!record || record.request_hash !== fingerprint) {
-      return json({ error: "This submission was already saved with different details. Start a new registration to make changes." }, 409);
+      throw new RequestError("This submission was already saved with different details. Start a new registration.", 409);
     }
 
     await database.query(
@@ -164,11 +176,14 @@ export async function POST(request: Request) {
       ],
     );
 
+    await database.query("COMMIT");
     return json({ registration: {
       id: record.id, reference: record.reference,
       totalPaise: record.total_paise, paymentStatus: record.payment_status,
     } }, inserted.rows.length ? 201 : 200);
   } catch (error) {
+    if (database) await database.query("ROLLBACK");
+    if (error instanceof RequestError) return requestErrorResponse(error);
     // Log only database diagnostics; never log submitted personal data or credentials.
     const diagnostic = error && typeof error === "object"
       ? { code: "code" in error ? String(error.code) : undefined, message: "message" in error ? String(error.message) : undefined }
@@ -186,5 +201,5 @@ export async function POST(request: Request) {
       error: responseMessage,
       diagnosticCode: databaseCode ?? "DB_ERROR",
     }, 503);
-  }
+  } finally { database?.release(); }
 }

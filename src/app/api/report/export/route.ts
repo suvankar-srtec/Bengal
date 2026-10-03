@@ -1,7 +1,7 @@
 import { cookies } from "next/headers";
 import { ADMIN_SESSION_COOKIE, readAdminSession } from "@/lib/admin-auth";
 import { getDatabase } from "@/lib/db";
-import { mealChoiceLabel } from "@/lib/registration";
+import { mealChoiceLabel, type ParticipantContact } from "@/lib/registration";
 import { BBC_LOGO_DATA_URL } from "@/lib/bbc-logo";
 
 export const runtime = "nodejs";
@@ -16,6 +16,7 @@ type ExportEvent = {
 type ExportRegistration = {
   member_name: string;
   participant_names: string[];
+  additional_participant_contacts: ParticipantContact[];
   email: string;
   phone: string;
   billing_details: string;
@@ -64,6 +65,7 @@ function excelXml(event: ExportEvent, registrations: ExportRegistration[]) {
   const headers = [
     "Primary member",
     "Participants",
+    "Additional participant contacts",
     "Email",
     "WhatsApp",
     "Billing",
@@ -78,6 +80,7 @@ function excelXml(event: ExportEvent, registrations: ExportRegistration[]) {
   const rows = registrations.map((registration) => [
     registration.member_name,
     (registration.participant_names ?? [registration.member_name]).join(", "),
+    (registration.additional_participant_contacts ?? []).map((contact, index) => `${registration.participant_names[index + 1]}: ${contact.phone}, ${contact.email}`).join("; "),
     registration.email,
     registration.phone,
     registration.billing_details,
@@ -593,6 +596,7 @@ export async function GET(request: Request) {
       SELECT
         member_name,
         participant_names,
+        additional_participant_contacts,
         email,
         phone,
         billing_details,

@@ -10,5 +10,6 @@ export const metadata: Metadata = {
 };
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  return <html lang="en"><body>{children}</body></html>;
+  // Browser extensions may add body attributes (for example, cz-shortcut-listen) before hydration.
+  return <html lang="en"><body suppressHydrationWarning>{children}</body></html>;
 }

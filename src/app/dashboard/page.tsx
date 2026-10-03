@@ -1,3 +1,4 @@
+import { NotificationNavLink } from "@/components/notification-nav-link";
 import Link from "next/link";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
@@ -101,6 +102,7 @@ export default async function DashboardPage() {
             <Link prefetch={false} href="/report/whatsapp">WhatsApp</Link>
           </div>
         </details> : <Link prefetch={false} href={`/report?eventId=${session.eventId}`}>Report</Link>}
+        {session.role === "admin" && <NotificationNavLink />}
       </nav>
       <div className="admin-sidebar-footer"><AdminLogoutButton /></div>
     </aside>

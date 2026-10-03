@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { NotificationNavLink } from "./notification-nav-link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { AdminLogoutButton } from "@/components/admin-logout-button";
@@ -48,6 +49,7 @@ export function MobileAdminNav({
           <Link href="/report?report=event" onClick={() => setOpen(false)}>Event Report</Link>
           <Link prefetch={false} className={linkClass("/report/whatsapp")} href="/report/whatsapp" onClick={() => setOpen(false)}>WhatsApp</Link>
         </details> : <Link href={eventId ? `/report?eventId=${eventId}` : "/report"} onClick={() => setOpen(false)}>Report</Link>}
+        {role === "admin" && <NotificationNavLink onClick={() => setOpen(false)} />}
       </nav>
       <div className="mobile-admin-menu-footer">
         <AdminLogoutButton />

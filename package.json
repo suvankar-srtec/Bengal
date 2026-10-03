@@ -9,14 +9,18 @@
     "typecheck": "tsc --noEmit",
     "test": "tsx --test tests/registration.test.ts tests/payment-security.test.ts tests/venue-map.test.ts tests/event-content.test.ts",
     "db:migrate": "node --env-file=.env.local scripts/migrate.mjs",
-    "test:integration": "node --env-file=.env.local scripts/verify-registration.mjs",
-    "test:payments": "node --env-file=.env.local scripts/verify-payments.mjs",
+    "test:integration": "node --env-file=.env.local --conditions=react-server --import tsx scripts/verify-registration-payment.cjs",
+    "test:payments": "node --env-file=.env.local --conditions=react-server --import tsx scripts/verify-registration-payment.cjs",
     "test:whatsapp": "node --conditions=react-server --import tsx --test tests/whatsapp.test.ts",
-    "whatsapp:retry": "node --env-file=.env.local --conditions=react-server --import tsx scripts/retry-whatsapp.ts"
+    "whatsapp:retry": "node --env-file=.env.local --conditions=react-server --import tsx scripts/retry-whatsapp.ts",
+    "test:verification": "node --conditions=react-server --import tsx --test tests/verification-and-receipts.test.ts",
+    "passes:retry": "node --env-file=.env.local --conditions=react-server --import tsx scripts/retry-passes.ts",
+    "test:notifications": "node --env-file=.env.local --conditions=react-server --import tsx scripts/verify-notifications.cjs"
   },
   "dependencies": {
     "@googlemaps/js-api-loader": "^2.1.3",
     "next": "16.3.6",
+    "nodemailer": "^10.0.13",
     "pg": "8.23.0",
     "qrcode": "^1.5.4",
     "react": "19.3.0",
@@ -28,6 +32,7 @@
   "devDependencies": {
     "@types/google.maps": "^3.66.4",
     "@types/node": "^24.0.0",
+    "@types/nodemailer": "^8.0.2",
     "@types/pg": "^8.15.0",
     "@types/react": "^19.0.0",
     "@types/react-dom": "^19.0.0",

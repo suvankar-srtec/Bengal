@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { calculateTotal, registrationSchema } from "../src/lib/registration";
+import { calculateTotal, registrationSchema, registrationFieldKey } from "../src/lib/registration";
 
 const valid = {
   submissionId: "b582b911-bf74-46fc-a8c1-6c757f18a3d2",
@@ -54,4 +54,17 @@ test("supports the full participant limit with a name for every guest", () => {
   const group = { ...valid, participationQuantity: 20, additionalParticipantNames: Array.from({ length: 19 }, (_, index) => `Guest ${index + 2}`) };
   assert.equal(registrationSchema.safeParse(group).success, true);
   assert.equal(calculateTotal(group), 2360000);
+});
+
+
+test("validates and normalizes contacts for each additional participant", () => {
+  const group = { ...valid, participationQuantity: 2, additionalParticipantNames: ["Second Member"], additionalParticipantContacts: [{ email: " Guest@Example.COM ", phone: "9000000001" }] };
+  assert.deepEqual(registrationSchema.parse(group).additionalParticipantContacts, [{ email: "guest@example.com", phone: "9000000001" }]);
+  for (const contacts of [[], [{ email: "bad", phone: "9000000001" }], [{ email: "guest@example.com", phone: "123" }], [{ email: "", phone: "" }], [group.additionalParticipantContacts[0], group.additionalParticipantContacts[0]]]) {
+    assert.equal(registrationSchema.safeParse({ ...group, additionalParticipantContacts: contacts }).success, false);
+  }
+  assert.equal(registrationSchema.parse(valid).additionalParticipantContacts, undefined);
+  assert.equal(registrationSchema.safeParse({ ...valid, additionalParticipantContacts: group.additionalParticipantContacts }).success, false);
+  assert.equal(registrationFieldKey(["additionalParticipantContacts", 1, "email"]), "participantEmail3");
+  assert.equal(registrationFieldKey(["additionalParticipantContacts", 0, "phone"]), "participantPhone2");
 });

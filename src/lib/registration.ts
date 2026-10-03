@@ -77,6 +77,12 @@ export function participationPricesFromRow(row: Record<string, unknown> | undefi
 
 export const LIMITS = { participation: 20, standee: 10 } as const;
 
+export const participantContactSchema = z.object({
+  email: z.string().trim().pipe(z.email("Enter a valid email address.").max(254)).transform((email) => email.toLowerCase()),
+  phone: z.string().regex(/^[6-9]\d{9}$/, "Enter a valid 10-digit Indian WhatsApp number."),
+});
+export type ParticipantContact = z.infer<typeof participantContactSchema>;
+
 export const registrationSchema = z.object({
   submissionId: z.uuid(),
   eventContentId: z.number().int().positive().nullable().default(null),
@@ -100,17 +106,26 @@ export const registrationSchema = z.object({
   additionalParticipantNames: z.array(
     z.string().trim().min(2, "Enter the participant’s full name.").max(120, "Use 120 characters or fewer."),
   ).max(LIMITS.participation - 1).default([]),
+  // Optional for existing open forms and name-only spreadsheet imports.
+  additionalParticipantContacts: z.array(participantContactSchema).max(LIMITS.participation - 1).optional(),
 }).superRefine((data, context) => {
+  if (data.additionalParticipantContacts && data.additionalParticipantContacts.length !== data.additionalParticipantNames.length) {
+    context.addIssue({ code: "custom", path: ["additionalParticipantContacts"], message: "Provide contact details for every additional participant." });
+  }
   if (data.additionalParticipantNames.length !== data.participationQuantity - 1) {
     context.addIssue({ code: "custom", path: ["additionalParticipantNames"], message: "Provide one name for every participant selected." });
   }
 });
 
 export type RegistrationInput = z.infer<typeof registrationSchema>;
-export type RegistrationFieldKey = keyof RegistrationInput | `participantName${number}`;
+export type RegistrationFieldKey = keyof RegistrationInput | `participantName${number}` | `participantEmail${number}` | `participantPhone${number}`;
 export type FieldErrors = Partial<Record<RegistrationFieldKey, string>>;
 
 export function registrationFieldKey(path: readonly PropertyKey[]): RegistrationFieldKey {
+  if (path[0] === "additionalParticipantContacts") {
+    const number = typeof path[1] === "number" ? path[1] + 2 : 2;
+    return path[2] === "phone" ? `participantPhone${number}` : `participantEmail${number}`;
+  }
   return path[0] === "additionalParticipantNames"
     ? `participantName${typeof path[1] === "number" ? path[1] + 2 : 2}`
     : String(path[0]) as RegistrationFieldKey;

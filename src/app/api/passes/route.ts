@@ -1,8 +1,10 @@
 import { after } from "next/server";
 import { z } from "zod";
+import { queueRegistrationPasses, deliverRegistrationPasses, passDeliveryStatuses } from "@/lib/pass-delivery";
+import { passBundlePath } from "@/lib/whatsapp-delivery";
 import { getDatabase } from "@/lib/db";
 import { participantPass } from "@/lib/participant-pass";
-import { deliveryDetails, deliverWhatsAppPassesSafely, loadPassRegistration, passImagePath, queueWhatsAppPasses } from "@/lib/whatsapp-delivery";
+import { deliveryDetails, loadPassRegistration, passImagePath } from "@/lib/whatsapp-delivery";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -28,13 +30,13 @@ export async function POST(request: Request) {
     const authorized = (await getDatabase().query(`SELECT id FROM public.bbc_event_registrations
       WHERE id = $1 AND submission_id = $2 AND payment_status = 'paid'`, [data.registrationId, data.submissionId])).rowCount;
     if (!authorized) return Response.json({ error: "Paid registration not found." }, { status: 404, headers });
-    await queueWhatsAppPasses(getDatabase(), data.registrationId);
+    await queueRegistrationPasses(getDatabase(), data.registrationId);
     const [registration, delivery] = await Promise.all([loadPassRegistration(data.registrationId), deliveryDetails(data.registrationId)]);
     if (!registration || !delivery) throw new Error("Passes unavailable");
-    if (delivery.status === "pending" || delivery.status === "sending" || (data.retry && delivery.status === "failed")) {
-      after(() => deliverWhatsAppPassesSafely(data.registrationId));
-    }
+    after(() => deliverRegistrationPasses(data.registrationId));
     return Response.json({
+      bundleUrl: passBundlePath(delivery.media_token),
+      delivery: await passDeliveryStatuses(data.registrationId),
       passes: registration.participant_names.map((_, index) => {
         const { payload: _payload, ...pass } = participantPass(registration, index);
         return { ...pass, passUrl: passImagePath(delivery.media_token, index + 1) };

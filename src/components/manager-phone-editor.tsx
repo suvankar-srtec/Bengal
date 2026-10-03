@@ -23,7 +23,7 @@ export function ManagerPhoneEditor({registrationId,phone}:{registrationId:string
         method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({registrationId,phone:value,...(kind==="save"?{challengeId:challenge,code}:{})}),signal:AbortSignal.timeout(45000)});
       const data=await response.json();if(!response.ok)throw new Error(data.error||"Could not update the WhatsApp number.");
       if(kind==="send") {setChallenge(data.challengeId);setCode("");setMessage(data.message);setCooldown(60);setTimeout(()=>otpInput.current?.focus(),0);}
-      else {setValue(data.phone);setSavedPhone(data.phone);setEditing(false);setChallenge("");setCode("");setMessage("WhatsApp number verified and updated.");router.refresh();}
+      else {setValue(data.phone);setSavedPhone(data.phone);setEditing(false);setChallenge("");setCode("");setMessage("Current number verified. WhatsApp number updated.");router.refresh();}
     }catch(reason){setError(reason instanceof Error&&reason.name!=="TimeoutError"?reason.message:"Connection interrupted. Please try again.");}
     finally{locked.current=false;setBusy(false);}
   }
@@ -37,8 +37,8 @@ export function ManagerPhoneEditor({registrationId,phone}:{registrationId:string
   return <div className="manager-phone-editor">
     <label className="sr-only" htmlFor={`manager-phone-${registrationId}`}>New WhatsApp number</label>
     <input id={`manager-phone-${registrationId}`} value={value} disabled={busy} onChange={event=>{setValue(event.target.value);setChallenge("");setCode("");setMessage("");setError("");}} inputMode="tel" autoFocus maxLength={20}/>
-    <small>A code will be sent to the new WhatsApp number before it is saved.</small>
-    <div className="manager-phone-editor-actions"><button type="button" disabled={busy||cooldown>0||value.trim()===savedPhone||value.trim().length<8} onClick={()=>void act("send")}>{busy?"Please wait...":cooldown?`Resend in ${cooldown}s`:challenge?"Resend code":"Send code"}</button></div>
+    <small>A code will be sent to the current WhatsApp number before the number is changed.</small>
+    <div className="manager-phone-editor-actions"><button type="button" disabled={busy||cooldown>0||value.trim()===savedPhone||value.trim().length<8} onClick={()=>void act("send")}>{busy?"Please wait...":cooldown?`Resend in ${cooldown}s`:challenge?"Resend code":"Send code to current number"}</button></div>
     {challenge&&<>
       <label className="sr-only" htmlFor={`manager-code-${registrationId}`}>Verification code</label>
       <input ref={otpInput} id={`manager-code-${registrationId}`} value={code} disabled={busy} onChange={event=>setCode(event.target.value.replace(/\D/g,"").slice(0,6))} inputMode="numeric" autoComplete="one-time-code" placeholder="6-digit code" maxLength={6}/>

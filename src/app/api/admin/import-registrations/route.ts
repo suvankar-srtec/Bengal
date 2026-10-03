@@ -264,7 +264,18 @@ export async function POST(request: Request) {
   }
 
   const client = await database.connect();
-  const resultRows: Array<{ row: number; registrationId: string; primaryMember: string; participants: number; additionalParticipants: number; whatsapp: string; passUrl: string; deliveryStatus: string; existing: boolean }> = [];
+  const resultRows: Array<{
+    row: number;
+    registrationId: string;
+    primaryMember: string;
+    participants: number;
+    additionalParticipants: number;
+    whatsapp: string;
+    passUrl: string;
+    deliveryStatus: string;
+    canSendPasses: boolean;
+    existing: boolean;
+  }> = [];
   const origin = (process.env.APP_PUBLIC_URL || new URL(request.url).origin).replace(/\/+$/, "");
   const eventDate = event.event_date instanceof Date ? event.event_date.toISOString().slice(0, 10) : String(event.event_date).slice(0, 10);
 
@@ -321,10 +332,21 @@ export async function POST(request: Request) {
         [registration.id, randomBytes(32).toString("hex")],
       );
 
-      const delivery = (await client.query<{ media_token: string; status: string }>(
-        "SELECT media_token, status FROM public.bbc_whatsapp_pass_deliveries WHERE registration_id = $1",
-        [registration.id],
-      )).rows[0];
+      const delivery = (await client.query<{
+        media_token: string;
+        status: string;
+        event_resend_at: Date | null;
+        event_started: boolean;
+      }>(`
+        SELECT
+          d.media_token,
+          d.status,
+          d.event_resend_at,
+          (r.event_date <= (NOW() AT TIME ZONE 'Asia/Kolkata')::date) AS event_started
+        FROM public.bbc_whatsapp_pass_deliveries d
+        JOIN public.bbc_event_registrations r ON r.id=d.registration_id
+        WHERE d.registration_id=$1
+      `, [registration.id])).rows[0];
       if (!delivery) throw new Error("Pass link could not be generated.");
 
       resultRows.push({
@@ -336,6 +358,9 @@ export async function POST(request: Request) {
         whatsapp: "+91" + row.phone,
         passUrl: origin + passBundlePath(delivery.media_token),
         deliveryStatus: delivery.status,
+        canSendPasses:
+          delivery.status !== "accepted" ||
+          (delivery.event_started && !delivery.event_resend_at),
         existing,
       });
     }

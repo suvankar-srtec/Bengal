@@ -26,10 +26,15 @@ export async function POST(request: Request) {
 
     const id = parsed.data.registrationId;
     const db = getDatabase();
-    const row = (await db.query(
-      "SELECT event_id, admin_import_key FROM public.bbc_event_registrations WHERE id=$1 AND payment_status='paid'",
-      [id],
-    )).rows[0];
+    const row = (await db.query(`
+      SELECT
+        event_id,
+        admin_import_key,
+        event_date::text,
+        (event_date <= (NOW() AT TIME ZONE 'Asia/Kolkata')::date) AS event_started
+      FROM public.bbc_event_registrations
+      WHERE id=$1 AND payment_status='paid'
+    `, [id])).rows[0];
     if (!row) throw new RequestError("Paid registration not found.", 404);
     if (session.role === "manager" && row.event_id !== String(session.eventId)) {
       throw new RequestError("This registration is not in your assigned event.", 403);
@@ -40,20 +45,59 @@ export async function POST(request: Request) {
     // the newer participant-photo workflow used by public registrations.
     if (row.admin_import_key) {
       await queueRegistrationPasses(db, id);
-      await db.query(`
-        UPDATE public.bbc_whatsapp_pass_deliveries
-        SET status='pending', attempts=0, next_attempt_at=NOW(), error_code=NULL, updated_at=NOW()
-        WHERE registration_id=$1 AND status IN ('manual','failed','unknown')
-      `, [id]);
-      await db.query(`
-        UPDATE public.bbc_email_pass_deliveries
-        SET status='pending', attempts=0, next_attempt_at=NOW(), error_code=NULL, updated_at=NOW()
-        WHERE registration_id=$1 AND status IN ('failed','unknown')
-      `, [id]);
+
+      const currentDelivery = (await db.query<{
+        status: string;
+        event_resend_at: Date | null;
+      }>(`
+        SELECT status,event_resend_at
+        FROM public.bbc_whatsapp_pass_deliveries
+        WHERE registration_id=$1
+      `, [id])).rows[0];
+
+      if (currentDelivery?.status === "accepted") {
+        if (!row.event_started) {
+          throw new RequestError("Passes were already sent. Resend will be available on the event date.", 409);
+        }
+        if (currentDelivery.event_resend_at) {
+          throw new RequestError("Passes were already resent on the event date.", 409);
+        }
+
+        await db.query(`
+          UPDATE public.bbc_whatsapp_pass_deliveries
+          SET status='pending', attempts=0, next_attempt_at=NOW(), error_code=NULL, updated_at=NOW()
+          WHERE registration_id=$1
+        `, [id]);
+        await db.query(`
+          UPDATE public.bbc_email_pass_deliveries
+          SET status='pending', attempts=0, next_attempt_at=NOW(), error_code=NULL, updated_at=NOW()
+          WHERE registration_id=$1
+        `, [id]);
+      } else {
+        await db.query(`
+          UPDATE public.bbc_whatsapp_pass_deliveries
+          SET status='pending', attempts=0, next_attempt_at=NOW(), error_code=NULL, updated_at=NOW()
+          WHERE registration_id=$1 AND status IN ('manual','failed','unknown')
+        `, [id]);
+        await db.query(`
+          UPDATE public.bbc_email_pass_deliveries
+          SET status='pending', attempts=0, next_attempt_at=NOW(), error_code=NULL, updated_at=NOW()
+          WHERE registration_id=$1 AND status IN ('failed','unknown')
+        `, [id]);
+      }
 
       await deliverRegistrationPasses(id);
       const delivery = await passDeliveryStatuses(id);
       const whatsappSent = delivery?.whatsapp === "accepted";
+
+      if (whatsappSent && row.event_started) {
+        await db.query(`
+          UPDATE public.bbc_whatsapp_pass_deliveries
+          SET event_resend_at=COALESCE(event_resend_at,NOW()),updated_at=NOW()
+          WHERE registration_id=$1
+        `, [id]);
+      }
+
       const labels: Record<string, string> = {
         accepted: "sent",
         pending: "queued",
@@ -65,6 +109,7 @@ export async function POST(request: Request) {
       return Response.json({
         ok: whatsappSent,
         status: whatsappSent ? "accepted" : (delivery?.whatsapp || "failed"),
+        canSendPasses: !whatsappSent,
         delivery,
         message: `WhatsApp: ${labels[delivery?.whatsapp] || "not sent"}. Email: ${labels[delivery?.email] || "not sent"}${delivery?.email_error ? ` (${delivery.email_error})` : ""}.`,
       }, {

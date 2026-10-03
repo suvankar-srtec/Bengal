@@ -6,22 +6,45 @@ export class EmailError extends Error {
   constructor(public code: string, public uncertain = false) { super(code); }
 }
 export function emailConfiguration() {
-  const provider = process.env.EMAIL_PROVIDER || (process.env.RESEND_API_KEY ? "resend" : "smtp");
-  if (provider === "resend") {
-    if (!process.env.RESEND_API_KEY) throw new EmailError("email_not_configured");
+  const resendApiKey = process.env.RESEND_API_KEY?.trim();
+  const configuredProvider = process.env.EMAIL_PROVIDER?.trim().toLowerCase();
+
+  // Prefer Resend whenever its API key exists. This prevents an old
+  // EMAIL_PROVIDER=smtp value from forcing the app into an unconfigured SMTP path.
+  if (resendApiKey) {
     const configuredFrom = process.env.EMAIL_FROM?.trim() || "";
     const verifiedFrom = "Bengal Business Council <events@mail.digigraptek.com>";
     const from = /@mail\.digigraptek\.com>?$/i.test(configuredFrom)
       ? configuredFrom
       : verifiedFrom;
-    if (/[\r\n]/.test(from)) throw new EmailError("email_not_configured");
-    return { provider, from, apiKey: process.env.RESEND_API_KEY } as const;
+    if (/[\r\n]/.test(from)) throw new EmailError("email_from_invalid");
+    return { provider: "resend", from, apiKey: resendApiKey } as const;
   }
+
+  if (configuredProvider === "resend") {
+    throw new EmailError("resend_api_key_missing");
+  }
+
   const from = process.env.EMAIL_FROM?.trim();
-  if (!from || /[\r\n]/.test(from)) throw new EmailError("email_not_configured");
+  if (!from || /[\r\n]/.test(from)) throw new EmailError("smtp_from_missing");
   const port = Number(process.env.SMTP_PORT || 465);
-  if (provider !== "smtp" || !process.env.SMTP_HOST || !process.env.SMTP_USER || !process.env.SMTP_PASSWORD || ![465,587].includes(port)) throw new EmailError("email_not_configured");
-  return { provider: "smtp", from, host: process.env.SMTP_HOST, port, user: process.env.SMTP_USER, password: process.env.SMTP_PASSWORD } as const;
+  if (
+    configuredProvider && configuredProvider !== "smtp" ||
+    !process.env.SMTP_HOST ||
+    !process.env.SMTP_USER ||
+    !process.env.SMTP_PASSWORD ||
+    ![465,587].includes(port)
+  ) {
+    throw new EmailError("smtp_not_configured");
+  }
+  return {
+    provider: "smtp",
+    from,
+    host: process.env.SMTP_HOST,
+    port,
+    user: process.env.SMTP_USER,
+    password: process.env.SMTP_PASSWORD,
+  } as const;
 }
 export async function sendEmail(input: { to: string; subject: string; text: string; html?: string; idempotencyKey: string }, request: typeof fetch = fetch) {
   if (!z.email().safeParse(input.to).success || /[\r\n]/.test(input.subject)) throw new EmailError("invalid_email");

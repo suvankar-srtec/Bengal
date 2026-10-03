@@ -229,11 +229,21 @@ export async function validateAndProcessParticipantPhoto(file: File) {
 export async function saveParticipantPhoto(token: string, file: File) {
   const request = await participantPhotoRequest(token);
   if (!request) throw new RequestError("This photo link is invalid or has expired.", 404);
+  if (request.photo_uploaded_at) {
+    throw new RequestError("This photo-upload link has already been used and is now disabled.", 409);
+  }
+
   const processed = await validateAndProcessParticipantPhoto(file);
-  await getDatabase().query(`
+  const updated = await getDatabase().query(`
     UPDATE public.bbc_participant_photos
     SET photo_data=$2,photo_mime=$3,photo_uploaded_at=NOW(),updated_at=NOW()
-    WHERE id=$1`, [request.id, processed.data, processed.mime]);
+    WHERE id=$1 AND photo_uploaded_at IS NULL
+    RETURNING id`, [request.id, processed.data, processed.mime]);
+
+  if (!updated.rowCount) {
+    throw new RequestError("This photo-upload link has already been used and is now disabled.", 409);
+  }
+
   return { registrationId: request.registration_id, participantNumber: request.participant_number };
 }
 

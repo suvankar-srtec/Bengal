@@ -11,8 +11,7 @@ import { AdminLogoutButton } from "@/components/admin-logout-button";
 import { MobileAdminNav } from "@/components/mobile-admin-nav";
 import { PaymentReviewActions } from "@/components/payment-review-actions";
 export const dynamic="force-dynamic";
-type Review={id:string;registration_id:string;member_name:string;email:string;phone:string;event_name:string;reference:string;method:string;status:string;amount_paise:number;note:string;created_at:Date;whatsapp:string|null;email_status:string|null;email_error:string|null;whatsapp_error:string|null};
-const labels:Record<string,string>={accepted:"Sent to provider",pending:"Queued",sending:"Sending",failed:"Failed",unknown:"Unconfirmed",manual:"Not sent"};
+type Review={id:string;registration_id:string;member_name:string;email:string;phone:string;event_name:string;reference:string;method:string;status:string;amount_paise:number;note:string;created_at:Date;whatsapp:string|null;email_status:string|null;email_error:string|null;whatsapp_error:string|null;photo_total:number;photo_uploaded:number;photo_email_sent:number;photo_whatsapp_sent:number};
 export default async function Notifications({searchParams}:{searchParams:Promise<{q?:string;status?:string;page?:string}>}) {
   const session=readAdminSession((await cookies()).get(ADMIN_SESSION_COOKIE)?.value);
   if(!session)redirect("/");if(session.role!=="admin")redirect("/dashboard");
@@ -22,7 +21,11 @@ export default async function Notifications({searchParams}:{searchParams:Promise
   const n=Number(params.page);const page=Number.isSafeInteger(n)&&n>0?Math.min(n,100000):1;
   let rows:Review[]=[];let failed=false;
   try {rows=(await getDatabase().query<Review>(`SELECT p.id,p.registration_id,p.method,p.status,p.amount_paise,p.note,p.created_at,
-    r.member_name,r.email,r.phone,r.event_name,r.reference,w.status AS whatsapp,e.status AS email_status,e.error_code AS email_error,w.error_code AS whatsapp_error
+    r.member_name,r.email,r.phone,r.event_name,r.reference,w.status AS whatsapp,e.status AS email_status,e.error_code AS email_error,w.error_code AS whatsapp_error,
+    COALESCE((SELECT COUNT(*) FROM public.bbc_participant_photos ph WHERE ph.registration_id=r.id),0)::int AS photo_total,
+    COALESCE((SELECT COUNT(*) FROM public.bbc_participant_photos ph WHERE ph.registration_id=r.id AND ph.photo_data IS NOT NULL),0)::int AS photo_uploaded,
+    COALESCE((SELECT COUNT(*) FROM public.bbc_participant_photos ph WHERE ph.registration_id=r.id AND ph.email_status='accepted'),0)::int AS photo_email_sent,
+    COALESCE((SELECT COUNT(*) FROM public.bbc_participant_photos ph WHERE ph.registration_id=r.id AND ph.whatsapp_status='accepted'),0)::int AS photo_whatsapp_sent
     FROM public.bbc_registration_payment_reviews p JOIN public.bbc_event_registrations r ON r.id=p.registration_id
     LEFT JOIN public.bbc_whatsapp_pass_deliveries w ON w.registration_id=r.id LEFT JOIN public.bbc_email_pass_deliveries e ON e.registration_id=r.id
     WHERE ($1='all' OR p.status=$1) AND ($2='' OR strpos(lower(concat_ws(' ',r.member_name,r.email,r.phone,r.event_name,r.reference)),lower($2))>0)
@@ -49,7 +52,11 @@ export default async function Notifications({searchParams}:{searchParams:Promise
         <dl className="payment-review-details"><div><dt>Payment</dt><dd>{row.method==="bank"?"Bank transfer":"Cash"} / {formatMoney(row.amount_paise)}</dd></div><div><dt>Submitted</dt><dd>{new Intl.DateTimeFormat("en-IN",{dateStyle:"medium",timeStyle:"short",timeZone:"Asia/Kolkata"}).format(row.created_at)}</dd></div><div><dt>Email</dt><dd>{row.email}</dd></div><div><dt>WhatsApp</dt><dd>{row.phone}</dd></div><div className="full-width"><dt>Registration reference</dt><dd>{row.reference}</dd></div></dl>
         {row.method==="bank"&&<a className="receipt-download" href={`/api/admin/payment-reviews/${row.id}/receipt`}>Download bank receipt</a>}
         {row.note&&<p>Review note: {row.note}</p>}
-        {row.status==="approved"&&<p className="payment-delivery-status">WhatsApp: {labels[row.whatsapp||""]||"Not queued"}{row.whatsapp_error?` (${row.whatsapp_error.replaceAll("_"," ")})`:""}<br/>Email: {labels[row.email_status||""]||"Not queued"}{row.email_error?` (${row.email_error.replaceAll("_"," ")})`:""}</p>}
+        {row.status==="approved"&&<p className="payment-delivery-status">
+          Participant photos: <strong>{row.photo_uploaded}/{row.photo_total || 0} uploaded</strong><br/>
+          Photo links: WhatsApp {row.photo_whatsapp_sent}/{row.photo_total || 0} sent · Email {row.photo_email_sent}/{row.photo_total || 0} sent<br/>
+          Passes: <strong>{row.photo_total>0&&row.photo_uploaded===row.photo_total?"Ready":"Awaiting participant photos"}</strong>
+        </p>}
         <PaymentReviewActions id={row.id} registrationId={row.registration_id} status={row.status} method={row.method}/>
       </article>)}</div>}
       {!failed&&<nav className="whatsapp-history-pagination" aria-label="Notification pages"><span>Page {page}</span>{page>1&&<Link href={href(page-1)}>Previous</Link>}{rows.length>50&&<Link href={href(page+1)}>Next</Link>}</nav>}

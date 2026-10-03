@@ -61,7 +61,7 @@ function publicOrigin() {
     process.env.APP_PUBLIC_URL?.trim(),
     process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : "",
     process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "",
-  ].filter(Boolean);
+  ].filter((value): value is string => Boolean(value));
 
   for (const candidate of candidates) {
     try {

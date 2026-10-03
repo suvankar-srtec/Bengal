@@ -66,7 +66,7 @@ export async function POST(request: Request) {
         ok: whatsappSent,
         status: whatsappSent ? "accepted" : (delivery?.whatsapp || "failed"),
         delivery,
-        message: `WhatsApp: ${labels[delivery?.whatsapp] || "not sent"}. Email: ${labels[delivery?.email] || "not sent"}.`,
+        message: `WhatsApp: ${labels[delivery?.whatsapp] || "not sent"}. Email: ${labels[delivery?.email] || "not sent"}${delivery?.email_error ? ` (${delivery.email_error})` : ""}.`,
       }, {
         status: whatsappSent ? 200 : 502,
         headers: { "Cache-Control": "no-store" },
@@ -92,7 +92,7 @@ export async function POST(request: Request) {
         ok: true,
         status: "awaiting_photos",
         progress,
-        message: `Participant photos: ${progress.uploaded}/${progress.total}. Photo links — WhatsApp: ${progress.whatsapp_sent}/${progress.total}, Email: ${progress.email_sent}/${progress.total}.`,
+        message: `Participant photos: ${progress.uploaded}/${progress.total}. Photo links — WhatsApp: ${progress.whatsapp_sent}/${progress.total}, Email: ${progress.email_sent}/${progress.total}${progress.email_error ? ` (${progress.email_error})` : ""}.`,
       }, { headers: { "Cache-Control": "no-store" } });
     }
 
@@ -113,7 +113,7 @@ export async function POST(request: Request) {
       ok: true,
       status: sent ? "accepted" : "partial",
       delivery,
-      message: `WhatsApp: ${labels[delivery?.whatsapp] || "not sent"}. Email: ${labels[delivery?.email] || "not sent"}.`,
+      message: `WhatsApp: ${labels[delivery?.whatsapp] || "not sent"}. Email: ${labels[delivery?.email] || "not sent"}${delivery?.email_error ? ` (${delivery.email_error})` : ""}.`,
     }, { headers: { "Cache-Control": "no-store" } });
   } catch (error) {
     return requestErrorResponse(error);

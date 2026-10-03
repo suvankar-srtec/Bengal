@@ -61,8 +61,8 @@ export async function requestPhoneChangeCode(input:{registrationId:string;phone:
     await db.query("BEGIN");
     await db.query("SELECT pg_advisory_xact_lock(8731264)");
     const counts = (await db.query<{recent:string;destination_count:string;actor_count:string;ip_count:string}>(`
-      SELECT COUNT(*) FILTER (WHERE channel='phone' AND destination=$1 AND created_at>NOW()-INTERVAL '60 seconds') AS recent,
-        COUNT(*) FILTER (WHERE channel='phone' AND destination=$1) AS destination_count,
+      SELECT COUNT(*) FILTER (WHERE channel='phone' AND COALESCE(previous_destination,destination)=$1 AND created_at>NOW()-INTERVAL '60 seconds') AS recent,
+        COUNT(*) FILTER (WHERE channel='phone' AND COALESCE(previous_destination,destination)=$1) AS destination_count,
         COUNT(*) FILTER (WHERE actor_id=$2) AS actor_count,
         COUNT(*) FILTER (WHERE ip_hash=$3) AS ip_count
       FROM public.bbc_contact_verifications WHERE created_at>NOW()-INTERVAL '1 hour'`,[currentPhone,manager.managerId,ipHash])).rows[0];

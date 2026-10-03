@@ -12,17 +12,17 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const { id } = await params;
     const parsed = z.object({
       decision: z.enum(["approved", "rejected"]),
-      note: z.string().trim().max(500).default(""),
+      note: z.string().trim().max(500).default(""),\n      confirmationSuffix: z.string().trim().regex(/^[A-Za-z0-9]{4}$/).optional(),
     }).safeParse(await limitedJson(request));
 
     if (!z.uuid().safeParse(id).success || !parsed.success) {
       throw new RequestError("Invalid payment review.");
     }
-    if (parsed.data.decision === "rejected" && !parsed.data.note) {
+    if (parsed.data.decision === "approved" && !parsed.data.confirmationSuffix) {\n      throw new RequestError("Enter the last 4 characters of the transaction ID.");\n    }\n    if (parsed.data.decision === "rejected" && !parsed.data.note) {
       throw new RequestError("Enter a reason so the member can correct the payment request.");
     }
 
-    const result = await reviewPayment(id, parsed.data.decision, parsed.data.note);
+    const result = await reviewPayment(id, parsed.data.decision, parsed.data.note, parsed.data.confirmationSuffix || "");
 
     if (result.status === "approved") {
       await deliverParticipantPhotoRequests(result.registrationId);

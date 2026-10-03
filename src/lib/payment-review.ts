@@ -6,7 +6,7 @@ import { z } from "zod";
 import { ADMIN_SESSION_COOKIE, readAdminSession } from "./admin-auth";
 import { getDatabase } from "./db";
 import { RequestError } from "./request-security";
-import { queueRegistrationPasses } from "./pass-delivery";
+import { queueParticipantPhotoRequests } from "./participant-photo";
 
 export const paymentAccessSchema = z.object({ registrationId: z.uuid(), submissionId: z.uuid() });
 export async function requirePaymentAdmin() {
@@ -68,7 +68,7 @@ export async function reviewPayment(id: string, decision: "approved" | "rejected
       await db.query("UPDATE public.bbc_registration_payment_reviews SET status=$2,note=$3,reviewed_at=NOW(),read_at=COALESCE(read_at,NOW()) WHERE id=$1",[id,decision,note]);
       if (decision === "approved") {
         await db.query(`UPDATE public.bbc_event_registrations SET payment_status='paid',amount_paid_paise=total_paise,payment_approved_at=NOW() WHERE id=$1`,[found.registration_id]);
-        await queueRegistrationPasses(db, found.registration_id);
+        await queueParticipantPhotoRequests(db, found.registration_id);
       }
     }
     await db.query("COMMIT");

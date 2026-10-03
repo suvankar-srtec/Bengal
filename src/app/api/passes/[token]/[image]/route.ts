@@ -1,5 +1,6 @@
 import { getDatabase } from "@/lib/db";
 import { renderParticipantPass } from "@/lib/participant-pass";
+import { participantPhoto } from "@/lib/participant-photo";
 import { loadPassRegistration } from "@/lib/whatsapp-delivery";
 
 export const runtime = "nodejs";
@@ -14,9 +15,14 @@ export async function GET(_request: Request, context: { params: Promise<{ token:
       SELECT registration_id FROM public.bbc_whatsapp_pass_deliveries
       WHERE media_token = $1 AND media_expires_at > NOW()`, [token])).rows[0];
     const registration = delivery && await loadPassRegistration(delivery.registration_id);
-    const index = Number(participant[1]) - 1;
+    const participantNumber = Number(participant[1]);
+    const index = participantNumber - 1;
     if (!registration || !registration.participant_names[index]) return new Response(null, { status: 404, headers });
-    const png = await renderParticipantPass(registration, index);
+
+    const photo = await participantPhoto(registration.id, participantNumber);
+    if (!photo) return Response.json({ error: "Participant photo is still pending." }, { status: 409, headers });
+
+    const png = await renderParticipantPass(registration, index, photo.photo_data);
     return new Response(new Uint8Array(png), { headers: { ...headers, "Content-Type": "image/png", "X-Content-Type-Options": "nosniff" } });
   } catch {
     return new Response(null, { status: 503, headers });

@@ -148,11 +148,11 @@ function eventTimeLabel(value: string | null | undefined) {
   return `${hour % 12 || 12}:${String(minute).padStart(2, "0")} ${suffix}`;
 }
 
-export async function renderParticipantPass(registration: PassRegistration, index: number) {
+export async function renderParticipantPass(registration: PassRegistration, index: number, participantPhoto?: Buffer | null) {
   const pass = participantPass(registration, index);
 
   const [qr, logo] = await Promise.all([
-    QRCode.toDataURL(pass.payload, { width: 430, margin: 3, errorCorrectionLevel: "M" }),
+    QRCode.toDataURL(pass.payload, { width: 400, margin: 3, errorCorrectionLevel: "M" }),
     sharp(Buffer.from(BBC_LOGO_DATA_URL.split(",")[1], "base64")).png().toBuffer(),
   ]);
 
@@ -170,6 +170,13 @@ export async function renderParticipantPass(registration: PassRegistration, inde
     : startTime || endTime || "Time to be announced";
   const venue = String(registration.venue || "Venue to be announced");
 
+  const photoMarkup = participantPhoto
+    ? `<rect x="45" y="350" width="180" height="220" rx="10" fill="#f3f5f7"/>
+       <image href="data:image/jpeg;base64,${participantPhoto.toString("base64")}" x="45" y="350" width="180" height="220" preserveAspectRatio="xMidYMid slice"/>
+       <rect x="45" y="350" width="180" height="220" rx="10" fill="none" stroke="#dfe3e8" stroke-width="2"/>`
+    : `<rect x="45" y="350" width="180" height="220" rx="10" fill="#f3f5f7" stroke="#dfe3e8" stroke-width="2"/>
+       ${pixelText("PHOTO", 88, 446, 3, "#9aa5af", 10)}`;
+
   const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="750" height="1050">
     <rect width="750" height="1050" fill="#ffffff"/>
     <rect width="750" height="14" fill="#c74c40"/>
@@ -186,7 +193,8 @@ export async function renderParticipantPass(registration: PassRegistration, inde
     ${pixelText(`PARTICIPANT ${pass.participantNumber}`, 45, 238, 2.2, "#626f7b", 28)}
     ${pixelText(pass.participantName, 45, 276, 4, "#182f46", 24)}
 
-    <image href="data:image/png;base64,${qr.split(",")[1]}" x="160" y="330" width="430" height="430"/>
+    ${photoMarkup}
+    <image href="data:image/png;base64,${qr.split(",")[1]}" x="285" y="325" width="400" height="400"/>
 
     <rect x="45" y="790" width="660" height="74" rx="8" fill="#fff8f5"/>
     ${pixelText("MEALS INCLUDED", (750 - ("MEALS INCLUDED".length * 6 - 1) * 2.7) / 2, 817.5, 2.7, "#182f46")}

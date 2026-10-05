@@ -2615,3 +2615,123 @@ fieldset.additional-participant-card{min-width:0;border:1px solid #efd9d5;border
   .participant-photo-success strong{font-size:14px}
   .participant-photo-success p{margin:4px 0 8px;font-size:11px}
 }
+
+/* Mobile upload page containment fix */
+.admin-upload-main{
+  min-width:0;
+  width:100%;
+  max-width:100%;
+  overflow-x:hidden;
+}
+
+.admin-upload-stack{
+  display:grid;
+  grid-template-columns:minmax(0,1fr);
+  gap:20px;
+  min-width:0;
+  width:100%;
+  max-width:100%;
+}
+
+.admin-upload-card,
+.admin-upload-results{
+  min-width:0;
+  width:100%;
+  max-width:100%;
+}
+
+.admin-upload-card-head,
+.admin-upload-results-head,
+.admin-upload-card-head>div,
+.admin-upload-results-head>div,
+.admin-upload-form,
+.admin-upload-form>*,
+.admin-upload-form label,
+.admin-upload-file,
+.admin-upload-file-box{
+  min-width:0;
+  max-width:100%;
+}
+
+.admin-upload-form{
+  width:100%;
+}
+
+.admin-upload-form select,
+.admin-upload-form input[type=file]{
+  min-width:0;
+  max-width:100%;
+}
+
+.admin-upload-file-box{
+  width:100%;
+}
+
+.admin-upload-file-box input[type=file]{
+  flex:1 1 auto;
+  width:100%;
+  min-width:0;
+  max-width:100%;
+}
+
+.admin-upload-results-table-wrap{
+  display:block;
+  width:100%;
+  max-width:100%;
+  min-width:0;
+  overflow-x:auto;
+  overflow-y:hidden;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior-x:contain;
+}
+
+.admin-upload-results-table{
+  width:100%;
+  min-width:760px;
+  max-width:none;
+}
+
+@media(max-width:900px){
+  .admin-upload-form{
+    grid-template-columns:minmax(0,1fr);
+  }
+}
+
+@media(max-width:700px){
+  .admin-upload-main{
+    width:100%;
+    max-width:100%;
+    padding-left:16px;
+    padding-right:16px;
+    overflow-x:hidden;
+  }
+
+  .admin-upload-stack,
+  .admin-upload-card,
+  .admin-upload-results{
+    width:100%;
+    max-width:100%;
+    min-width:0;
+  }
+
+  .admin-upload-card,
+  .admin-upload-results{
+    padding:16px;
+  }
+
+  .admin-upload-file-box{
+    flex-wrap:wrap;
+  }
+
+  .admin-upload-file-box small{
+    width:100%;
+    white-space:normal;
+    overflow-wrap:anywhere;
+  }
+
+  .admin-upload-results-table-wrap{
+    width:100%;
+    max-width:100%;
+    overflow-x:auto;
+  }
+}

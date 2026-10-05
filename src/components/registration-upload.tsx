@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 
 type EventOption = { id: number; title: string; eventDate: string };
 type ImportResult = {
@@ -26,6 +26,18 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
   const [rowErrors, setRowErrors] = useState<Array<{ row: number; error: string }>>([]);
   const [results, setResults] = useState<ImportResult[]>([]);
   const [sendingId, setSendingId] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!successPopup) return;
+
+    const timer = window.setTimeout(() => {
+      setSuccessPopup("");
+    }, 3000);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
+  }, [successPopup]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

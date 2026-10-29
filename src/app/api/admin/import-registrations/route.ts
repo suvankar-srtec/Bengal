@@ -1,10 +1,11 @@
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { cookies } from "next/headers";
 import { ADMIN_SESSION_COOKIE, readAdminSession } from "@/lib/admin-auth";
+import { prepareRegistrationImport } from "@/lib/prepare-registration-import";
 import { parseRegistrationImport } from "@/lib/admin-registration-import";
 import { getDatabase } from "@/lib/db";
 import { passBundlePath } from "@/lib/whatsapp-delivery";
-import { calculateTotal, participationPricesFromRow, registrationSchema } from "@/lib/registration";
+import { participationPricesFromRow } from "@/lib/registration";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -22,43 +23,6 @@ type EventRow = {
   dinner_unit_paise: number;
   included_meals: ("snacks" | "lunch" | "dinner")[];
 };
-
-function field(row: Record<string, string>, names: string[]) {
-  for (const name of names) if (row[name]?.trim()) return row[name].trim();
-  return "";
-}
-
-function phone(raw: string) {
-  const digits = raw.replace(/\D/g, "");
-  return digits.length === 12 && digits.startsWith("91") ? digits.slice(2) : digits;
-}
-
-function optionalBillingDetails(raw: string) {
-  const value = raw.trim().toUpperCase();
-  return /^(?:[A-Z]{5}[0-9]{4}[A-Z]|[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][A-Z0-9]Z[A-Z0-9])$/.test(value)
-    ? value
-    : "";
-}
-
-function participants(raw: string, primary: string) {
-  const names = raw.split(/[|;\n]+/).map((value) => value.trim()).filter(Boolean);
-  if (names[0]?.toLowerCase() === primary.trim().toLowerCase()) names.shift();
-  return names;
-}
-
-function yes(raw: string) {
-  return /^(?:1|true|yes|y)$/i.test(raw.trim());
-}
-
-function moneyRupees(raw: string) {
-  const value = Number(raw.replace(/[₹,\s]/g, ""));
-  return Number.isFinite(value) && value >= 0 ? value : NaN;
-}
-
-function isCapturedParticipationRow(row: Record<string, string>) {
-  return field(row, ["item_name"]).trim().toLowerCase() === "participation fees"
-    && field(row, ["payment_status"]).trim().toLowerCase() === "captured";
-}
 
 export async function POST(request: Request) {
   const session = readAdminSession((await cookies()).get(ADMIN_SESSION_COOKIE)?.value);
@@ -92,175 +56,15 @@ export async function POST(request: Request) {
   if (!event) return Response.json({ error: "The selected event no longer exists." }, { status: 404 });
 
   const prices = participationPricesFromRow(event as unknown as Record<string, unknown>);
-  const parsedRows: Array<{
-    rowNumber: number;
-    memberName: string;
-    email: string;
-    phone: string;
-    billingDetails: string;
-    participantNames: string[];
-    participationQuantity: number;
-    standeeQuantity: number;
-    presentationSelected: boolean;
-    amountPaidPaise: number;
-    totalPaise: number;
-    key: string;
-    source: "registration" | "payment_export";
-  }> = [];
-  const rowErrors: Array<{ row: number; error: string }> = [];
-  const keys = new Set<string>();
-
-  const paymentExport = rows.some((row) =>
-    "item_name" in row || "payment_status" in row || "item_quantity" in row || "total_payment_amount" in row,
-  );
-  let matchingPaymentRows = 0;
-
-  rows.forEach((row, index) => {
-    const rowNumber = index + 2;
-
-    if (paymentExport) {
-      if (!isCapturedParticipationRow(row)) return;
-      matchingPaymentRows += 1;
-
-      const memberName = field(row, ["member_name", "primary_member", "name"]);
-      const email = field(row, ["email", "email_address"]);
-      const whatsapp = phone(field(row, ["phone", "whatsapp_number", "whatsapp", "mobile", "mobile_number"]));
-      const billingDetails = optionalBillingDetails(field(row, ["billing_details", "billing", "gst_pan", "gstin_pan", "gst_pan_number"]));
-      const quantity = Number(field(row, ["item_quantity", "participation_quantity", "participant_count"]));
-      const amountPaidRupees = moneyRupees(field(row, ["total_payment_amount", "amount_paid", "paid_amount", "amount"]));
-      const paymentDate = field(row, ["payment_date"]);
-
-      if (!Number.isInteger(quantity) || quantity < 1 || quantity > 20) {
-        rowErrors.push({ row: rowNumber, error: "Participation Fees item quantity must be between 1 and 20." });
-        return;
-      }
-      if (!Number.isFinite(amountPaidRupees)) {
-        rowErrors.push({ row: rowNumber, error: "Enter a valid total payment amount." });
-        return;
-      }
-
-      const generatedAdditionalNames = Array.from(
-        { length: quantity - 1 },
-        (_, nameIndex) => `${memberName} +${nameIndex + 1}`,
-      );
-      const parsed = registrationSchema.safeParse({
-        submissionId: randomUUID(),
-        eventContentId: eventId,
-        memberName,
-        email,
-        phone: whatsapp,
-        billingDetails,
-        photoDataUrl: null,
-        participationQuantity: quantity,
-        standeeQuantity: 0,
-        mealChoice: null,
-        presentationSelected: false,
-        additionalParticipantNames: generatedAdditionalNames,
-      });
-
-      if (!parsed.success) {
-        rowErrors.push({ row: rowNumber, error: parsed.error.issues[0]?.message || "Invalid payment registration data." });
-        return;
-      }
-
-      const participantNames = [parsed.data.memberName, ...generatedAdditionalNames];
-      const calculatedTotalPaise = quantity * prices.participation;
-      const key = createHash("sha256").update(JSON.stringify({
-        source: "payment_export", eventId, paymentDate, memberName: parsed.data.memberName, email: parsed.data.email,
-        phone: parsed.data.phone, billingDetails: parsed.data.billingDetails, quantity, amountPaidRupees,
-      })).digest("hex");
-
-      if (keys.has(key)) {
-        rowErrors.push({ row: rowNumber, error: "This captured Participation Fees payment is duplicated within the uploaded file." });
-        return;
-      }
-      keys.add(key);
-
-      parsedRows.push({
-        rowNumber,
-        memberName: parsed.data.memberName,
-        email: parsed.data.email,
-        phone: parsed.data.phone,
-        billingDetails: parsed.data.billingDetails,
-        participantNames,
-        participationQuantity: quantity,
-        standeeQuantity: 0,
-        presentationSelected: false,
-        amountPaidPaise: Math.round(amountPaidRupees * 100),
-        totalPaise: calculatedTotalPaise,
-        key,
-        source: "payment_export",
-      });
-      return;
-    }
-
-    const memberName = field(row, ["primary_member", "member_name", "primary_member_name", "name"]);
-    const email = field(row, ["email", "email_address"]);
-    const whatsapp = phone(field(row, ["whatsapp_number", "whatsapp", "phone", "mobile", "mobile_number"]));
-    const billingDetails = optionalBillingDetails(field(row, ["billing_details", "billing", "gst_pan", "gstin_pan", "gst_pan_number"]));
-    const additional = participants(field(row, ["additional_participants", "participant_names", "participants"]), memberName);
-    const participantNames = [memberName, ...additional];
-    const quantityText = field(row, ["participation_quantity", "participant_count", "participants_count"]);
-    const participationQuantity = quantityText ? Number(quantityText) : participantNames.length;
-    const standeeQuantity = Number(field(row, ["standee_quantity", "standee", "standees"]) || "0");
-    const presentationSelected = yes(field(row, ["company_presentation", "presentation", "presentation_selected"]));
-    const amountPaidRaw = field(row, ["amount_paid", "paid_amount", "amount"]);
-
-    const parsed = registrationSchema.safeParse({
-      submissionId: randomUUID(),
-      eventContentId: eventId,
-      memberName,
-      email,
-      phone: whatsapp,
-      billingDetails,
-      photoDataUrl: null,
-      participationQuantity,
-      standeeQuantity,
-      mealChoice: null,
-      presentationSelected,
-      additionalParticipantNames: additional,
-    });
-
-    if (!parsed.success) {
-      rowErrors.push({ row: rowNumber, error: parsed.error.issues[0]?.message || "Invalid registration data." });
-      return;
-    }
-
-    const calculatedTotalPaise = calculateTotal(parsed.data, prices);
-    const amountPaidRupees = amountPaidRaw ? moneyRupees(amountPaidRaw) : calculatedTotalPaise / 100;
-    if (!Number.isFinite(amountPaidRupees)) {
-      rowErrors.push({ row: rowNumber, error: "Amount Paid could not be calculated. Check the row values." });
-      return;
-    }
-
-    const key = createHash("sha256").update(JSON.stringify({
-      source: "registration", eventId, memberName: parsed.data.memberName, email: parsed.data.email, phone: parsed.data.phone,
-      billingDetails: parsed.data.billingDetails, participantNames, standeeQuantity: parsed.data.standeeQuantity,
-      presentationSelected: parsed.data.presentationSelected,
-    })).digest("hex");
-
-    if (keys.has(key)) {
-      rowErrors.push({ row: rowNumber, error: "This registration is duplicated within the uploaded file." });
-      return;
-    }
-    keys.add(key);
-
-    parsedRows.push({
-      rowNumber, memberName: parsed.data.memberName, email: parsed.data.email, phone: parsed.data.phone,
-      billingDetails: parsed.data.billingDetails, participantNames, participationQuantity: parsed.data.participationQuantity,
-      standeeQuantity: parsed.data.standeeQuantity, presentationSelected: parsed.data.presentationSelected,
-      amountPaidPaise: Math.round(amountPaidRupees * 100), totalPaise: calculatedTotalPaise, key,
-      source: "registration",
-    });
-  });
-
-  if (paymentExport && matchingPaymentRows === 0) {
+  const { parsedRows, rowErrors, skippedRows, paymentExport } = prepareRegistrationImport(rows, eventId, prices);
+  if (!parsedRows.length) {
     return Response.json({
-      error: "No captured Participation Fees rows were found. QR passes are created only when item name is Participation Fees and payment status is captured.",
+      error: paymentExport
+        ? "No valid captured registration payments were found. Failed, incomplete, unrelated, or invalid rows were skipped."
+        : "No valid registrations were found. Check the row details below.",
+      rowErrors: rowErrors.slice(0, 50), skippedRows: skippedRows.slice(0, 50),
+      skippedCount: rowErrors.length + skippedRows.length,
     }, { status: 400 });
-  }
-  if (rowErrors.length) {
-    return Response.json({ error: "Some rows need correction. Nothing was imported.", rowErrors: rowErrors.slice(0, 50) }, { status: 400 });
   }
 
   const client = await database.connect();
@@ -376,5 +180,5 @@ export async function POST(request: Request) {
     client.release();
   }
 
-  return Response.json({ ok: true, event: { id: event.id, title: event.title_en }, count: resultRows.length, results: resultRows });
+  return Response.json({ ok: true, event: { id: event.id, title: event.title_en }, count: resultRows.length, results: resultRows, skippedCount: skippedRows.length + rowErrors.length, skippedRows: skippedRows.slice(0, 50), rowErrors: rowErrors.slice(0, 50) });
 }

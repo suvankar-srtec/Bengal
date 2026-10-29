@@ -64,13 +64,15 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
 
       if (!response.ok) {
         setMessage(data.error || "The registrations could not be imported.");
-        setRowErrors(Array.isArray(data.rowErrors) ? data.rowErrors : []);
+        setRowErrors([...(Array.isArray(data.rowErrors) ? data.rowErrors : []), ...(Array.isArray(data.skippedRows) ? data.skippedRows : [])]);
         return;
       }
 
       const importedResults: ImportResult[] = Array.isArray(data.results) ? data.results : [];
       setResults(importedResults);
-      setMessage("");
+      const skippedCount = Number(data.skippedCount ?? 0);
+      setRowErrors([...(Array.isArray(data.rowErrors) ? data.rowErrors : []), ...(Array.isArray(data.skippedRows) ? data.skippedRows : [])]);
+      setMessage(skippedCount ? `${skippedCount} row${skippedCount === 1 ? " was" : "s were"} skipped. Valid registrations were processed. Details below (up to 100 rows).` : "");
       setSuccessPopup(String(data.count ?? 0) + " registration" + (data.count === 1 ? "" : "s") + " processed successfully.");
     } catch (error) {
       setMessage(error instanceof Error && error.name === "TimeoutError"
@@ -149,7 +151,7 @@ export function RegistrationUpload({ events }: { events: EventOption[] }) {
         <div>
           <span className="eyebrow">REGISTRATION IMPORT</span>
           <h2>Upload Excel or CSV</h2>
-          <p>Upload the Razorpay payment export. QR passes are generated only for captured Participation Fees rows.</p>
+          <p>Upload the Razorpay payment export. Captured Participation Fees or Amount payments are imported, including Add Family member quantities. Failed or incomplete payments are skipped.</p>
         </div>
       </div>
 

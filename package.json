@@ -15,6 +15,7 @@
     "whatsapp:retry": "node --env-file=.env.local --conditions=react-server --import tsx scripts/retry-whatsapp.ts",
     "test:verification": "node --conditions=react-server --import tsx --test tests/verification-and-receipts.test.ts",
     "passes:retry": "node --env-file=.env.local --conditions=react-server --import tsx scripts/retry-passes.ts",
+    "test:imports": "node --conditions=react-server --import tsx --test tests/registration-import.test.ts tests/registration-import-route.test.cjs",
     "test:notifications": "node --env-file=.env.local --conditions=react-server --import tsx scripts/verify-notifications.cjs"
   },
   "dependencies": {

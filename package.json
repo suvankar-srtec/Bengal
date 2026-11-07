@@ -13,6 +13,7 @@
     "test:payments": "node --env-file=.env.local --conditions=react-server --import tsx scripts/verify-registration-payment.cjs",
     "test:whatsapp": "node --conditions=react-server --import tsx --test tests/whatsapp.test.ts",
     "whatsapp:retry": "node --env-file=.env.local --conditions=react-server --import tsx scripts/retry-whatsapp.ts",
+    "test:manager-email": "node --conditions=react-server --import tsx --test tests/manager-email.test.cjs",
     "test:verification": "node --conditions=react-server --import tsx --test tests/verification-and-receipts.test.ts",
     "passes:retry": "node --env-file=.env.local --conditions=react-server --import tsx scripts/retry-passes.ts",
     "test:imports": "node --conditions=react-server --import tsx --test tests/registration-import.test.ts tests/registration-import-route.test.cjs",

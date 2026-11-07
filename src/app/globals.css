@@ -2735,3 +2735,18 @@ fieldset.additional-participant-card{min-width:0;border:1px solid #efd9d5;border
     overflow-x:auto;
   }
 }
+
+/* Manager report with editable email. */
+@media(min-width:761px){
+.manager-event-report-table th:nth-child(1),.manager-event-report-table td:nth-child(1){width:7%}
+.manager-event-report-table th:nth-child(2),.manager-event-report-table td:nth-child(2){width:12%}
+.manager-event-report-table th:nth-child(3),.manager-event-report-table td:nth-child(3){width:13%}
+.manager-event-report-table th:nth-child(4),.manager-event-report-table td:nth-child(4){width:14%}
+.manager-event-report-table th:nth-child(5),.manager-event-report-table td:nth-child(5){width:17%}
+.manager-event-report-table th:nth-child(6),.manager-event-report-table td:nth-child(6){width:9%}
+.manager-event-report-table th:nth-child(7),.manager-event-report-table td:nth-child(7){width:10%}
+.manager-event-report-table th:nth-child(8),.manager-event-report-table td:nth-child(8){width:18%}
+}
+.manager-event-report-table td[data-label="Email"] .manager-phone-display>span{white-space:normal;overflow-wrap:anywhere;min-width:0}
+.manager-event-report-table td[data-label="Email"] .manager-phone-editor{min-width:0;width:100%}
+.manager-event-report-table td[data-label="Email"] .manager-phone-editor input{width:100%;min-width:0}

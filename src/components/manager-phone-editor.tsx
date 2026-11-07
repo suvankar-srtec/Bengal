@@ -37,8 +37,7 @@ export function ManagerPhoneEditor({registrationId,phone}:{registrationId:string
   return <div className="manager-phone-editor">
     <label className="sr-only" htmlFor={`manager-phone-${registrationId}`}>New WhatsApp number</label>
     <input id={`manager-phone-${registrationId}`} value={value} disabled={busy} onChange={event=>{setValue(event.target.value);setChallenge("");setCode("");setMessage("");setError("");}} inputMode="tel" autoFocus maxLength={20}/>
-    <small>A code will be sent to the current WhatsApp number before the number is changed.</small>
-    <div className="manager-phone-editor-actions"><button type="button" disabled={busy||cooldown>0||value.trim()===savedPhone||value.trim().length<8} onClick={()=>void act("send")}>{busy?"Please wait...":cooldown?`Resend in ${cooldown}s`:challenge?"Resend code":"Send code to current number"}</button></div>
+    <div className="manager-phone-editor-actions"><button type="button" disabled={busy||cooldown>0||value.trim()===savedPhone||value.trim().length<8} onClick={()=>void act("send")}>{busy?"Please wait...":cooldown?`Resend in ${cooldown}s`:challenge?"Resend code":"Send Code"}</button></div>
     {challenge&&<>
       <label className="sr-only" htmlFor={`manager-code-${registrationId}`}>Verification code</label>
       <input ref={otpInput} id={`manager-code-${registrationId}`} value={code} disabled={busy} onChange={event=>setCode(event.target.value.replace(/\D/g,"").slice(0,6))} inputMode="numeric" autoComplete="one-time-code" placeholder="6-digit code" maxLength={6}/>

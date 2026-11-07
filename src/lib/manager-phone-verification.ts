@@ -13,13 +13,13 @@ export type ManagerSession = Extract<AdminSession, {role:"manager"}>;
 export const VERIFICATION_COOKIE = "bbc_contact_session";
 export function verificationSecret() {
   const value = process.env.CONTACT_VERIFICATION_SECRET || process.env.ADMIN_SESSION_SECRET || process.env.WAPMONKEY_API_KEY || process.env.DATABASE_URL;
-  if (!value || value.length < 32) throw new RequestError("Phone verification is temporarily unavailable. Please contact the admin.", 503);
+  if (!value || value.length < 32) throw new RequestError("Contact verification is temporarily unavailable. Please contact the admin.", 503);
   return value;
 }
 export async function requireManager() {
   const session = readAdminSession((await cookies()).get(ADMIN_SESSION_COOKIE)?.value);
-  if (!session) throw new RequestError("Sign in to update the WhatsApp number.", 401);
-  if (session.role !== "manager") throw new RequestError("Only the assigned manager can update this number here.", 403);
+  if (!session) throw new RequestError("Sign in to update contact details.", 401);
+  if (session.role !== "manager") throw new RequestError("Only the assigned manager can update contact details here.", 403);
   return session;
 }
 export function normalizePhone(value: string) {

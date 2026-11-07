@@ -34,6 +34,7 @@ export function whatsappPassMessage(input: {
   eventTime?: string | null;
   eventEndTime?: string | null;
 }) {
+  // The format is shared, but the destination always comes from this event.
   const map = venueMapUrl(input.venue, input.googleMapsUrl);
   const date = formatEventDate(input.eventDate);
   const startTime = formatEventTime(input.eventTime);

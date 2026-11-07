@@ -35,3 +35,13 @@ export function venueMapEmbedUrl(venue: string | null | undefined, savedUrl?: st
   if (!query) return null;
   return `https://www.google.com/maps?${new URLSearchParams({ q: query, output: "embed", z: "16" })}`;
 }
+
+// Use the pass site's public origin, without exposing the private pass token.
+export function shortVenueMapUrl(passUrl: string, eventId?: string | null) {
+  if (!eventId || !/^[1-9]\d*$/.test(eventId) || !Number.isSafeInteger(Number(eventId))) return null;
+  try {
+    const url = new URL(passUrl);
+    if (!["https:", "http:"].includes(url.protocol) || url.username || url.password) return null;
+    return new URL(`/m/${eventId}`, url.origin).href;
+  } catch { return null; }
+}

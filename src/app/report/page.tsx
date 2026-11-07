@@ -1,3 +1,4 @@
+import { ManagerEmailEditor } from "@/components/manager-email-editor";
 import { ReportParticipants } from "@/components/report-participants";
 import { NotificationNavLink } from "@/components/notification-nav-link";
 import Link from "next/link";
@@ -218,6 +219,7 @@ export default async function ReportPage({
                   <th>Primary member</th>
                   <th>Participants</th>
                   <th>WhatsApp</th>
+                  {session.role === "manager" && <th>Email</th>}
                   {session.role === "manager" && <th>Action</th>}
                   <th>Meals included</th>
                   <th>Provided meal</th>
@@ -238,6 +240,7 @@ export default async function ReportPage({
                     ...participants,
                     ...(registration.additional_participant_contacts ?? []).flatMap(({ email, phone }) => [email, phone]),
                     registration.phone,
+                    registration.email,
                     ...includedMeals.map(mealChoiceLabel),
                     ...(registration.provided_meals ?? []).map((item) => mealChoiceLabel(item.meal)),
                   ].join(" ");
@@ -253,6 +256,7 @@ export default async function ReportPage({
                         ? <ManagerPhoneEditor registrationId={registration.id} phone={registration.phone} />
                         : registration.phone}
                     </td>
+                    {session.role === "manager" && <td data-label="Email"><ManagerEmailEditor registrationId={registration.id} email={registration.email} /></td>}
                     {session.role === "manager" && <td data-label="Action"><ManagerWhatsAppSend registrationId={registration.id} /></td>}
                     <td data-label="Meals included">{includedMeals.length ? includedMeals.map(mealChoiceLabel).join(", ") : "None"}</td>
                     <td data-label="Provided meal">
@@ -306,6 +310,7 @@ export default async function ReportPage({
                     ...(registration.additional_participant_contacts ?? []).flatMap(({ email, phone }) => [email, phone]),
                     registration.email,
                     registration.phone,
+                    registration.email,
                     registration.billing_details,
                     ...(registration.included_meals?.length ? registration.included_meals : registration.meal_choice ? [registration.meal_choice] : []).map(mealChoiceLabel),
                     registration.payment_status,

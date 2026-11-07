@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { isGoogleMapsUrl, venueMapUrl, venueMapEmbedUrl } from "../src/lib/venue-map";
+import { isGoogleMapsUrl, venueMapUrl, venueMapEmbedUrl, shortVenueMapUrl } from "../src/lib/venue-map";
 import { DEFAULT_EVENT_CONTENT, eventContentFromRow, eventContentSchema } from "../src/lib/event-content";
 import { whatsappPassMessage } from "../src/lib/whatsapp-pass-message";
 
@@ -55,4 +55,27 @@ test("embedded maps use the saved address safely and omit unknown locations", ()
   assert.equal(venueMapEmbedUrl("Venue to be announced"), null);
   assert.equal(venueMapEmbedUrl("", "https://maps.app.goo.gl/test"), null);
   assert.equal(new URL(venueMapEmbedUrl("Venue", "https://www.google.com/maps/embed?pb=shared-location")!).searchParams.get("pb"), "shared-location");
+});
+
+
+test("WhatsApp map format stays consistent while each event uses its own destination", () => {
+  const common = { memberName: "Test", participantCount: 1, passUrl: "https://example.com/passes/test" };
+  const events = [
+    { eventName: "Siliguri event", venue: "Sunhill Portico, Siliguri", googleMapsUrl: "https://maps.app.goo.gl/siliguriVenue" },
+    { eventName: "Kolkata event", venue: "A different hall, Kolkata", googleMapsUrl: "https://www.google.com/maps/search/?api=1&query=Kolkata&query_place_id=exactPlace" },
+  ];
+  for (const event of events) {
+    const message = whatsappPassMessage({ ...common, ...event });
+    assert.ok(message.includes(`Google Maps:\n${event.googleMapsUrl}\n`));
+    assert.ok(message.includes(`*Venue:* ${event.venue}`));
+  }
+  const updatedAddress = "New venue & hall, Kolkata 700001";
+  const updated = whatsappPassMessage({ ...common, eventName: "Updated event", venue: updatedAddress });
+  assert.ok(updated.includes(venueMapUrl(updatedAddress)!));
+  assert.ok(!updated.includes("Sunhill"));
+});
+
+test("legacy short map links remain valid without exposing private pass tokens", () => {
+  assert.equal(shortVenueMapUrl("https://example.com/passes/private?v=4", "42"), "https://example.com/m/42");
+  assert.equal(shortVenueMapUrl("not-a-url", "42"), null);
 });

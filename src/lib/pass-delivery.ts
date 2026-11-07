@@ -1,4 +1,5 @@
 import "server-only";
+import { createHash } from "node:crypto";
 import type { Pool, PoolClient } from "pg";
 import { getDatabase } from "./db";
 import { EmailError, sendEmail } from "./email";
@@ -38,7 +39,7 @@ export async function deliverEmailPasses(id: string) {
       venue: registration.venue, googleMapsUrl: registration.google_maps_url, eventDate: registration.event_date,
       eventTime: registration.event_time, eventEndTime: registration.event_end_time }).replaceAll("*", "");
     submitted = true;
-    const messageId = await sendEmail({ to: registration.email, subject: "Your Event Pass | Bengal Business Council", text, idempotencyKey: `pass-${id}` });
+    const messageId = await sendEmail({ to: registration.email, subject: "Your Event Pass | Bengal Business Council", text, idempotencyKey: `pass-${id}-${createHash("sha256").update(registration.email.toLowerCase()).digest("hex").slice(0, 24)}` });
     await db.query(`UPDATE public.bbc_email_pass_deliveries SET status='accepted',provider_message_id=$2,error_code=NULL,accepted_at=NOW(),updated_at=NOW()
       WHERE registration_id=$1 AND status='sending'`, [id, messageId]);
   } catch (error) {

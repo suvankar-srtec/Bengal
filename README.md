@@ -8,7 +8,7 @@ Requires Node.js 22 or newer.
 
 ```powershell
 npm install
-# On a fresh checkout, copy .env.example to .env.local and set DATABASE_URL.
+# Create .env.local using your private environment settings, including DATABASE_URL.
 npm run db:migrate
 npm run dev
 ```

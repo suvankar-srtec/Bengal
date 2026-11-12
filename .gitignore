@@ -1,12 +1,44 @@
+# Dependencies and generated output
 node_modules/
 .next/
 out/
-.env*
-!.env.example
+dist/
+build/
+coverage/
+next-env.d.ts
 *.tsbuildinfo
 *.log
+
+# Local configuration, including example/sample environment files
+.env*
+.vercel/
+
+# Local previews, samples, screenshots, and browser sessions
 artifacts/
 .browser/
-.env.local
+/samples/
+/sample/
+/previews/
+/screenshots/
+playwright-report/
+test-results/
 
+# Local imports, exports, and uploaded documents
+/uploads/
+/exports/
+*.csv
+*.xls
+*.xlsx
+
+# Local editor and operating system files
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# Local backups and project archives
+*.bak
+*.tmp
 project.tar.gz

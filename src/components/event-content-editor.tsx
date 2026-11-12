@@ -193,8 +193,6 @@ export function EventContentEditor({
           <div className="pricing-meal-heading">
             <div>
               <span>MEALS INCLUDED</span>
-              <h3>Select all meals included in the participation fee</h3>
-              <p>These meals are included automatically. Participants will not choose meals on the registration form.</p>
             </div>
           </div>
 

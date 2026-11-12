@@ -5,6 +5,7 @@ import sharp from "sharp";
 import {
   participantPass,
   renderParticipantPass,
+  wrapPassHeaderText,
   type PassRegistration,
 } from "../src/lib/participant-pass";
 import {
@@ -192,11 +193,31 @@ test("pass renderer produces a full size PNG with a nonempty QR area and escaped
   const metadata = await sharp(image).metadata();
   assert.equal(metadata.format, "png");
   assert.equal(metadata.width, 750);
-  assert.equal(metadata.height, 1050);
+  assert.ok(metadata.height! >= 1050);
   const qr = await sharp(image)
     .extract({ left: 160, top: 505, width: 430, height: 430 })
     .stats();
   assert.ok(qr.channels[0].min < 20);
   assert.ok(qr.channels[0].max > 240);
   assert.ok(qr.channels[0].stdev > 60);
+});
+
+
+test("passes list every selected meal with commas and preserve legacy meal choices", () => {
+  assert.equal(participantPass({ ...registration, included_meals: ["lunch"] }, 0).mealLabel, "Lunch");
+  assert.equal(participantPass({ ...registration, included_meals: ["snacks", "lunch", "dinner"] }, 0).mealLabel, "Hi-Tea, Lunch, Dinner");
+  assert.equal(participantPass({ ...registration, included_meals: [] }, 0).mealLabel, "No meals");
+  assert.equal(participantPass(registration, 0).mealLabel, "Lunch");
+});
+
+test("pass header wraps full addresses without ellipses or lost words", async () => {
+  const venue = "Sunhill Portico, Nazrul Sarani, off Bidhan Road, Ward 14, Hakim Para, Siliguri, West Bengal 734001";
+  const lines = wrapPassHeaderText(venue);
+  assert.ok(lines.length >= 2);
+  assert.equal(lines.join(" "), venue);
+  assert.ok(lines.every(line => line.length <= 54));
+  assert.equal(wrapPassHeaderText("A".repeat(220)).join(""), "A".repeat(220));
+  const short = await sharp(await renderParticipantPass({ ...registration, venue: "Hall A" }, 0)).metadata();
+  const long = await sharp(await renderParticipantPass({ ...registration, venue }, 0)).metadata();
+  assert.equal(long.height, short.height + (lines.length - 1) * 23);
 });

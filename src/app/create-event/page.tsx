@@ -69,9 +69,7 @@ export default async function CreateEventPage({
     <main className="admin-dashboard-main event-editor-page">
       <div className="event-editor-heading">
         <div>
-          <span className="eyebrow">EVENT CONTENT</span>
           <h1>{editingId ? "Edit Event" : "Create Event"}</h1>
-          <p>{editingId ? "Review this event’s participation fees first, then edit the event details." : "Set participation fees first, then create the event details."}</p>
         </div>
       </div>
       <EventContentEditor initial={content} initialPrices={pricing} eventId={editingId} />

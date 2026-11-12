@@ -66,6 +66,8 @@ const GLYPHS: Record<string, string[]> = {
   "7":["11111","00001","00010","00100","01000","01000","01000"],
   "8":["01110","10001","10001","01110","10001","10001","01110"],
   "9":["01110","10001","10001","01111","00001","00001","01110"],
+  "&":["01100","10010","10100","01000","10101","10010","01101"],
+  "\'":["00100","00100","00000","00000","00000","00000","00000"],
   "@":["01110","10001","10111","10101","10111","10000","01110"],
   ".":["00000","00000","00000","00000","00000","00110","00110"],
   ",":["00000","00000","00000","00000","00000","00110","00010"],
@@ -80,8 +82,8 @@ const GLYPHS: Record<string, string[]> = {
   " ":["00000","00000","00000","00000","00000","00000","00000"],
 };
 
-function pixelText(text: string, x: number, y: number, scale: number, color = "#182f46", maxChars?: number) {
-  const clean = text.toUpperCase().replace(/[^A-Z0-9@.,_\-\/:+()? ]/g, "?");
+function pixelText(text: string, x: number, y: number, scale: number, color = "#182f46", maxChars?: number, bold = false) {
+  const clean = text.toUpperCase().replace(/[^A-Z0-9&'@.,_\-\/:+()? ]/g, "?");
   const clipped = maxChars && clean.length > maxChars
     ? clean.slice(0, Math.max(1, maxChars - 3)) + "..."
     : clean;
@@ -97,7 +99,23 @@ function pixelText(text: string, x: number, y: number, scale: number, color = "#
       });
     });
   });
-  return `<path d="${path}" fill="${color}"/>`;
+  return `<path d="${path}" fill="${color}"${bold ? ` stroke="${color}" stroke-width="${scale * 0.4}" stroke-linejoin="round"` : ""}/>`;
+}
+
+// Wrap instead of clipping header values, including long unbroken address parts.
+export function wrapPassHeaderText(value: string, columns = 54): string[] {
+  const words = value.trim().replace(/\s+/g, " ").split(" ");
+  const lines: string[] = [];
+  let line = "";
+  for (const word of words) {
+    if (line && line.length + 1 + word.length <= columns) { line += ` ${word}`; continue; }
+    if (line) { lines.push(line); line = ""; }
+    let rest = word;
+    while (rest.length > columns) { lines.push(rest.slice(0, columns)); rest = rest.slice(columns); }
+    line = rest;
+  }
+  if (line) lines.push(line);
+  return lines.length ? lines : [""];
 }
 
 function paiseText(value: number) {
@@ -171,6 +189,21 @@ export async function renderParticipantPass(registration: PassRegistration, inde
     : startTime || endTime || "Time to be announced";
   const venue = String(registration.venue || "Venue to be announced");
 
+  let headerY = 145;
+  const headerMarkup = ([
+    ["EVENT", registration.event_name], ["TIME", eventTime], ["VENUE", venue],
+  ] as const).map(([label, value]) => {
+    const lines = wrapPassHeaderText(value);
+    const markup = pixelText(`${label} :`, 45, headerY, 1.75, "#182f46", undefined, true)
+      + lines.map((line, lineIndex) => pixelText(line, 135, headerY + lineIndex * 23, 1.75, "#626f7b")).join("");
+    headerY += lines.length * 23;
+    return markup;
+  }).join("");
+  const headerBottom = headerY + 8;
+  const contentOffset = headerBottom - 210;
+  const height = 1050 + contentOffset;
+  const mealText = pass.mealLabel;
+
   const photoMarkup = participantPhoto
     ? `<rect x="45" y="350" width="180" height="220" rx="10" fill="#f3f5f7"/>
        <image href="data:image/jpeg;base64,${participantPhoto.toString("base64")}" x="45" y="350" width="180" height="220" preserveAspectRatio="xMidYMid slice"/>
@@ -180,19 +213,17 @@ export async function renderParticipantPass(registration: PassRegistration, inde
   const qrY = participantPhoto ? 325 : 320;
   const qrSize = participantPhoto ? 400 : 400;
 
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="750" height="1050">
-    <rect width="750" height="1050" fill="#ffffff"/>
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="750" height="${height}">
+    <rect width="750" height="${height}" fill="#ffffff"/>
     <rect width="750" height="14" fill="#c74c40"/>
 
     ${pixelText("BENGAL BUSINESS COUNCIL", 45, 53, 3, "#182f46", 28)}
     ${pixelText("INDIVIDUAL EVENT PASS", 45, 91, 2.4, "#c74c40", 30)}
     <image href="data:image/png;base64,${logo.toString("base64")}" x="545" y="28" width="160" height="108"/>
 
-    ${pixelText(`EVENT ${registration.event_name}`, 45, 128, 1.75, "#626f7b", 48)}
-    ${pixelText(`TIME ${eventTime}`, 45, 154, 1.75, "#626f7b", 48)}
-    ${pixelText(`VENUE ${venue}`, 45, 180, 1.75, "#626f7b", 48)}
-    <path d="M45 210H705" stroke="#e5e8ea" stroke-width="2"/>
-
+    ${headerMarkup}
+    <path d="M45 ${headerBottom}H705" stroke="#e5e8ea" stroke-width="2"/>
+    <g transform="translate(0 ${contentOffset})">
     ${pixelText(`PARTICIPANT ${pass.participantNumber}`, 45, 238, 2.2, "#626f7b", 28)}
     ${pixelText(pass.participantName, 45, 276, 4, "#182f46", 24)}
 
@@ -200,10 +231,11 @@ export async function renderParticipantPass(registration: PassRegistration, inde
     <image href="data:image/png;base64,${qr.split(",")[1]}" x="${qrX}" y="${qrY}" width="${qrSize}" height="${qrSize}"/>
 
     <rect x="45" y="790" width="660" height="74" rx="8" fill="#fff8f5"/>
-    ${pixelText("MEALS INCLUDED", (750 - ("MEALS INCLUDED".length * 6 - 1) * 2.7) / 2, 817.5, 2.7, "#182f46")}
+    ${pixelText(mealText, (750 - (mealText.length * 6 - 1) * 2.7) / 2, 817.5, 2.7, "#182f46")}
 
     ${pixelText("SCAN QR FOR PARTICIPATION DETAILS", 157, 910, 2, "#626f7b", 38)}
     ${pixelText(date, 252, 952, 1.7, "#626f7b", 28)}
+    </g>
   </svg>`;
 
   return sharp(Buffer.from(svg)).png().toBuffer();

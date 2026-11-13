@@ -73,3 +73,23 @@ Set `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY` in `.env.local` and in Vercel before build
 Setup: https://developers.google.com/maps/documentation/javascript/get-api-key
 
 Without the key, manual venue entry remains available, and the map dialog explains that automatic selection is not configured.
+
+## Email delivery with Resend
+
+QR-pass emails, participant-photo emails, and manager email-change verification codes use Resend when a Resend API key is configured. Add these private values to the local `.env.local` file and to the live server's environment:
+
+```text
+EMAIL_PROVIDER=resend
+RESEND_API_KEY=<your Resend API key>
+EMAIL_FROM=Bengal Business Council <events@mail.digigraptek.com>
+```
+
+Do not commit these values or expose them through a `NEXT_PUBLIC_` variable. The sender address must belong to a domain verified in Resend. The application defaults to the verified `events@mail.digigraptek.com` sender if `EMAIL_FROM` is absent or uses a different domain.
+
+Check the configuration without sending an email or displaying the API key:
+
+```powershell
+npm run email:check
+```
+
+Restart the application after changing server environment variables. A successful check confirms only that the required settings are present; verify the domain and API key in the Resend dashboard before sending production email.

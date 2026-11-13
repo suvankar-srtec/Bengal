@@ -5,6 +5,17 @@ import { z } from "zod";
 export class EmailError extends Error {
   constructor(public code: string, public uncertain = false) { super(code); }
 }
+
+export type EmailConfigurationSummary = {
+  provider: "resend" | "smtp";
+  from: string;
+};
+
+export function emailConfigurationSummary(): EmailConfigurationSummary {
+  const configuration = emailConfiguration();
+  return { provider: configuration.provider, from: configuration.from };
+}
+
 export function emailConfiguration() {
   const resendApiKey = process.env.RESEND_API_KEY?.trim();
   const configuredProvider = process.env.EMAIL_PROVIDER?.trim().toLowerCase();

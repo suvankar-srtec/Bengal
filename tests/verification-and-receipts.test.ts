@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import sharp from "sharp";
 import {newVerificationCode, verificationHash, verificationCodeMatches} from "../src/lib/verification-security";
 import {validateReceipt} from "../src/lib/payment-review";
-import {sendEmail, EmailError} from "../src/lib/email";
+import {sendEmail, EmailError, emailConfigurationSummary} from "../src/lib/email";
 
 test("OTP hashes bind the six-digit code to its challenge and secret",()=>{
   const secret="a".repeat(64), id="challenge-a", code="123456";
@@ -33,6 +33,18 @@ test("Resend transport passes idempotency key and classifies uncertain outcomes"
     assert.equal(await sendEmail(input,mock),"test-message");assert.equal(calls,1);
     await assert.rejects(sendEmail(input,async()=>{throw new Error("timeout");}),error=>error instanceof EmailError&&error.uncertain);
     await assert.rejects(sendEmail(input,async()=>new Response("",{status:400})),error=>error instanceof EmailError&&!error.uncertain);
+  }finally{
+    for(const [key,value] of Object.entries({EMAIL_PROVIDER:previous.provider,EMAIL_FROM:previous.from,RESEND_API_KEY:previous.key})){if(value===undefined)delete process.env[key];else process.env[key]=value;}
+  }
+});
+
+test("email configuration summary never exposes the Resend API key",()=>{
+  const previous={provider:process.env.EMAIL_PROVIDER,from:process.env.EMAIL_FROM,key:process.env.RESEND_API_KEY};
+  process.env.EMAIL_PROVIDER="resend";process.env.EMAIL_FROM="BBC <events@mail.digigraptek.com>";process.env.RESEND_API_KEY="secret-test-key";
+  try {
+    const summary=emailConfigurationSummary();
+    assert.deepEqual(summary,{provider:"resend",from:"BBC <events@mail.digigraptek.com>"});
+    assert.equal(JSON.stringify(summary).includes("secret-test-key"),false);
   }finally{
     for(const [key,value] of Object.entries({EMAIL_PROVIDER:previous.provider,EMAIL_FROM:previous.from,RESEND_API_KEY:previous.key})){if(value===undefined)delete process.env[key];else process.env[key]=value;}
   }
